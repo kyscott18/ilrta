@@ -1,0 +1,19 @@
+{
+  "name": "iltra",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "format": "rome format . --write && forge fmt",
+    "clean": "rm -rf cache out",
+    "lint": "pnpm solhint \"{script,src,test}/**/*.sol\" && rome check ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "rome": "^12.1.3",
+    "solhint": "^3.4.1"
+  }
+}

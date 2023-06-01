@@ -2,6 +2,11 @@
 cache/
 out/
 
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
