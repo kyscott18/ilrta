@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-abstract contract ILTRA {
+abstract contract ILRTA {
 // event Transfer(address indexed from, address indexed to, bytes data);
 
 // TODO: this shouldn't be bytes because the size is fixed but it must be overriden
