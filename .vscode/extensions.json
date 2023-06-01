@@ -1,7 +1,7 @@
 {
 	"recommendations": [
 		"rome.rome",
-		"JuanBlanco.solidity",
+		"NomicFoundation.hardhat-solidity",
 		"tamasfe.even-better-toml"
 	]
 }

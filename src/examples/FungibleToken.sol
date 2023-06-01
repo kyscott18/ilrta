@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { ILRTA } from "src/ILRTA.sol";
+import { EIP712 } from "./EIP712.sol";
 import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
 
-abstract contract ILRTAFungibleToken is ILRTA {
+abstract contract ILRTAFungibleToken is EIP712 {
     /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
 
-    event Transfer(address from, address to, uint256 amount);
+    event Transfer(address from, address to, ILRTATransferDetails transferDetails);
 
     /*(((((((((((((((((((((((((((ERRORS)))))))))))))))))))))))))))*/
 
@@ -27,91 +27,81 @@ abstract contract ILRTAFungibleToken is ILRTA {
 
     uint256 public totalSupply;
 
-    mapping(address owner => uint256 balance) public dataOf;
+    mapping(address owner => ILRTAData data) public dataOf;
 
     /*((((((((((((((((((((((SIGNATURE STORAGE)))))))))))))))))))))*/
-
-    uint256 internal immutable INITIAL_CHAIN_ID;
-
-    bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
 
     mapping(address => uint256) public nonces;
 
     /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
 
-    constructor(string memory _name, string memory _symbol, uint8 _decimals) {
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) EIP712(keccak256(bytes(_name))) {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
+    }
 
-        INITIAL_CHAIN_ID = block.chainid;
-        INITIAL_DOMAIN_SEPARATOR = computeDomainSeparator();
+    function balanceOf(address owner) external view returns (uint256 balance) {
+        return dataOf[owner].balance;
     }
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
 
-    function balanceOf(address owner) external view returns (uint256 balance) {
-        return dataOf[owner];
+    struct ILRTAData {
+        uint256 balance;
     }
 
-    function transfer(address to, uint256 amount) external returns (bool) {
-        dataOf[msg.sender] -= amount;
-
-        // Cannot overflow because the sum of all user
-        // balances can't exceed the max uint256 value.
-        unchecked {
-            dataOf[to] += amount;
-        }
-
-        emit Transfer(msg.sender, to, amount);
-
-        return true;
-    }
-
-    struct TransferData {
+    struct ILRTATransferDetails {
         uint256 amount;
+    }
+
+    struct ILRTASignatureTransfer {
+        ILRTATransferDetails transferDetails;
         uint256 nonce;
         uint256 deadline;
     }
 
-    struct TransferDetails {
+    struct RequestedTransfer {
         address to;
-        uint256 requestedAmount;
+        ILRTATransferDetails transferDetails;
     }
 
-    /// @custom:team look at unordered nonces
+    bytes32 public constant ILRTA_DETAILS_TYPEHASH = keccak256("ILRTATransferDetails(uint256 amount)");
+
+    bytes32 public constant ILRTA_TRANSFER_TYPEHASH = keccak256(
+        /* solhint-disable-next-line max-line-length */
+        "ILRTATransfer(ILRTATransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)ILRTATransferDetails(uint256 amount)"
+    );
+
+    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+        return _transfer(msg.sender, to, transferDetails);
+    }
+
+    /// @custom:team How do we use signature transfer nonce
     function transferBySignature(
         address from,
-        TransferData memory transferData,
-        TransferDetails calldata transferDetails,
+        ILRTASignatureTransfer calldata signatureTransfer,
+        RequestedTransfer calldata requestedTransfer,
         bytes calldata signature
     )
         external
         returns (bool)
     {
-        uint256 requestedAmount = transferDetails.requestedAmount;
-
-        if (block.timestamp > transferData.deadline) revert SignatureExpired(transferData.deadline);
-        if (requestedAmount > transferData.amount) revert InvalidAmount(transferData.amount);
+        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
+        if (requestedTransfer.transferDetails.amount > signatureTransfer.transferDetails.amount) {
+            revert InvalidAmount(signatureTransfer.transferDetails.amount);
+        }
 
         bytes32 signatureHash;
-
         unchecked {
-            signatureHash = keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR(),
-                    keccak256(
-                        abi.encode(
-                            keccak256(
-                                "Transfer(address from,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-                            ),
-                            from,
-                            msg.sender,
-                            transferData.amount,
-                            nonces[from]++,
-                            transferData.deadline
-                        )
+            signatureHash = hashTypedData(
+                keccak256(
+                    abi.encode(
+                        ILRTA_TRANSFER_TYPEHASH,
+                        keccak256(abi.encode(ILRTA_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
+                        msg.sender,
+                        nonces[from]++,
+                        signatureTransfer.deadline
                     )
                 )
             );
@@ -119,58 +109,53 @@ abstract contract ILRTAFungibleToken is ILRTA {
 
         SignatureVerification.verify(signature, signatureHash, from);
 
-        dataOf[from] -= requestedAmount;
+        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        ILRTATransferDetails calldata transferDetails
+    )
+        internal
+        returns (bool)
+    {
+        dataOf[from].balance -= transferDetails.amount;
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
         unchecked {
-            dataOf[transferDetails.to] += requestedAmount;
+            dataOf[to].balance += transferDetails.amount;
         }
 
-        emit Transfer(from, transferDetails.to, requestedAmount);
+        emit Transfer(from, to, transferDetails);
 
         return true;
     }
 
-    function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
-        return block.chainid == INITIAL_CHAIN_ID ? INITIAL_DOMAIN_SEPARATOR : computeDomainSeparator();
-    }
-
-    function computeDomainSeparator() internal view virtual returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(name)),
-                keccak256("1"),
-                block.chainid,
-                address(this)
-            )
-        );
-    }
-
     /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
 
-    function _mint(address to, uint256 amount) internal virtual {
-        totalSupply += amount;
+    function _mint(address to, ILRTATransferDetails calldata details) internal virtual {
+        totalSupply += details.amount;
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
         unchecked {
-            dataOf[to] += amount;
+            dataOf[to].balance += details.amount;
         }
 
-        emit Transfer(address(0), to, amount);
+        emit Transfer(address(0), to, details);
     }
 
-    function _burn(address from, uint256 amount) internal virtual {
-        dataOf[from] -= amount;
+    function _burn(address from, ILRTATransferDetails calldata details) internal virtual {
+        dataOf[from].balance -= details.amount;
 
         // Cannot underflow because a user's balance
         // will never be larger than the total supply.
         unchecked {
-            totalSupply -= amount;
+            totalSupply -= details.amount;
         }
 
-        emit Transfer(from, address(0), amount);
+        emit Transfer(from, address(0), details);
     }
 }
