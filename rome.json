@@ -1,7 +1,14 @@
 {
 	"$schema": "https://docs.rome.tools/schemas/12.1.3/schema.json",
-	"organizeImports": {
-		"enabled": false
+	"files": {
+		"ignore": [
+			"lib/**",
+			"**/node_modules",
+			"CHANGELOG.md",
+			"pnpm-lock.yaml",
+			"cache",
+			"out"
+		]
 	},
 	"linter": {
 		"enabled": true,
