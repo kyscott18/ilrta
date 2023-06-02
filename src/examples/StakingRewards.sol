@@ -60,17 +60,6 @@ abstract contract StakingRewards is ILRTA {
         uint256 tokensOwed;
     }
 
-    struct ILRTASignatureTransfer {
-        ILRTATransferDetails transferDetails;
-        uint256 nonce;
-        uint256 deadline;
-    }
-
-    struct RequestedTransfer {
-        address to;
-        ILRTATransferDetails transferDetails;
-    }
-
     bytes32 public constant ILRTA_DETAILS_TYPEHASH =
         keccak256("ILRTATransferDetails(uint256 balance, uint256 tokensOwed)");
 
@@ -94,13 +83,15 @@ abstract contract StakingRewards is ILRTA {
         override
         returns (bool)
     {
-        ILRTASignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (ILRTASignatureTransfer));
+        SignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (SignatureTransfer));
         RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
 
         if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
         if (
-            requestedTransfer.transferDetails.balance > signatureTransfer.transferDetails.balance
-                || requestedTransfer.transferDetails.tokensOwed > signatureTransfer.transferDetails.tokensOwed
+            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).balance
+                > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).balance
+                || abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).tokensOwed
+                    > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).tokensOwed
         ) {
             revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
@@ -122,7 +113,9 @@ abstract contract StakingRewards is ILRTA {
 
         SignatureVerification.verify(signature, signatureHash, from);
 
-        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+        return
+        /* solhint-disable-next-line max-line-length */
+        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
     /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/

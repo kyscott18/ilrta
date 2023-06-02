@@ -42,17 +42,6 @@ abstract contract ILRTAFungibleToken is ILRTA {
         uint256 amount;
     }
 
-    struct ILRTASignatureTransfer {
-        ILRTATransferDetails transferDetails;
-        uint256 nonce;
-        uint256 deadline;
-    }
-
-    struct RequestedTransfer {
-        address to;
-        ILRTATransferDetails transferDetails;
-    }
-
     bytes32 public constant ILRTA_DETAILS_TYPEHASH = keccak256("ILRTATransferDetails(uint256 amount)");
 
     bytes32 public constant ILRTA_TRANSFER_TYPEHASH = keccak256(
@@ -66,6 +55,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
     }
 
     /// @custom:team How do we use signature transfer nonce
+    /// @custom:team Is there a way to simplifiy the signature verification step and move it to ILRTA.sol
     function transferBySignature(
         address from,
         bytes calldata signatureTransferBytes,
@@ -76,11 +66,14 @@ abstract contract ILRTAFungibleToken is ILRTA {
         override
         returns (bool)
     {
-        ILRTASignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (ILRTASignatureTransfer));
+        SignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (SignatureTransfer));
         RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
 
         if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
-        if (requestedTransfer.transferDetails.amount > signatureTransfer.transferDetails.amount) {
+        if (
+            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).amount
+                > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).amount
+        ) {
             revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
 
@@ -101,7 +94,9 @@ abstract contract ILRTAFungibleToken is ILRTA {
 
         SignatureVerification.verify(signature, signatureHash, from);
 
-        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+        return
+        /* solhint-disable-next-line max-line-length */
+        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
     /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/

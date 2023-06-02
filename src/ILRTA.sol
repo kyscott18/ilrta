@@ -14,8 +14,22 @@ abstract contract ILRTA is EIP712 {
 
     error InvalidRequest(bytes transferDetailsBytes);
 
+    /*(((((((((((((((((((((((((DATA TYPES)))))))))))))))))))))))))*/
+
+    struct SignatureTransfer {
+        uint256 nonce;
+        uint256 deadline;
+        bytes transferDetails;
+    }
+
+    struct RequestedTransfer {
+        address to;
+        bytes transferDetails;
+    }
+
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
 
+    /// @custom:team permit2 allows for unordered nonces, and includes a nonce bitmap
     mapping(address => uint256) public nonces;
 
     /// @custom:team problem is that when data takes up more than one slot but we don't want to read all of it, it may
