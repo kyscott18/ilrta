@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import { EIP712 } from "../EIP712.sol";
+import { ILRTA } from "../ILRTA.sol";
 import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
-import { EIP712 } from "./EIP712.sol";
 
-abstract contract StakingRewards is EIP712 {
-    /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
-
-    event Transfer(address from, address to, ILRTATransferDetails transferDetails);
-
-    /*(((((((((((((((((((((((((((ERRORS)))))))))))))))))))))))))))*/
-
-    error SignatureExpired(uint256 signatureDeadline);
-
-    error InvalidAmount(uint256 maxAmount);
-
+abstract contract StakingRewards is ILRTA {
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
 
     address public immutable stakingToken;
@@ -28,12 +19,6 @@ abstract contract StakingRewards is EIP712 {
     uint256 public rewardPerTokenStored;
     uint256 public lastUpdate;
 
-    mapping(address owner => ILRTAData data) public dataOf;
-
-    /*((((((((((((((((((((((SIGNATURE STORAGE)))))))))))))))))))))*/
-
-    mapping(address => uint256) public nonces;
-
     /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
 
     constructor(
@@ -46,7 +31,7 @@ abstract contract StakingRewards is EIP712 {
         rewardToken = _rewardToken;
     }
 
-    /*(((((((((((((((((((((((STAKING STORAGE))))))))))))))))))))))*/
+    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
 
     function getRewardPerToken() public view returns (uint256) {
         if (totalSupply == 0) {
@@ -57,7 +42,7 @@ abstract contract StakingRewards is EIP712 {
     }
 
     function getTokensOwed(address owner) public view returns (uint256) {
-        ILRTAData memory data = dataOf[owner];
+        ILRTAData memory data = abi.decode(dataOf[owner], (ILRTAData));
 
         return data.balance * (getRewardPerToken() - data.rewardPerTokenPaid) / 1e18 + data.tokensOwed;
     }
@@ -94,25 +79,30 @@ abstract contract StakingRewards is EIP712 {
         "ILRTATransfer(ILRTATransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)ILRTATransferDetails(uint256 balance, uint256 tokensOwed)"
     );
 
-    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+    function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
+        ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
         return _transfer(msg.sender, to, transferDetails);
     }
 
     function transferBySignature(
         address from,
-        ILRTASignatureTransfer calldata signatureTransfer,
-        RequestedTransfer calldata requestedTransfer,
+        bytes calldata signatureTransferBytes,
+        bytes calldata requestedTransferBytes,
         bytes calldata signature
     )
         external
+        override
         returns (bool)
     {
+        ILRTASignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (ILRTASignatureTransfer));
+        RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
+
         if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
-        if (requestedTransfer.transferDetails.balance > signatureTransfer.transferDetails.balance) {
-            revert InvalidAmount(signatureTransfer.transferDetails.balance);
-        }
-        if (requestedTransfer.transferDetails.tokensOwed > signatureTransfer.transferDetails.tokensOwed) {
-            revert InvalidAmount(signatureTransfer.transferDetails.tokensOwed);
+        if (
+            requestedTransfer.transferDetails.balance > signatureTransfer.transferDetails.balance
+                || requestedTransfer.transferDetails.tokensOwed > signatureTransfer.transferDetails.tokensOwed
+        ) {
+            revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
 
         bytes32 signatureHash;
@@ -135,37 +125,32 @@ abstract contract StakingRewards is EIP712 {
         return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
     }
 
-    function _transfer(
-        address from,
-        address to,
-        ILRTATransferDetails calldata transferDetails
-    )
-        internal
-        returns (bool)
-    {
+    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
+
+    function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         uint256 rewardPerToken = getRewardPerToken();
 
-        ILRTAData memory fromData = dataOf[from];
-        fromData.tokensOwed += fromData.balance * (rewardPerToken - fromData.rewardPerTokenPaid) / 1e18;
+        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
+        ILRTAData memory dataTo = abi.decode(dataOf[from], (ILRTAData));
 
-        ILRTAData memory toData = dataOf[from];
-        toData.tokensOwed += toData.balance * (rewardPerToken - toData.rewardPerTokenPaid) / 1e18;
+        dataFrom.tokensOwed += dataFrom.balance * (rewardPerToken - dataFrom.rewardPerTokenPaid) / 1e18;
+        dataTo.tokensOwed += dataTo.balance * (rewardPerToken - dataTo.rewardPerTokenPaid) / 1e18;
 
-        fromData.balance -= transferDetails.balance;
-        fromData.rewardPerTokenPaid = rewardPerToken;
-        fromData.tokensOwed -= transferDetails.tokensOwed;
-        dataOf[from] = fromData;
+        dataFrom.balance -= transferDetails.balance;
+        dataFrom.rewardPerTokenPaid = rewardPerToken;
+        dataFrom.tokensOwed -= transferDetails.tokensOwed;
+        dataOf[from] = abi.encode(dataFrom);
 
         // Cannot overflow because the sum of all user balances and tokens owed can't exceed the max uint256 value.
         unchecked {
-            toData.tokensOwed += transferDetails.tokensOwed;
-            toData.balance += transferDetails.balance;
+            dataTo.tokensOwed += transferDetails.tokensOwed;
+            dataTo.balance += transferDetails.balance;
         }
 
-        toData.rewardPerTokenPaid = rewardPerToken;
-        dataOf[to] = toData;
+        dataTo.rewardPerTokenPaid = rewardPerToken;
+        dataOf[to] = abi.encode(dataTo);
 
-        emit Transfer(from, to, transferDetails);
+        emit Transfer(from, to, abi.encode(transferDetails));
 
         return true;
     }

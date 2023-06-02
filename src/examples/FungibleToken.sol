@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { EIP712 } from "./EIP712.sol";
+import { EIP712 } from "../EIP712.sol";
+import { ILRTA } from "../ILRTA.sol";
 import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
 
-abstract contract ILRTAFungibleToken is EIP712 {
-    /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
-
-    event Transfer(address from, address to, ILRTATransferDetails transferDetails);
-
-    /*(((((((((((((((((((((((((((ERRORS)))))))))))))))))))))))))))*/
-
-    error SignatureExpired(uint256 signatureDeadline);
-
-    error InvalidAmount(uint256 maxAmount);
-
+abstract contract ILRTAFungibleToken is ILRTA {
     /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
 
     string public name;
@@ -27,12 +18,6 @@ abstract contract ILRTAFungibleToken is EIP712 {
 
     uint256 public totalSupply;
 
-    mapping(address owner => ILRTAData data) public dataOf;
-
-    /*((((((((((((((((((((((SIGNATURE STORAGE)))))))))))))))))))))*/
-
-    mapping(address => uint256) public nonces;
-
     /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
 
     constructor(string memory _name, string memory _symbol, uint8 _decimals) EIP712(keccak256(bytes(_name))) {
@@ -41,8 +26,10 @@ abstract contract ILRTAFungibleToken is EIP712 {
         decimals = _decimals;
     }
 
+    /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
+
     function balanceOf(address owner) external view returns (uint256 balance) {
-        return dataOf[owner].balance;
+        return abi.decode(dataOf[owner], (ILRTAData)).balance;
     }
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
@@ -73,23 +60,28 @@ abstract contract ILRTAFungibleToken is EIP712 {
         "ILRTATransfer(ILRTATransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)ILRTATransferDetails(uint256 amount)"
     );
 
-    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+    function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
+        ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
         return _transfer(msg.sender, to, transferDetails);
     }
 
     /// @custom:team How do we use signature transfer nonce
     function transferBySignature(
         address from,
-        ILRTASignatureTransfer calldata signatureTransfer,
-        RequestedTransfer calldata requestedTransfer,
+        bytes calldata signatureTransferBytes,
+        bytes calldata requestedTransferBytes,
         bytes calldata signature
     )
         external
+        override
         returns (bool)
     {
+        ILRTASignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (ILRTASignatureTransfer));
+        RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
+
         if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
         if (requestedTransfer.transferDetails.amount > signatureTransfer.transferDetails.amount) {
-            revert InvalidAmount(signatureTransfer.transferDetails.amount);
+            revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
 
         bytes32 signatureHash;
@@ -112,43 +104,44 @@ abstract contract ILRTAFungibleToken is EIP712 {
         return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
     }
 
-    function _transfer(
-        address from,
-        address to,
-        ILRTATransferDetails calldata transferDetails
-    )
-        internal
-        returns (bool)
-    {
-        dataOf[from].balance -= transferDetails.amount;
+    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
+
+    function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
+        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
+        dataFrom.balance -= transferDetails.amount;
+        dataOf[from] = abi.encode(dataFrom);
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
+        ILRTAData memory dataTo = abi.decode(dataOf[to], (ILRTAData));
         unchecked {
-            dataOf[to].balance += transferDetails.amount;
+            dataTo.balance += transferDetails.amount;
         }
+        dataOf[to] = abi.encode(dataTo);
 
-        emit Transfer(from, to, transferDetails);
+        emit Transfer(from, to, abi.encode(transferDetails));
 
         return true;
     }
-
-    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
 
     function _mint(address to, ILRTATransferDetails calldata details) internal virtual {
         totalSupply += details.amount;
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
+        ILRTAData memory dataTo = abi.decode(dataOf[to], (ILRTAData));
         unchecked {
-            dataOf[to].balance += details.amount;
+            dataTo.balance += details.amount;
         }
+        dataOf[to] = abi.encode(dataTo);
 
-        emit Transfer(address(0), to, details);
+        emit Transfer(address(0), to, abi.encode(details));
     }
 
     function _burn(address from, ILRTATransferDetails calldata details) internal virtual {
-        dataOf[from].balance -= details.amount;
+        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
+        dataFrom.balance -= details.amount;
+        dataOf[from] = abi.encode(dataFrom);
 
         // Cannot underflow because a user's balance
         // will never be larger than the total supply.
@@ -156,6 +149,6 @@ abstract contract ILRTAFungibleToken is EIP712 {
             totalSupply -= details.amount;
         }
 
-        emit Transfer(from, address(0), details);
+        emit Transfer(from, address(0), abi.encode(details));
     }
 }

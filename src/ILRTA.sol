@@ -1,17 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-abstract contract ILRTA {
-// event Transfer(address indexed from, address indexed to, bytes data);
+import { EIP712 } from "./EIP712.sol";
 
-// TODO: this shouldn't be bytes because the size is fixed but it must be overriden
-// function dataOf(address owner) external view virtual;
+abstract contract ILRTA is EIP712 {
+    /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
 
-// function transfer(address to) external virtual;
+    event Transfer(address indexed from, address indexed to, bytes data);
 
-// function transferBySignature(address from, address to) external virtual;
+    /*(((((((((((((((((((((((((((ERRORS)))))))))))))))))))))))))))*/
 
-// function _mint(address to) external virtual;
+    error SignatureExpired(uint256 signatureDeadline);
 
-// function _burn(address from) external virtual;
+    error InvalidRequest(bytes transferDetailsBytes);
+
+    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
+
+    mapping(address => uint256) public nonces;
+
+    /// @custom:team problem is that when data takes up more than one slot but we don't want to read all of it, it may
+    /// do an extra SLOAD
+    mapping(address owner => bytes data) internal dataOf;
+
+    /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
+
+    function transfer(address to, bytes calldata transferDetails) external virtual returns (bool);
+
+    function transferBySignature(
+        address from,
+        bytes calldata signatureTransferBytes,
+        bytes calldata requestedTransferBytes,
+        bytes calldata signature
+    )
+        external
+        virtual
+        returns (bool);
 }
