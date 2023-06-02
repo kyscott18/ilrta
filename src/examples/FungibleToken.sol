@@ -20,7 +20,14 @@ abstract contract ILRTAFungibleToken is ILRTA {
 
     /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
 
-    constructor(string memory _name, string memory _symbol, uint8 _decimals) EIP712(keccak256(bytes(_name))) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals
+    )
+        ILRTA("TransferDetails(uint256 amount)")
+        EIP712(keccak256(bytes(_name)))
+    {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
@@ -42,13 +49,6 @@ abstract contract ILRTAFungibleToken is ILRTA {
         uint256 amount;
     }
 
-    bytes32 public constant ILRTA_DETAILS_TYPEHASH = keccak256("ILRTATransferDetails(uint256 amount)");
-
-    bytes32 public constant ILRTA_TRANSFER_TYPEHASH = keccak256(
-        /* solhint-disable-next-line max-line-length */
-        "ILRTATransfer(ILRTATransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)ILRTATransferDetails(uint256 amount)"
-    );
-
     function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
         ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
         return _transfer(msg.sender, to, transferDetails);
@@ -69,7 +69,6 @@ abstract contract ILRTAFungibleToken is ILRTA {
         SignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (SignatureTransfer));
         RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
 
-        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
         if (
             abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).amount
                 > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).amount
@@ -77,22 +76,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
             revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
 
-        bytes32 signatureHash;
-        unchecked {
-            signatureHash = hashTypedData(
-                keccak256(
-                    abi.encode(
-                        ILRTA_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(ILRTA_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
-                        msg.sender,
-                        nonces[from]++,
-                        signatureTransfer.deadline
-                    )
-                )
-            );
-        }
-
-        SignatureVerification.verify(signature, signatureHash, from);
+        verifySignature(from, signatureTransfer, signature);
 
         return
         /* solhint-disable-next-line max-line-length */

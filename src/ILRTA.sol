@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import { EIP712 } from "./EIP712.sol";
+import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
 
 abstract contract ILRTA is EIP712 {
     /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
@@ -27,6 +28,13 @@ abstract contract ILRTA is EIP712 {
         bytes transferDetails;
     }
 
+    string internal constant TRANSFER_ENCODE_TYPE =
+        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
+
+    bytes32 internal immutable TRANSFER_TYPEHASH;
+
+    bytes32 internal immutable TRANSFER_DETAILS_TYPEHASH;
+
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
 
     /// @custom:team permit2 allows for unordered nonces, and includes a nonce bitmap
@@ -35,6 +43,11 @@ abstract contract ILRTA is EIP712 {
     /// @custom:team problem is that when data takes up more than one slot but we don't want to read all of it, it may
     /// do an extra SLOAD
     mapping(address owner => bytes data) internal dataOf;
+
+    constructor(string memory transferDetailsEncodeType) {
+        TRANSFER_TYPEHASH = keccak256(bytes(string.concat(transferDetailsEncodeType, TRANSFER_ENCODE_TYPE)));
+        TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
+    }
 
     /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
 
@@ -49,4 +62,31 @@ abstract contract ILRTA is EIP712 {
         external
         virtual
         returns (bool);
+
+    function verifySignature(
+        address from,
+        SignatureTransfer memory signatureTransfer,
+        bytes calldata signature
+    )
+        internal
+    {
+        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
+
+        bytes32 signatureHash;
+        unchecked {
+            signatureHash = hashTypedData(
+                keccak256(
+                    abi.encode(
+                        TRANSFER_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
+                        msg.sender,
+                        nonces[from]++,
+                        signatureTransfer.deadline
+                    )
+                )
+            );
+        }
+
+        SignatureVerification.verify(signature, signatureHash, from);
+    }
 }
