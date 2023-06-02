@@ -4,3 +4,4 @@ forge-std/=lib/forge-std/src/
 openzeppelin-contracts/=lib/permit2/lib/openzeppelin-contracts/
 permit2/=lib/permit2/src/
 solmate/=lib/permit2/lib/solmate/src/
+src/=src/
