@@ -15,6 +15,8 @@ abstract contract StakingRewards is ILRTA {
     /// @dev units are (rewardToken / stakingToken) * 10**18
     uint256 public immutable rewardRate = 1e18;
 
+    mapping(address owner => ILRTAData data) public dataOf;
+
     uint256 public totalSupply;
     uint256 public rewardPerTokenStored;
     uint256 public lastUpdate;
@@ -32,7 +34,7 @@ abstract contract StakingRewards is ILRTA {
         rewardToken = _rewardToken;
     }
 
-    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
+    /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
 
     function getRewardPerToken() public view returns (uint256) {
         if (totalSupply == 0) {
@@ -43,9 +45,8 @@ abstract contract StakingRewards is ILRTA {
     }
 
     function getTokensOwed(address owner) public view returns (uint256) {
-        ILRTAData memory data = abi.decode(dataOf[owner], (ILRTAData));
-
-        return data.balance * (getRewardPerToken() - data.rewardPerTokenPaid) / 1e18 + data.tokensOwed;
+        return dataOf[owner].balance * (getRewardPerToken() - dataOf[owner].rewardPerTokenPaid) / 1e18
+            + dataOf[owner].tokensOwed;
     }
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
@@ -100,8 +101,8 @@ abstract contract StakingRewards is ILRTA {
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         uint256 rewardPerToken = getRewardPerToken();
 
-        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
-        ILRTAData memory dataTo = abi.decode(dataOf[from], (ILRTAData));
+        ILRTAData memory dataFrom = dataOf[from];
+        ILRTAData memory dataTo = dataOf[to];
 
         dataFrom.tokensOwed += dataFrom.balance * (rewardPerToken - dataFrom.rewardPerTokenPaid) / 1e18;
         dataTo.tokensOwed += dataTo.balance * (rewardPerToken - dataTo.rewardPerTokenPaid) / 1e18;
@@ -109,7 +110,7 @@ abstract contract StakingRewards is ILRTA {
         dataFrom.balance -= transferDetails.balance;
         dataFrom.rewardPerTokenPaid = rewardPerToken;
         dataFrom.tokensOwed -= transferDetails.tokensOwed;
-        dataOf[from] = abi.encode(dataFrom);
+        dataOf[from] = dataFrom;
 
         // Cannot overflow because the sum of all user balances and tokens owed can't exceed the max uint256 value.
         unchecked {
@@ -118,7 +119,7 @@ abstract contract StakingRewards is ILRTA {
         }
 
         dataTo.rewardPerTokenPaid = rewardPerToken;
-        dataOf[to] = abi.encode(dataTo);
+        dataOf[to] = dataTo;
 
         emit Transfer(from, to, abi.encode(transferDetails));
 

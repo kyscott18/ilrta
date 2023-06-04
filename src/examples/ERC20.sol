@@ -22,6 +22,8 @@ abstract contract ERC20 is ILRTA {
 
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
 
+    mapping(address owner => ILRTAData data) public dataOf;
+
     uint256 public totalSupply;
 
     mapping(address owner => mapping(address spender => uint256)) public allowance;
@@ -44,7 +46,7 @@ abstract contract ERC20 is ILRTA {
     /*(((((((((((((((((((((((((ERC20 LOGIC))))))))))))))))))))))))*/
 
     function balanceOf(address owner) external view returns (uint256 balance) {
-        return abi.decode(dataOf[owner], (ILRTAData)).balance;
+        return dataOf[owner].balance;
     }
 
     function approve(address spender, uint256 amount) public virtual returns (bool) {
@@ -114,17 +116,13 @@ abstract contract ERC20 is ILRTA {
     /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
-        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
-        dataFrom.balance -= transferDetails.amount;
-        dataOf[from] = abi.encode(dataFrom);
+        dataOf[from].balance -= transferDetails.amount;
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
-        ILRTAData memory dataTo = abi.decode(dataOf[to], (ILRTAData));
         unchecked {
-            dataTo.balance += transferDetails.amount;
+            dataOf[to].balance += transferDetails.amount;
         }
-        dataOf[to] = abi.encode(dataTo);
 
         emit Transfer(from, to, abi.encode(transferDetails));
         emit Transfer(address(0), to, transferDetails.amount);
@@ -137,20 +135,16 @@ abstract contract ERC20 is ILRTA {
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
-        ILRTAData memory dataTo = abi.decode(dataOf[to], (ILRTAData));
         unchecked {
-            dataTo.balance += amount;
+            dataOf[to].balance += amount;
         }
-        dataOf[to] = abi.encode(dataTo);
 
         emit Transfer(address(0), to, amount);
         emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({ amount: amount })));
     }
 
     function _burn(address from, uint256 amount) internal virtual {
-        ILRTAData memory dataFrom = abi.decode(dataOf[from], (ILRTAData));
-        dataFrom.balance -= amount;
-        dataOf[from] = abi.encode(dataFrom);
+        dataOf[from].balance -= amount;
 
         // Cannot underflow because a user's balance
         // will never be larger than the total supply.

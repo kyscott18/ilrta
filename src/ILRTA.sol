@@ -40,10 +40,6 @@ abstract contract ILRTA is EIP712 {
     /// @custom:team permit2 allows for unordered nonces, and includes a nonce bitmap
     mapping(address => uint256) public nonces;
 
-    /// @custom:team problem is that when data takes up more than one slot but we don't want to read all of it, it may
-    /// do an extra SLOAD
-    mapping(address owner => bytes data) internal dataOf;
-
     constructor(string memory transferDetailsEncodeType) {
         TRANSFER_TYPEHASH = keccak256(bytes(string.concat(transferDetailsEncodeType, TRANSFER_ENCODE_TYPE)));
         TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
