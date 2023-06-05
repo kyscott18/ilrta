@@ -41,18 +41,21 @@ abstract contract ILRTA is EIP712 {
     mapping(address => uint256) public nonces;
 
     constructor(string memory transferDetailsEncodeType) {
-        TRANSFER_TYPEHASH = keccak256(bytes(string.concat(transferDetailsEncodeType, TRANSFER_ENCODE_TYPE)));
+        TRANSFER_TYPEHASH = keccak256(bytes(string.concat(TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
         TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
     }
 
     /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
 
+    function dataOf(address owner) external view virtual returns (bytes memory);
+
     function transfer(address to, bytes calldata transferDetails) external virtual returns (bool);
 
+    /// @custom:team potentially use decoded signatureTransfer and requestedTransfer
     function transferBySignature(
         address from,
-        bytes calldata signatureTransferBytes,
-        bytes calldata requestedTransferBytes,
+        SignatureTransfer calldata signatureTransfer,
+        RequestedTransfer calldata requestedTransfer,
         bytes calldata signature
     )
         external

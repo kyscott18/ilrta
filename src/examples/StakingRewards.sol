@@ -15,7 +15,7 @@ abstract contract StakingRewards is ILRTA {
     /// @dev units are (rewardToken / stakingToken) * 10**18
     uint256 public immutable rewardRate = 1e18;
 
-    mapping(address owner => ILRTAData data) public dataOf;
+    mapping(address owner => ILRTAData data) public _dataOf;
 
     uint256 public totalSupply;
     uint256 public rewardPerTokenStored;
@@ -45,8 +45,8 @@ abstract contract StakingRewards is ILRTA {
     }
 
     function getTokensOwed(address owner) public view returns (uint256) {
-        return dataOf[owner].balance * (getRewardPerToken() - dataOf[owner].rewardPerTokenPaid) / 1e18
-            + dataOf[owner].tokensOwed;
+        return _dataOf[owner].balance * (getRewardPerToken() - _dataOf[owner].rewardPerTokenPaid) / 1e18
+            + _dataOf[owner].tokensOwed;
     }
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
@@ -62,6 +62,10 @@ abstract contract StakingRewards is ILRTA {
         uint256 tokensOwed;
     }
 
+    function dataOf(address owner) external view override returns (bytes memory) {
+        return abi.encode(_dataOf[owner]);
+    }
+
     function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
         ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
         return _transfer(msg.sender, to, transferDetails);
@@ -69,17 +73,14 @@ abstract contract StakingRewards is ILRTA {
 
     function transferBySignature(
         address from,
-        bytes calldata signatureTransferBytes,
-        bytes calldata requestedTransferBytes,
+        SignatureTransfer calldata signatureTransfer,
+        RequestedTransfer calldata requestedTransfer,
         bytes calldata signature
     )
         external
         override
         returns (bool)
     {
-        SignatureTransfer memory signatureTransfer = abi.decode(signatureTransferBytes, (SignatureTransfer));
-        RequestedTransfer memory requestedTransfer = abi.decode(requestedTransferBytes, (RequestedTransfer));
-
         if (
             abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).balance
                 > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).balance
@@ -101,8 +102,8 @@ abstract contract StakingRewards is ILRTA {
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         uint256 rewardPerToken = getRewardPerToken();
 
-        ILRTAData memory dataFrom = dataOf[from];
-        ILRTAData memory dataTo = dataOf[to];
+        ILRTAData memory dataFrom = _dataOf[from];
+        ILRTAData memory dataTo = _dataOf[to];
 
         dataFrom.tokensOwed += dataFrom.balance * (rewardPerToken - dataFrom.rewardPerTokenPaid) / 1e18;
         dataTo.tokensOwed += dataTo.balance * (rewardPerToken - dataTo.rewardPerTokenPaid) / 1e18;
@@ -110,7 +111,7 @@ abstract contract StakingRewards is ILRTA {
         dataFrom.balance -= transferDetails.balance;
         dataFrom.rewardPerTokenPaid = rewardPerToken;
         dataFrom.tokensOwed -= transferDetails.tokensOwed;
-        dataOf[from] = dataFrom;
+        _dataOf[from] = dataFrom;
 
         // Cannot overflow because the sum of all user balances and tokens owed can't exceed the max uint256 value.
         unchecked {
@@ -119,7 +120,7 @@ abstract contract StakingRewards is ILRTA {
         }
 
         dataTo.rewardPerTokenPaid = rewardPerToken;
-        dataOf[to] = dataTo;
+        _dataOf[to] = dataTo;
 
         emit Transfer(from, to, abi.encode(transferDetails));
 
