@@ -7,8 +7,54 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-**Token standard for token standards.** Focused on allowing for easy creation and composability of token standards.
+**Token standard for token standards.** Easily tokenize any type of data and inherit a composable signature transfer scheme.
 
 ## Features
 
-- **Signature based transfers**
+- Easiest way to create a token type for unconvential needs
+- Signature based transfers with EIP712 typed data
+- Contract based signatures included by default
+- Full test suite running with Foundry
+
+## Install
+
+You will need a copy of [Foundry](https://getfoundry.sh/) installed before proceeding.
+
+### Setup
+
+```sh
+forge install
+pnpm install
+```
+
+### Lint
+
+```sh
+pnpm lint
+```
+
+### Format
+
+```sh
+pnpm format
+```
+
+### Test
+
+```sh
+forge test
+```
+
+### Gas Snapshot
+
+```sh
+forge snapshot
+```
+
+## Acknowledgements
+
+- **Uniswap's permit2** for their signature verification implementation and pushing the boundaries of what I thought was possible
+- **Uniswap's v3-core** for showing the need of an extensible standard for creating small token types
+- **Noah Zinsmeister and Sara Reynolds** for personally taking the time to talk through some of these ideas
+- **Solmate** for an incredibly clean eip2612 and erc20 implementation to base off of
+- [**This Twitter thread**](https://twitter.com/pcaversaccio/status/1645084293989822466?s=20) for discussion on the shortcomings of current standards

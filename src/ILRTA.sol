@@ -28,7 +28,7 @@ abstract contract ILRTA is EIP712 {
         bytes transferDetails;
     }
 
-    string internal constant TRANSFER_ENCODE_TYPE =
+    string private constant TRANSFER_ENCODE_TYPE =
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
 
     bytes32 internal immutable TRANSFER_TYPEHASH;
@@ -51,7 +51,6 @@ abstract contract ILRTA is EIP712 {
 
     function transfer(address to, bytes calldata transferDetails) external virtual returns (bool);
 
-    /// @custom:team potentially use decoded signatureTransfer and requestedTransfer
     function transferBySignature(
         address from,
         SignatureTransfer calldata signatureTransfer,
