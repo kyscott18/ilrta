@@ -10,6 +10,7 @@ contract ERC20Test is Test {
     MockERC20 private erc20;
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
+            /* solhint-disable-next-line max-line-length */
             "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(uint256 amount)"
         )
     );
