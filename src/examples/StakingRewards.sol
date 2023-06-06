@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { EIP712 } from "../EIP712.sol";
-import { ILRTA } from "../ILRTA.sol";
-import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
+import {EIP712} from "../EIP712.sol";
+import {ILRTA} from "../ILRTA.sol";
+import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
 
 abstract contract StakingRewards is ILRTA {
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/

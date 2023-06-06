@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { EIP712 } from "../EIP712.sol";
-import { ILRTA } from "../ILRTA.sol";
-import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
+import {EIP712} from "../EIP712.sol";
+import {ILRTA} from "../ILRTA.sol";
+import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
 
 abstract contract ERC20 is ILRTA {
     /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
@@ -58,7 +58,7 @@ abstract contract ERC20 is ILRTA {
     }
 
     function transfer(address to, uint256 amount) external returns (bool) {
-        return _transfer(msg.sender, to, ILRTATransferDetails({ amount: amount }));
+        return _transfer(msg.sender, to, ILRTATransferDetails({amount: amount}));
     }
 
     function transferFrom(address from, address to, uint256 amount) public virtual returns (bool) {
@@ -66,7 +66,7 @@ abstract contract ERC20 is ILRTA {
 
         if (allowed != type(uint256).max) allowance[from][msg.sender] = allowed - amount;
 
-        return _transfer(from, to, ILRTATransferDetails({ amount: amount }));
+        return _transfer(from, to, ILRTATransferDetails({amount: amount}));
     }
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
@@ -141,7 +141,7 @@ abstract contract ERC20 is ILRTA {
         }
 
         emit Transfer(address(0), to, amount);
-        emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({ amount: amount })));
+        emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({amount: amount})));
     }
 
     function _burn(address from, uint256 amount) internal virtual {
@@ -154,6 +154,6 @@ abstract contract ERC20 is ILRTA {
         }
 
         emit Transfer(from, address(0), amount);
-        emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({ amount: amount })));
+        emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({amount: amount})));
     }
 }

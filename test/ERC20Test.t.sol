@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.19;
 
-import { Test } from "forge-std/Test.sol";
-import { MockERC20 } from "./mocks/MockERC20.sol";
+import {Test} from "forge-std/Test.sol";
+import {MockERC20} from "./mocks/MockERC20.sol";
 
 contract ERC20Test is Test {
     MockERC20 private erc20;

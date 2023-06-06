@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { EIP712 } from "../EIP712.sol";
-import { ILRTA } from "../ILRTA.sol";
-import { SignatureVerification } from "permit2/libraries/SignatureVerification.sol";
+import {EIP712} from "../EIP712.sol";
+import {ILRTA} from "../ILRTA.sol";
+import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
 
 abstract contract ILRTAFungibleToken is ILRTA {
     /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
@@ -111,7 +111,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
             _dataOf[to].balance += amount;
         }
 
-        emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({ amount: amount })));
+        emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({amount: amount})));
     }
 
     function _burn(address from, uint256 amount) internal virtual {
@@ -123,6 +123,6 @@ abstract contract ILRTAFungibleToken is ILRTA {
             totalSupply -= amount;
         }
 
-        emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({ amount: amount })));
+        emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({amount: amount})));
     }
 }
