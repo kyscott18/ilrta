@@ -11,10 +11,21 @@
 
 ## Features
 
-- Easiest way to create a token type for unconvential needs
+- Easiest way to create a token type for one-off contracts
 - Signature based transfers with EIP712 typed data
 - Contract based signatures included by default
 - Full test suite running with Foundry
+
+## Example Implementations
+
+To show backwards compatibility, many popular token standards have been implementing while also conforming to the ilrta standard.
+
+- [ERC20](https://github.com/kyscott18/ilrta/blob/main/src/examples/ERC20.sol)
+
+As well as some more examples, such as:
+
+- [FungibleToken](https://github.com/kyscott18/ilrta/blob/main/src/examples/FungibleToken.sol)
+- [Staking](https://github.com/kyscott18/ilrta/blob/main/src/examples/Staking.sol)
 
 ## Install
 

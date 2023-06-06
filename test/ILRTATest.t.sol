@@ -41,7 +41,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -52,12 +52,11 @@ contract ILRTATest is Test {
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        vm.prank(address(0xCAFE));
         assertTrue(
             ilrta.transferBySignature(
                 owner,
                 ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
-                ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+                ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
                 signature
             )
         );
@@ -79,7 +78,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             1,
                             block.timestamp
                         )
@@ -91,11 +90,10 @@ contract ILRTATest is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
@@ -114,7 +112,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -126,11 +124,10 @@ contract ILRTATest is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 1, deadline: block.timestamp, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
@@ -149,7 +146,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -161,11 +158,10 @@ contract ILRTATest is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         vm.expectRevert(SignatureVerification.InvalidSigner.selector);
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp + 1, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
@@ -184,7 +180,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -198,11 +194,10 @@ contract ILRTATest is Test {
         vm.warp(block.timestamp + 1);
 
         vm.expectRevert(abi.encodeWithSelector(ILRTA.SignatureExpired.selector, block.timestamp - 1));
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp - 1, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
@@ -221,7 +216,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -232,19 +227,17 @@ contract ILRTATest is Test {
 
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
         vm.expectRevert(ILRTA.InvalidNonce.selector);
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
@@ -263,7 +256,7 @@ contract ILRTATest is Test {
                         abi.encode(
                             TRANSFER_TYPEHASH,
                             keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                            address(0xCAFE),
+                            address(this),
                             0,
                             block.timestamp
                         )
@@ -280,11 +273,10 @@ contract ILRTATest is Test {
         assertEq(ilrta.nonceBitmap(owner, 0), 1);
 
         vm.expectRevert(ILRTA.InvalidNonce.selector);
-        vm.prank(address(0xCAFE));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
-            ILRTA.RequestedTransfer({to: address(0xCAFE), transferDetails: bytes("")}),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
     }
