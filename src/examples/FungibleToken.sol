@@ -89,8 +89,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from].balance -= transferDetails.amount;
 
-        // Cannot overflow because the sum of all user
-        // balances can't exceed the max uint256 value.
+        // Cannot overflow because the sum of all user balances can't exceed the max uint256 value.
         unchecked {
             _dataOf[to].balance += transferDetails.amount;
         }
@@ -103,8 +102,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
     function _mint(address to, uint256 amount) internal virtual {
         totalSupply += amount;
 
-        // Cannot overflow because the sum of all user
-        // balances can't exceed the max uint256 value.
+        // Cannot overflow because the sum of all user balances can't exceed the max uint256 value.
         unchecked {
             _dataOf[to].balance += amount;
         }
@@ -115,8 +113,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
     function _burn(address from, uint256 amount) internal virtual {
         _dataOf[from].balance -= amount;
 
-        // Cannot underflow because a user's balance
-        // will never be larger than the total supply.
+        // Cannot underflow because a user's balance will never be larger than the total supply.
         unchecked {
             totalSupply -= amount;
         }

@@ -82,19 +82,18 @@ abstract contract ILRTA is EIP712 {
         useUnorderedNonce(from, signatureTransfer.nonce);
 
         bytes32 signatureHash;
-        unchecked {
-            signatureHash = hashTypedData(
-                keccak256(
-                    abi.encode(
-                        TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
-                        msg.sender,
-                        signatureTransfer.nonce,
-                        signatureTransfer.deadline
-                    )
+
+        signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    TRANSFER_TYPEHASH,
+                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
+                    msg.sender,
+                    signatureTransfer.nonce,
+                    signatureTransfer.deadline
                 )
-            );
-        }
+            )
+        );
 
         SignatureVerification.verify(signature, signatureHash, from);
     }
