@@ -88,8 +88,6 @@ abstract contract ERC20 is ILRTA {
         return _transfer(msg.sender, to, transferDetails);
     }
 
-    /// @custom:team How do we use signature transfer nonce
-    /// @custom:team Is there a way to simplifiy the signature verification step and move it to ILRTA.sol
     function transferBySignature(
         address from,
         SignatureTransfer calldata signatureTransfer,
