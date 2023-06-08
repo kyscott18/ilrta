@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
 import {ILRTA} from "src/ILRTA.sol";
-import {ERC20} from "src/examples/ERC20.sol";
+import {FungibleToken} from "src/examples/FungibleToken.sol";
 
-contract ERC20Test is Test {
-    MockERC20 private erc20;
+contract FungibleTokenTest is Test {
+    MockFungibleToken private ft;
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
             /* solhint-disable-next-line max-line-length */
@@ -17,54 +17,54 @@ contract ERC20Test is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
 
     function setUp() public {
-        erc20 = new MockERC20();
+        ft = new MockFungibleToken();
     }
 
     function testMetadata() public {
-        assertEq(erc20.name(), "Test ERC20");
-        assertEq(erc20.symbol(), "TEST");
-        assertEq(erc20.decimals(), 18);
+        assertEq(ft.name(), "Test FT");
+        assertEq(ft.symbol(), "TEST");
+        assertEq(ft.decimals(), 18);
     }
 
     function testMint() public {
-        erc20.mint(address(0xC0FFEE), 1e18);
+        ft.mint(address(0xC0FFEE), 1e18);
 
-        assertEq(erc20.totalSupply(), 1e18);
-        assertEq(erc20.balanceOf(address(0xC0FFEE)), 1e18);
+        assertEq(ft.totalSupply(), 1e18);
+        assertEq(ft.balanceOf(address(0xC0FFEE)), 1e18);
     }
 
     function testBurn() public {
-        erc20.mint(address(0xC0FFEE), 1e18);
-        erc20.burn(address(0xC0FFEE), 0.9e18);
+        ft.mint(address(0xC0FFEE), 1e18);
+        ft.burn(address(0xC0FFEE), 0.9e18);
 
-        assertEq(erc20.totalSupply(), 1e18 - 0.9e18);
-        assertEq(erc20.balanceOf(address(0xC0FFEE)), 0.1e18);
+        assertEq(ft.totalSupply(), 1e18 - 0.9e18);
+        assertEq(ft.balanceOf(address(0xC0FFEE)), 0.1e18);
     }
 
     function testTransfer() public {
-        erc20.mint(address(this), 1e18);
+        ft.mint(address(this), 1e18);
 
-        assertTrue(erc20.transfer(address(0xC0FFEE), 1e18));
-        assertEq(erc20.totalSupply(), 1e18);
+        assertTrue(ft.transfer(address(0xC0FFEE), abi.encode(FungibleToken.ILRTATransferDetails({amount: 1e18}))));
+        assertEq(ft.totalSupply(), 1e18);
 
-        assertEq(erc20.balanceOf(address(this)), 0);
-        assertEq(erc20.balanceOf(address(0xC0FFEE)), 1e18);
+        assertEq(ft.balanceOf(address(this)), 0);
+        assertEq(ft.balanceOf(address(0xC0FFEE)), 1e18);
     }
 
     function testTransferBySignature() public {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
-        erc20.mint(address(owner), 1e18);
+        ft.mint(address(owner), 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        FungibleToken.ILRTATransferDetails memory transferDetails = FungibleToken.ILRTATransferDetails({amount: 1e18});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    erc20.DOMAIN_SEPARATOR(),
+                    ft.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
@@ -81,7 +81,7 @@ contract ERC20Test is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         assertTrue(
-            erc20.transferBySignature(
+            ft.transferBySignature(
                 owner,
                 ILRTA.SignatureTransfer({
                     nonce: 0,
@@ -92,18 +92,18 @@ contract ERC20Test is Test {
                 signature
             )
         );
-        assertEq(erc20.totalSupply(), 1e18);
+        assertEq(ft.totalSupply(), 1e18);
 
-        assertEq(erc20.balanceOf(address(this)), 1e18);
-        assertEq(erc20.balanceOf(address(owner)), 0);
+        assertEq(ft.balanceOf(address(this)), 1e18);
+        assertEq(ft.balanceOf(address(owner)), 0);
     }
 
     function testTransferGas() public {
         vm.pauseGasMetering();
-        erc20.mint(address(this), 1e18);
+        ft.mint(address(this), 1e18);
         vm.resumeGasMetering();
 
-        erc20.transfer(address(0xC0FFEE), 1e18);
+        ft.transfer(address(0xC0FFEE), abi.encode(FungibleToken.ILRTATransferDetails({amount: 1e18})));
     }
 
     function testTransferBySignatureGas() public {
@@ -111,16 +111,16 @@ contract ERC20Test is Test {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
-        erc20.mint(address(owner), 1e18);
+        ft.mint(address(owner), 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        FungibleToken.ILRTATransferDetails memory transferDetails = FungibleToken.ILRTATransferDetails({amount: 1e18});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    erc20.DOMAIN_SEPARATOR(),
+                    ft.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
@@ -137,7 +137,7 @@ contract ERC20Test is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
         vm.resumeGasMetering();
 
-        erc20.transferBySignature(
+        ft.transferBySignature(
             owner,
             /* solhint-disable-next-line max-line-length */
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),

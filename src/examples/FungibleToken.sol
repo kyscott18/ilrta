@@ -5,7 +5,7 @@ import {EIP712} from "../EIP712.sol";
 import {ILRTA} from "../ILRTA.sol";
 import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
 
-abstract contract ILRTAFungibleToken is ILRTA {
+abstract contract FungibleToken is ILRTA {
     /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
 
     string public name;

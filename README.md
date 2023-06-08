@@ -12,9 +12,14 @@
 ## Features
 
 - Easiest way to create a token type for one-off contracts
+- Consistent events across all inheriting contracts
 - Signature based transfers with EIP712 typed data
 - Contract based signatures included by default
 - Full test suite running with Foundry
+
+## H
+
+This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal. Permit2 solved a lot of problems around the approve flow, but for token standards where we are able to start from scratch, there is room for improvemnt.
 
 ## Example Implementations
 
@@ -36,6 +41,12 @@ You will need a copy of [Foundry](https://getfoundry.sh/) installed before proce
 ```sh
 forge install
 pnpm install
+```
+
+### Build
+
+```sh
+forge build
 ```
 
 ### Lint
