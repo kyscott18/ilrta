@@ -5,6 +5,12 @@ import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
 
 abstract contract ILRTA is EIP712 {
+    /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
+
+    string public name;
+
+    string public symbol;
+
     /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
 
     event Transfer(address indexed from, address indexed to, bytes data);
@@ -43,14 +49,25 @@ abstract contract ILRTA is EIP712 {
 
     mapping(address => mapping(uint256 => uint256)) public nonceBitmap;
 
-    constructor(string memory transferDetailsEncodeType) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory transferDetailsEncodeType
+    )
+        EIP712(keccak256(bytes(_name)))
+    {
+        name = _name;
+        symbol = _symbol;
+
         TRANSFER_TYPEHASH = keccak256(bytes(string.concat(TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
         TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
     }
 
     /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
 
-    function dataOf(bytes32 id) external view virtual returns (bytes memory);
+    function dataOf(address owner, bytes32 id) external view virtual returns (bytes memory);
+
+    function dataID(bytes calldata id) external pure virtual returns (bytes32);
 
     function transfer(address to, bytes calldata transferDetails) external virtual returns (bool);
 
