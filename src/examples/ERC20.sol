@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {EIP712} from "../EIP712.sol";
 import {ILRTA} from "../ILRTA.sol";
-import {Bytes32AddressLib} from "solmate/utils/Bytes32AddressLib.sol";
 
 abstract contract ERC20 is ILRTA {
     /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
@@ -13,10 +11,6 @@ abstract contract ERC20 is ILRTA {
     event Approval(address indexed owner, address indexed spender, uint256 amount);
 
     /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
-
-    string public name;
-
-    string public symbol;
 
     uint8 public immutable decimals;
 
@@ -35,8 +29,7 @@ abstract contract ERC20 is ILRTA {
         string memory _symbol,
         uint8 _decimals
     )
-        ILRTA("TransferDetails(uint256 amount)")
-        EIP712(keccak256(bytes(_name)))
+        ILRTA(_name, _symbol, "TransferDetails(uint256 amount)")
     {
         name = _name;
         symbol = _symbol;
@@ -71,10 +64,6 @@ abstract contract ERC20 is ILRTA {
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
 
-    struct ILRTADataID {
-        address owner;
-    }
-
     struct ILRTAData {
         uint256 balance;
     }
@@ -83,8 +72,13 @@ abstract contract ERC20 is ILRTA {
         uint256 amount;
     }
 
-    function dataOf(bytes32 id) external view override returns (bytes memory) {
-        return abi.encode(_dataOf[Bytes32AddressLib.fromLast20Bytes(id)]);
+    function dataID(bytes calldata) external pure override returns (bytes32) {
+        return bytes32(0);
+    }
+
+    /// @dev because this standard is completely fungible, there is no need for an id
+    function dataOf(address owner, bytes32) external view override returns (bytes memory) {
+        return abi.encode(_dataOf[owner]);
     }
 
     function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {

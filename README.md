@@ -25,7 +25,6 @@ To show backwards compatibility, many popular token standards have been implemen
 As well as some more examples, such as:
 
 - [FungibleToken](https://github.com/kyscott18/ilrta/blob/main/src/examples/FungibleToken.sol)
-- [Staking](https://github.com/kyscott18/ilrta/blob/main/src/examples/Staking.sol)
 
 ## Install
 

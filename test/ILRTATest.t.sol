@@ -21,7 +21,7 @@ contract ILRTATest is Test {
     }
 
     function testDataOf() external {
-        assertEq(ilrta.dataOf(Bytes32AddressLib.fillLast12Bytes(address(0xC0FFEE))), bytes(""));
+        assertEq(ilrta.dataOf(address(0xC0FFEE), bytes32(0)), bytes(""));
     }
 
     function testTransfer() external {
