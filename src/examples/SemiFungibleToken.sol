@@ -65,9 +65,14 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         override
         returns (bool)
     {
+        ILRTATransferDetails memory transferDetails =
+            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails));
+        ILRTATransferDetails memory signatureTransferDetails =
+            abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails));
+
         if (
-            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).amount
-                > abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails)).amount
+            transferDetails.amount > signatureTransferDetails.amount
+                || transferDetails.id != signatureTransferDetails.id
         ) {
             revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
