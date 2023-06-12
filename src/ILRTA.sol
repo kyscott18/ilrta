@@ -50,7 +50,7 @@ abstract contract ILRTA is EIP712 {
 
     /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
 
-    function dataOf(address owner) external view virtual returns (bytes memory);
+    function dataOf(bytes32 id) external view virtual returns (bytes memory);
 
     function transfer(address to, bytes calldata transferDetails) external virtual returns (bool);
 

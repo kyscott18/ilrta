@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {EIP712} from "../EIP712.sol";
 import {ILRTA} from "../ILRTA.sol";
-import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
+import {Bytes32AddressLib} from "solmate/utils/Bytes32AddressLib.sol";
 
 abstract contract Staking is ILRTA {
     /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
@@ -62,8 +62,8 @@ abstract contract Staking is ILRTA {
         uint256 tokensOwed;
     }
 
-    function dataOf(address owner) external view override returns (bytes memory) {
-        return abi.encode(_dataOf[owner]);
+    function dataOf(bytes32 id) external view override returns (bytes memory) {
+        return abi.encode(_dataOf[Bytes32AddressLib.fromLast20Bytes(id)]);
     }
 
     function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {

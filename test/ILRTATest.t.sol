@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {MockILRTA} from "./mocks/MockILRTA.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
+import {Bytes32AddressLib} from "solmate/utils/Bytes32AddressLib.sol";
 
 contract ILRTATest is Test {
     MockILRTA private ilrta;
@@ -20,7 +21,7 @@ contract ILRTATest is Test {
     }
 
     function testDataOf() external {
-        assertEq(ilrta.dataOf(address(0xC0FFEE)), bytes(""));
+        assertEq(ilrta.dataOf(Bytes32AddressLib.fillLast12Bytes(address(0xC0FFEE))), bytes(""));
     }
 
     function testTransfer() external {
