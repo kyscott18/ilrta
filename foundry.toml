@@ -2,6 +2,8 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+solc = "0.8.19"
+via_ir = true
 
 [fmt]
 bracket_spacing = false
