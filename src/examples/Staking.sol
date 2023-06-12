@@ -51,6 +51,10 @@ abstract contract Staking is ILRTA {
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
 
+    struct ILRTADataID {
+        address owner;
+    }
+
     struct ILRTAData {
         uint256 balance;
         uint256 rewardPerTokenPaid;

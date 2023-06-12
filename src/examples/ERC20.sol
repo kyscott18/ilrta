@@ -71,6 +71,10 @@ abstract contract ERC20 is ILRTA {
 
     /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
 
+    struct ILRTADataID {
+        address owner;
+    }
+
     struct ILRTAData {
         uint256 balance;
     }
