@@ -4,12 +4,12 @@ runs:
   steps:
     - uses: pnpm/action-setup@v2
       with:
-        version: ${{ matrix.pnpm-version }}
-    - name: Set up Node ${{ matrix.node-version }}
+        version: latest
+    - name: Set up Node 
       uses: actions/setup-node@v3
       with:
         cache: "pnpm"
-        node-version: ${{ matrix.node-version }}
+        node-version: latest
     - name: Cache pnpm
       uses: actions/cache@v3
       with:
