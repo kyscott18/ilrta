@@ -4,8 +4,8 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {MockILRTA} from "./mocks/MockILRTA.sol";
 import {ILRTA} from "src/ILRTA.sol";
-import {SignatureVerification} from "permit2/libraries/SignatureVerification.sol";
-import {Bytes32AddressLib} from "solmate/utils/Bytes32AddressLib.sol";
+import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
+import {Bytes32AddressLib} from "solmate/src/utils/Bytes32AddressLib.sol";
 
 contract ILRTATest is Test {
     MockILRTA private ilrta;

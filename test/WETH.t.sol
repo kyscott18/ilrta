@@ -3,17 +3,17 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {WETH} from "src/examples/WETH.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 
 /// @notice tests from solmate
 contract WETHTest is Test {
     WETH weth;
 
-    function setUp() public {
+    function setUp() external {
         weth = new WETH();
     }
 
-    function testFallbackDeposit() public {
+    function testFallbackDeposit() external {
         assertEq(weth.balanceOf(address(this)), 0);
         assertEq(weth.totalSupply(), 0);
 
@@ -23,7 +23,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 1 ether);
     }
 
-    function testDeposit() public {
+    function testDeposit() external {
         assertEq(weth.balanceOf(address(this)), 0);
         assertEq(weth.totalSupply(), 0);
 
@@ -33,7 +33,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 1 ether);
     }
 
-    function testWithdraw() public {
+    function testWithdraw() external {
         uint256 startingBalance = address(this).balance;
 
         weth.deposit{value: 1 ether}();
@@ -47,7 +47,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 0);
     }
 
-    function testPartialWithdraw() public {
+    function testPartialWithdraw() external {
         weth.deposit{value: 1 ether}();
 
         uint256 balanceBeforeWithdraw = address(this).balance;
@@ -61,7 +61,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 0.5 ether);
     }
 
-    function testFallbackDeposit(uint256 amount) public {
+    function testFallbackDeposit(uint256 amount) external {
         amount = bound(amount, 0, address(this).balance);
 
         assertEq(weth.balanceOf(address(this)), 0);
@@ -73,7 +73,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), amount);
     }
 
-    function testDeposit(uint256 amount) public {
+    function testDeposit(uint256 amount) external {
         amount = bound(amount, 0, address(this).balance);
 
         assertEq(weth.balanceOf(address(this)), 0);
@@ -85,7 +85,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), amount);
     }
 
-    function testWithdraw(uint256 depositAmount, uint256 withdrawAmount) public {
+    function testWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
         depositAmount = bound(depositAmount, 0, address(this).balance);
         withdrawAmount = bound(withdrawAmount, 0, depositAmount);
 

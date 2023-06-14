@@ -139,14 +139,14 @@ contract FungibleTokenTest is Test {
         );
 
         bytes memory signature = abi.encodePacked(r, s, v);
+        ILRTA.SignatureTransfer memory transfer =
+        /* solhint-disable-next-line max-line-length */
+         ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)});
+        ILRTA.RequestedTransfer memory request =
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)});
+
         vm.resumeGasMetering();
 
-        ft.transferBySignature(
-            owner,
-            /* solhint-disable-next-line max-line-length */
-            ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
-            signature
-        );
+        ft.transferBySignature(owner, transfer, request, signature);
     }
 }
