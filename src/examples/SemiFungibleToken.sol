@@ -3,30 +3,12 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "../ILRTA.sol";
 
+/// @notice Implement a semi-fungible token with ilrta
+/// @author Kyle Scott
 abstract contract ILRTASemiFungibleToken is ILRTA {
-    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
-
-    mapping(address owner => mapping(bytes32 id => ILRTAData data)) internal _dataOf;
-
-    /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
-
-    constructor(
-        string memory _name,
-        string memory _symbol
-    )
-        ILRTA(_name, symbol, "TransferDetails(uint256 id,uint256 amount)")
-    {
-        name = _name;
-        symbol = _symbol;
-    }
-
-    /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
-
-    function balanceOf(address owner, uint256 id) external view returns (uint256 balance) {
-        return _dataOf[owner][bytes32(id)].balance;
-    }
-
-    /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                               DATA TYPES
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     struct ILRTADataID {
         uint256 id;
@@ -40,6 +22,38 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         bytes32 id;
         uint256 amount;
     }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                STORAGE
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    mapping(address owner => mapping(bytes32 id => ILRTAData data)) internal _dataOf;
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              CONSTRUCTOR
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    constructor(
+        string memory _name,
+        string memory _symbol
+    )
+        ILRTA(_name, symbol, "TransferDetails(uint256 id,uint256 amount)")
+    {
+        name = _name;
+        symbol = _symbol;
+    }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                 LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    function balanceOf(address owner, uint256 id) external view returns (uint256 balance) {
+        return _dataOf[owner][bytes32(id)].balance;
+    }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              ILRTA LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function dataID(bytes calldata idBytes) external pure override returns (bytes32) {
         ILRTADataID memory id = abi.decode(idBytes, (ILRTADataID));
@@ -84,7 +98,9 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
-    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                             INTERNAL LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from][transferDetails.id].balance -= transferDetails.amount;

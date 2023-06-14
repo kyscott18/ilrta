@@ -3,18 +3,38 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "../ILRTA.sol";
 
+/// @notice Implement a fungible token with ilrta
+/// @author Kyle Scott
 abstract contract ILRTAFungibleToken is ILRTA {
-    /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                            METADATA STORAGE
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     uint8 public immutable decimals;
 
-    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                               DATA TYPES
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    struct ILRTAData {
+        uint256 balance;
+    }
+
+    struct ILRTATransferDetails {
+        uint256 amount;
+    }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                STORAGE
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) internal _dataOf;
 
     uint256 public totalSupply;
 
-    /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              CONSTRUCTOR
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
         string memory _name,
@@ -28,21 +48,17 @@ abstract contract ILRTAFungibleToken is ILRTA {
         decimals = _decimals;
     }
 
-    /*((((((((((((((((((((((((((((LOGIC)))))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                 LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function balanceOf(address owner) external view returns (uint256 balance) {
         return _dataOf[owner].balance;
     }
 
-    /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
-
-    struct ILRTAData {
-        uint256 balance;
-    }
-
-    struct ILRTATransferDetails {
-        uint256 amount;
-    }
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              ILRTA LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function dataID(bytes calldata) external pure override returns (bytes32) {
         return bytes32(0);
@@ -82,7 +98,9 @@ abstract contract ILRTAFungibleToken is ILRTA {
         _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
-    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                             INTERNAL LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from].balance -= transferDetails.amount;

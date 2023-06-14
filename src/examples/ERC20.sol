@@ -3,18 +3,38 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "../ILRTA.sol";
 
+/// @notice Implement both ERC20 and ILRTA
+/// @author Kyle Scott
 abstract contract ERC20 is ILRTA {
-    /*(((((((((((((((((((((((((((EVENTS)))))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                 EVENTS
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
 
     event Approval(address indexed owner, address indexed spender, uint256 amount);
 
-    /*((((((((((((((((((((((METADATA STORAGE))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                            METADATA STORAGE
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     uint8 public immutable decimals;
 
-    /*(((((((((((((((((((((((((((STORAGE))))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                               DATA TYPES
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    struct ILRTAData {
+        uint256 balance;
+    }
+
+    struct ILRTATransferDetails {
+        uint256 amount;
+    }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                                STORAGE
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) internal _dataOf;
 
@@ -22,7 +42,9 @@ abstract contract ERC20 is ILRTA {
 
     mapping(address owner => mapping(address spender => uint256)) public allowance;
 
-    /*(((((((((((((((((((((((((CONSTRUCTOR))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              CONSTRUCTOR
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
         string memory _name,
@@ -36,7 +58,9 @@ abstract contract ERC20 is ILRTA {
         decimals = _decimals;
     }
 
-    /*(((((((((((((((((((((((((ERC20 LOGIC))))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              ERC20 LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function balanceOf(address owner) external view returns (uint256 balance) {
         return _dataOf[owner].balance;
@@ -62,15 +86,9 @@ abstract contract ERC20 is ILRTA {
         return _transfer(from, to, ILRTATransferDetails({amount: amount}));
     }
 
-    /*(((((((((((((((((((((((((ILRTA LOGIC))))))))))))))))))))))))*/
-
-    struct ILRTAData {
-        uint256 balance;
-    }
-
-    struct ILRTATransferDetails {
-        uint256 amount;
-    }
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              ILRTA LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function dataID(bytes calldata) external pure override returns (bytes32) {
         return bytes32(0);
@@ -110,7 +128,9 @@ abstract contract ERC20 is ILRTA {
         _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
-    /*(((((((((((((((((((((((INTERNAL LOGIC)))))))))))))))))))))))*/
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                             INTERNAL LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from].balance -= transferDetails.amount;
