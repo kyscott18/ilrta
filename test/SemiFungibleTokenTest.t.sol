@@ -2,72 +2,73 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
+import {MockSemiFungibleToken} from "./mocks/MockSemiFungibleToken.sol";
 import {ILRTA} from "src/ILRTA.sol";
-import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
+import {ILRTASemiFungibleToken} from "src/examples/SemiFungibleToken.sol";
 
-contract FungibleTokenTest is Test {
-    MockFungibleToken private ft;
+contract SemiFungibleTokenTest is Test {
+    MockSemiFungibleToken private sft;
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
             /* solhint-disable-next-line max-line-length */
-            "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(uint256 amount)"
+            "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(uint256 id,uint256 amount)"
         )
     );
 
-    bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
+    bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 id,uint256 amount)"));
 
     function setUp() external {
-        ft = new MockFungibleToken();
+        sft = new MockSemiFungibleToken();
     }
 
     function testMetadata() external {
-        assertEq(ft.name(), "Test FT");
-        assertEq(ft.symbol(), "TEST");
-        assertEq(ft.decimals(), 18);
+        assertEq(sft.name(), "Test SFT");
+        assertEq(sft.symbol(), "TEST");
     }
 
     function testMint() external {
-        ft.mint(address(0xC0FFEE), 1e18);
+        sft.mint(address(0xC0FFEE), bytes32(uint256(69)), 1e18);
 
-        assertEq(ft.totalSupply(), 1e18);
-        assertEq(ft.balanceOf(address(0xC0FFEE)), 1e18);
+        assertEq(sft.balanceOf(address(0xC0FFEE), 69), 1e18);
     }
 
     function testBurn() external {
-        ft.mint(address(0xC0FFEE), 1e18);
-        ft.burn(address(0xC0FFEE), 0.9e18);
+        sft.mint(address(0xC0FFEE), bytes32(uint256(69)), 1e18);
+        sft.burn(address(0xC0FFEE), bytes32(uint256(69)), 0.9e18);
 
-        assertEq(ft.totalSupply(), 1e18 - 0.9e18);
-        assertEq(ft.balanceOf(address(0xC0FFEE)), 0.1e18);
+        assertEq(sft.balanceOf(address(0xC0FFEE), 69), 0.1e18);
     }
 
     function testTransfer() external {
-        ft.mint(address(this), 1e18);
+        sft.mint(address(this), bytes32(uint256(69)), 1e18);
 
-        assertTrue(ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}))));
-        assertEq(ft.totalSupply(), 1e18);
+        assertTrue(
+            sft.transfer(
+                address(0xC0FFEE),
+                abi.encode(ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))}))
+            )
+        );
 
-        assertEq(ft.balanceOf(address(this)), 0);
-        assertEq(ft.balanceOf(address(0xC0FFEE)), 1e18);
+        assertEq(sft.balanceOf(address(this), 69), 0);
+        assertEq(sft.balanceOf(address(0xC0FFEE), 69), 1e18);
     }
 
     function testTransferBySignature() external {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
-        ft.mint(address(owner), 1e18);
+        sft.mint(address(owner), bytes32(uint256(69)), 1e18);
 
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
+        ILRTASemiFungibleToken.ILRTATransferDetails memory transferDetails =
+            ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ft.DOMAIN_SEPARATOR(),
+                    sft.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
@@ -84,7 +85,7 @@ contract FungibleTokenTest is Test {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         assertTrue(
-            ft.transferBySignature(
+            sft.transferBySignature(
                 owner,
                 ILRTA.SignatureTransfer({
                     nonce: 0,
@@ -95,18 +96,20 @@ contract FungibleTokenTest is Test {
                 signature
             )
         );
-        assertEq(ft.totalSupply(), 1e18);
 
-        assertEq(ft.balanceOf(address(this)), 1e18);
-        assertEq(ft.balanceOf(address(owner)), 0);
+        assertEq(sft.balanceOf(address(this), 69), 1e18);
+        assertEq(sft.balanceOf(address(owner), 69), 0);
     }
 
     function testGasTransfer() external {
         vm.pauseGasMetering();
-        ft.mint(address(this), 1e18);
+        sft.mint(address(this), bytes32(uint256(69)), 1e18);
         vm.resumeGasMetering();
 
-        ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
+        sft.transfer(
+            address(0xC0FFEE),
+            abi.encode(ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))}))
+        );
     }
 
     function testGasTransferBySignature() external {
@@ -114,17 +117,17 @@ contract FungibleTokenTest is Test {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
-        ft.mint(address(owner), 1e18);
+        sft.mint(address(owner), bytes32(uint256(69)), 1e18);
 
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
+        ILRTASemiFungibleToken.ILRTATransferDetails memory transferDetails =
+            ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ft.DOMAIN_SEPARATOR(),
+                    sft.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
@@ -139,11 +142,12 @@ contract FungibleTokenTest is Test {
         );
 
         bytes memory signature = abi.encodePacked(r, s, v);
+
         vm.resumeGasMetering();
 
-        ft.transferBySignature(
+        sft.transferBySignature(
             owner,
-            /* solhint-disable-next-line max-line-length */
+            // solhint-disable-next-line max-line-length
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),
             ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
             signature

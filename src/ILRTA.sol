@@ -55,9 +55,9 @@ abstract contract ILRTA is EIP712 {
     string private constant TRANSFER_ENCODE_TYPE =
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
 
-    bytes32 internal immutable TRANSFER_TYPEHASH;
+    bytes32 private immutable TRANSFER_TYPEHASH;
 
-    bytes32 internal immutable TRANSFER_DETAILS_TYPEHASH;
+    bytes32 private immutable TRANSFER_DETAILS_TYPEHASH;
 
     mapping(address => mapping(uint256 => uint256)) public nonceBitmap;
 

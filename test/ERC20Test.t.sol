@@ -8,32 +8,34 @@ import {ERC20} from "src/examples/ERC20.sol";
 
 contract ERC20Test is Test {
     MockERC20 private erc20;
+
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
             /* solhint-disable-next-line max-line-length */
             "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(uint256 amount)"
         )
     );
+
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
 
-    function setUp() public {
+    function setUp() external {
         erc20 = new MockERC20();
     }
 
-    function testMetadata() public {
+    function testMetadata() external {
         assertEq(erc20.name(), "Test ERC20");
         assertEq(erc20.symbol(), "TEST");
         assertEq(erc20.decimals(), 18);
     }
 
-    function testMint() public {
+    function testMint() external {
         erc20.mint(address(0xC0FFEE), 1e18);
 
         assertEq(erc20.totalSupply(), 1e18);
         assertEq(erc20.balanceOf(address(0xC0FFEE)), 1e18);
     }
 
-    function testBurn() public {
+    function testBurn() external {
         erc20.mint(address(0xC0FFEE), 1e18);
         erc20.burn(address(0xC0FFEE), 0.9e18);
 
@@ -41,7 +43,7 @@ contract ERC20Test is Test {
         assertEq(erc20.balanceOf(address(0xC0FFEE)), 0.1e18);
     }
 
-    function testTransfer() public {
+    function testTransfer() external {
         erc20.mint(address(this), 1e18);
 
         assertTrue(erc20.transfer(address(0xC0FFEE), 1e18));
@@ -51,7 +53,7 @@ contract ERC20Test is Test {
         assertEq(erc20.balanceOf(address(0xC0FFEE)), 1e18);
     }
 
-    function testTransferBySignature() public {
+    function testTransferBySignature() external {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
@@ -98,7 +100,7 @@ contract ERC20Test is Test {
         assertEq(erc20.balanceOf(address(owner)), 0);
     }
 
-    function testTransferGas() public {
+    function testGasTransfer() external {
         vm.pauseGasMetering();
         erc20.mint(address(this), 1e18);
         vm.resumeGasMetering();
@@ -106,7 +108,7 @@ contract ERC20Test is Test {
         erc20.transfer(address(0xC0FFEE), 1e18);
     }
 
-    function testTransferBySignatureGas() public {
+    function testGasTransferBySignature() external {
         vm.pauseGasMetering();
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);

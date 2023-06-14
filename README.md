@@ -17,19 +17,21 @@
 - Contract based signatures included by default
 - Full test suite running with Foundry
 
-## H
+## Abstract
 
-This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal. Permit2 solved a lot of problems around the approve flow, but for token standards where we are able to start from scratch, there is room for improvemnt.
+This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal.
 
 ## Example Implementations
 
 To show backwards compatibility, many popular token standards have been implementing while also conforming to the ilrta standard.
 
 - [ERC20](https://github.com/kyscott18/ilrta/blob/main/src/examples/ERC20.sol)
+- [WETH](https://github.com/kyscott18/ilrta/blob/main/src/examples/WETH.sol)
 
 As well as some more examples, such as:
 
 - [FungibleToken](https://github.com/kyscott18/ilrta/blob/main/src/examples/FungibleToken.sol)
+- [SemiFungibleToken](https://github.com/kyscott18/ilrta/blob/main/src/examples/SemiFungibleToken.sol)
 
 ## Install
 
