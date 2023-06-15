@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.17;
 
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
