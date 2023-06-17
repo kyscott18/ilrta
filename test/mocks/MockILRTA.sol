@@ -37,4 +37,21 @@ contract MockILRTA is ILRTA {
 
         return true;
     }
+
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
+    )
+        external
+        override
+        returns (bool)
+    {
+        verifySuperSignature(transferDetails, dataHash);
+
+        emit Transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+
+        return true;
+    }
 }

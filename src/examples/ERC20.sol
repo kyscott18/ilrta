@@ -129,6 +129,30 @@ abstract contract ERC20 is ILRTA {
         _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
     }
 
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
+    )
+        external
+        override
+        returns (bool)
+    {
+        if (
+            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).amount
+                > abi.decode(transferDetails, (ILRTATransferDetails)).amount
+        ) {
+            revert InvalidRequest(abi.encode(transferDetails));
+        }
+
+        verifySuperSignature(transferDetails, dataHash);
+
+        return
+        /* solhint-disable-next-line max-line-length */
+        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                              INTERNAL LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/

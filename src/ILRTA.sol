@@ -58,7 +58,12 @@ abstract contract ILRTA is EIP712 {
     string private constant TRANSFER_ENCODE_TYPE =
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
 
+    string private constant SUPER_SIGNATURE_TRANSFER_ENCODE_TYPE =
+        "Transfer(TransferDetails transferDetails,address spender)";
+
     bytes32 private immutable TRANSFER_TYPEHASH;
+
+    bytes32 private immutable SUPER_SIGNATURE_TRANSFER_TYPEHASH;
 
     bytes32 private immutable TRANSFER_DETAILS_TYPEHASH;
 
@@ -82,6 +87,8 @@ abstract contract ILRTA is EIP712 {
         symbol = _symbol;
 
         TRANSFER_TYPEHASH = keccak256(bytes(string.concat(TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
+        SUPER_SIGNATURE_TRANSFER_TYPEHASH =
+            keccak256(bytes(string.concat(SUPER_SIGNATURE_TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
         TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
     }
 
@@ -100,6 +107,16 @@ abstract contract ILRTA is EIP712 {
         SignatureTransfer calldata signatureTransfer,
         RequestedTransfer calldata requestedTransfer,
         bytes calldata signature
+    )
+        external
+        virtual
+        returns (bool);
+
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
     )
         external
         virtual
@@ -129,6 +146,20 @@ abstract contract ILRTA is EIP712 {
         );
 
         SignatureVerification.verify(signature, signatureHash, from);
+    }
+
+    function verifySuperSignature(bytes calldata transferDetails, bytes32[] calldata dataHash) internal {
+        bytes32 signatureHash = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                msg.sender
+            )
+        );
+
+        if (dataHash[0] != signatureHash) revert();
+
+        if (!superSignature.verifyData(dataHash)) revert();
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
