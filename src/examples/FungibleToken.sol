@@ -37,11 +37,12 @@ abstract contract ILRTAFungibleToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
+        address _superSignature,
         string memory _name,
         string memory _symbol,
         uint8 _decimals
     )
-        ILRTA(_name, symbol, "TransferDetails(uint256 amount)")
+        ILRTA(_superSignature, _name, symbol, "TransferDetails(uint256 amount)")
     {
         name = _name;
         symbol = _symbol;

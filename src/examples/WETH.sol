@@ -6,7 +6,7 @@ import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 
 /// @notice Wrapped Ether implementation with ilrta
 /// @author Kyle Scott
-contract WETH is ERC20("Wrapped Ether", "WETH", 18) {
+contract WETH is ERC20 {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -14,6 +14,12 @@ contract WETH is ERC20("Wrapped Ether", "WETH", 18) {
     event Deposit(address indexed from, uint256 amount);
 
     event Withdrawal(address indexed to, uint256 amount);
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                              CONSTRUCTOR
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    constructor(address _superSignature) ERC20(_superSignature, "Wrapped Ether", "WETH", 18) {}
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC

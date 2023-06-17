@@ -5,9 +5,11 @@ import {Test} from "forge-std/Test.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {ERC20} from "src/examples/ERC20.sol";
+import {SuperSignature} from "src/SuperSignature.sol";
 
 contract ERC20Test is Test {
     MockERC20 private erc20;
+    SuperSignature private superSignature;
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
@@ -19,7 +21,8 @@ contract ERC20Test is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
 
     function setUp() external {
-        erc20 = new MockERC20();
+        superSignature = new SuperSignature();
+        erc20 = new MockERC20(address(superSignature));
     }
 
     function testMetadata() external {

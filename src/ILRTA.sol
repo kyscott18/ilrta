@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
+import {SuperSignature} from "./SuperSignature.sol";
 
 /// @notice Custom and composable token standard with signature capabilities
 /// @author Kyle Scott
@@ -52,6 +53,8 @@ abstract contract ILRTA is EIP712 {
                            SIGNATURE STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    SuperSignature private immutable superSignature;
+
     string private constant TRANSFER_ENCODE_TYPE =
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
 
@@ -66,12 +69,15 @@ abstract contract ILRTA is EIP712 {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
+        address _superSignature,
         string memory _name,
         string memory _symbol,
         string memory transferDetailsEncodeType
     )
         EIP712(keccak256(bytes(_name)))
     {
+        superSignature = SuperSignature(_superSignature);
+
         name = _name;
         symbol = _symbol;
 
@@ -99,15 +105,9 @@ abstract contract ILRTA is EIP712 {
         virtual
         returns (bool);
 
-    function invalidateUnorderedNonces(uint256 wordPos, uint256 mask) external {
-        nonceBitmap[msg.sender][wordPos] |= mask;
-
-        emit UnorderedNonceInvalidation(msg.sender, wordPos, mask);
-    }
-
     function verifySignature(
         address from,
-        SignatureTransfer memory signatureTransfer,
+        SignatureTransfer calldata signatureTransfer,
         bytes calldata signature
     )
         internal

@@ -45,7 +45,7 @@ contract EIP712 {
         );
     }
 
-    function hashTypedData(bytes32 dataHash) internal view returns (bytes32) {
+    function hashTypedData(bytes32 dataHash) public view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), dataHash));
     }
 }

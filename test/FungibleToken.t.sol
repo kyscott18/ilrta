@@ -5,9 +5,11 @@ import {Test} from "forge-std/Test.sol";
 import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
+import {SuperSignature} from "src/SuperSignature.sol";
 
 contract FungibleTokenTest is Test {
     MockFungibleToken private ft;
+    SuperSignature private superSignature;
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
@@ -19,7 +21,8 @@ contract FungibleTokenTest is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
 
     function setUp() external {
-        ft = new MockFungibleToken();
+        superSignature = new SuperSignature();
+        ft = new MockFungibleToken(address(superSignature));
     }
 
     function testMetadata() external {

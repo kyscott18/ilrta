@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {ILRTA} from "src/ILRTA.sol";
 
 contract MockILRTA is ILRTA {
-    constructor() ILRTA("Test", "TEST", "TransferDetails()") {}
+    constructor(address _superSignature) ILRTA(_superSignature, "Test", "TEST", "TransferDetails()") {}
 
     function dataID(bytes calldata) external pure override returns (bytes32) {
         return bytes32(0);
