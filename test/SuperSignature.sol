@@ -72,7 +72,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyData(owner, dataHash);
 
-        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), 0);
+        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), bytes32(uint256(1)));
     }
 
     function testGas() external {

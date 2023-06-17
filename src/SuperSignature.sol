@@ -42,7 +42,9 @@ contract SuperSignature is EIP712, UnorderedNonce {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor() EIP712(keccak256(bytes("SuperSignatureV1"))) {}
+    constructor() EIP712(keccak256(bytes("SuperSignatureV1"))) {
+        root = bytes32(uint256(1));
+    }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC
@@ -66,14 +68,14 @@ contract SuperSignature is EIP712, UnorderedNonce {
         if (buildRoot(signer, dataHash) != root) revert InvalidSignature();
 
         if (dataHash.length > 1) root = buildRoot(signer, dataHash[1:]);
-        else delete root;
+        else root = bytes32(uint256(1));
     }
 
     function verifyData(address signer, bytes32[] calldata dataHash, uint256 offset) external {
         if (buildRoot(signer, dataHash) != root) revert InvalidSignature();
 
         if (dataHash.length > offset) root = buildRoot(signer, dataHash[offset:]);
-        else delete root;
+        else root = bytes32(uint256(1));
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
