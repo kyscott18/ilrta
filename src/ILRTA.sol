@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {EIP712} from "./EIP712.sol";
-import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
+import {SignatureVerification} from "./SignatureVerification.sol";
 
 /// @notice Custom and composable token standard with signature capabilities
 /// @author Kyle Scott
