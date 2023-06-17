@@ -37,11 +37,12 @@ abstract contract ILRTAFungibleToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
+        address _superSignature,
         string memory _name,
         string memory _symbol,
         uint8 _decimals
     )
-        ILRTA(_name, symbol, "TransferDetails(uint256 amount)")
+        ILRTA(_superSignature, _name, symbol, "TransferDetails(uint256 amount)")
     {
         name = _name;
         symbol = _symbol;
@@ -92,6 +93,30 @@ abstract contract ILRTAFungibleToken is ILRTA {
         }
 
         verifySignature(from, signatureTransfer, signature);
+
+        return
+        /* solhint-disable-next-line max-line-length */
+        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
+    }
+
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
+    )
+        external
+        override
+        returns (bool)
+    {
+        if (
+            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)).amount
+                > abi.decode(transferDetails, (ILRTATransferDetails)).amount
+        ) {
+            revert InvalidRequest(abi.encode(transferDetails));
+        }
+
+        verifySuperSignature(from, transferDetails, dataHash);
 
         return
         /* solhint-disable-next-line max-line-length */

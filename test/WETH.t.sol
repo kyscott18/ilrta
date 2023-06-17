@@ -3,14 +3,17 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {WETH} from "src/examples/WETH.sol";
-import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {SuperSignature} from "src/SuperSignature.sol";
 
 /// @notice tests from solmate
 contract WETHTest is Test {
-    WETH weth;
+    WETH private weth;
+    SuperSignature private superSignature;
 
     function setUp() external {
-        weth = new WETH();
+        superSignature = new SuperSignature();
+        weth = new WETH(address(superSignature));
     }
 
     function testFallbackDeposit() external {

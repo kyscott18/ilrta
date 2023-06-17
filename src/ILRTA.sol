@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.19;
 
 import {EIP712} from "./EIP712.sol";
-import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
+import {SignatureVerification} from "./SignatureVerification.sol";
+import {SuperSignature} from "./SuperSignature.sol";
+import {UnorderedNonce} from "./UnorderedNonce.sol";
 
 /// @notice Custom and composable token standard with signature capabilities
 /// @author Kyle Scott
-abstract contract ILRTA is EIP712 {
+abstract contract ILRTA is EIP712, UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     event Transfer(address indexed from, address indexed to, bytes data);
-
-    event UnorderedNonceInvalidation(address indexed owner, uint256 word, uint256 mask);
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
@@ -23,7 +23,7 @@ abstract contract ILRTA is EIP712 {
 
     error InvalidRequest(bytes transferDetailsBytes);
 
-    error InvalidNonce();
+    error DataHashMismatch();
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
@@ -52,30 +52,40 @@ abstract contract ILRTA is EIP712 {
                            SIGNATURE STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    SuperSignature private immutable superSignature;
+
     string private constant TRANSFER_ENCODE_TYPE =
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)";
 
+    string private constant SUPER_SIGNATURE_TRANSFER_ENCODE_TYPE =
+        "Transfer(TransferDetails transferDetails,address spender)";
+
     bytes32 private immutable TRANSFER_TYPEHASH;
 
-    bytes32 private immutable TRANSFER_DETAILS_TYPEHASH;
+    bytes32 private immutable SUPER_SIGNATURE_TRANSFER_TYPEHASH;
 
-    mapping(address => mapping(uint256 => uint256)) public nonceBitmap;
+    bytes32 private immutable TRANSFER_DETAILS_TYPEHASH;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     constructor(
+        address _superSignature,
         string memory _name,
         string memory _symbol,
         string memory transferDetailsEncodeType
     )
         EIP712(keccak256(bytes(_name)))
     {
+        superSignature = SuperSignature(_superSignature);
+
         name = _name;
         symbol = _symbol;
 
         TRANSFER_TYPEHASH = keccak256(bytes(string.concat(TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
+        SUPER_SIGNATURE_TRANSFER_TYPEHASH =
+            keccak256(bytes(string.concat(SUPER_SIGNATURE_TRANSFER_ENCODE_TYPE, transferDetailsEncodeType)));
         TRANSFER_DETAILS_TYPEHASH = keccak256(bytes(transferDetailsEncodeType));
     }
 
@@ -99,15 +109,19 @@ abstract contract ILRTA is EIP712 {
         virtual
         returns (bool);
 
-    function invalidateUnorderedNonces(uint256 wordPos, uint256 mask) external {
-        nonceBitmap[msg.sender][wordPos] |= mask;
-
-        emit UnorderedNonceInvalidation(msg.sender, wordPos, mask);
-    }
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
+    )
+        external
+        virtual
+        returns (bool);
 
     function verifySignature(
         address from,
-        SignatureTransfer memory signatureTransfer,
+        SignatureTransfer calldata signatureTransfer,
         bytes calldata signature
     )
         internal
@@ -131,20 +145,17 @@ abstract contract ILRTA is EIP712 {
         SignatureVerification.verify(signature, signatureHash, from);
     }
 
-    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                             INTERNAL LOGIC
-    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+    function verifySuperSignature(address from, bytes calldata transferDetails, bytes32[] calldata dataHash) internal {
+        bytes32 signatureHash = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                msg.sender
+            )
+        );
 
-    function bitmapPositions(uint256 nonce) private pure returns (uint256 wordPos, uint256 bitPos) {
-        wordPos = uint248(nonce >> 8);
-        bitPos = uint8(nonce);
-    }
+        if (dataHash[0] != signatureHash) revert DataHashMismatch();
 
-    function useUnorderedNonce(address from, uint256 nonce) private {
-        (uint256 wordPos, uint256 bitPos) = bitmapPositions(nonce);
-        uint256 bit = 1 << bitPos;
-        uint256 flipped = nonceBitmap[from][wordPos] ^= bit;
-
-        if (flipped & bit == 0) revert InvalidNonce();
+        superSignature.verifyData(from, dataHash);
     }
 }

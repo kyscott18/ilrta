@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {ILRTA} from "src/ILRTA.sol";
 
 contract MockILRTA is ILRTA {
-    constructor() ILRTA("Test", "TEST", "TransferDetails()") {}
+    constructor(address _superSignature) ILRTA(_superSignature, "Test", "TEST", "TransferDetails()") {}
 
     function dataID(bytes calldata) external pure override returns (bytes32) {
         return bytes32(0);
@@ -32,6 +32,23 @@ contract MockILRTA is ILRTA {
         returns (bool)
     {
         verifySignature(from, signatureTransfer, signature);
+
+        emit Transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+
+        return true;
+    }
+
+    function transferBySuperSignature(
+        address from,
+        bytes calldata transferDetails,
+        RequestedTransfer calldata requestedTransfer,
+        bytes32[] calldata dataHash
+    )
+        external
+        override
+        returns (bool)
+    {
+        verifySuperSignature(from, transferDetails, dataHash);
 
         emit Transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
 
