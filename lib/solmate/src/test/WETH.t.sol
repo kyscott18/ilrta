@@ -1,22 +1,21 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity 0.8.15;
 
-import {Test} from "forge-std/Test.sol";
-import {WETH} from "src/examples/WETH.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {SuperSignature} from "src/SuperSignature.sol";
+import {DSTestPlus} from "./utils/DSTestPlus.sol";
+import {DSInvariantTest} from "./utils/DSInvariantTest.sol";
 
-/// @notice tests from solmate
-contract WETHTest is Test {
-    WETH private weth;
-    SuperSignature private superSignature;
+import {SafeTransferLib} from "../utils/SafeTransferLib.sol";
 
-    function setUp() external {
-        superSignature = new SuperSignature();
-        weth = new WETH(address(superSignature));
+import {WETH} from "../tokens/WETH.sol";
+
+contract WETHTest is DSTestPlus {
+    WETH weth;
+
+    function setUp() public {
+        weth = new WETH();
     }
 
-    function testFallbackDeposit() external {
+    function testFallbackDeposit() public {
         assertEq(weth.balanceOf(address(this)), 0);
         assertEq(weth.totalSupply(), 0);
 
@@ -26,7 +25,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 1 ether);
     }
 
-    function testDeposit() external {
+    function testDeposit() public {
         assertEq(weth.balanceOf(address(this)), 0);
         assertEq(weth.totalSupply(), 0);
 
@@ -36,7 +35,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 1 ether);
     }
 
-    function testWithdraw() external {
+    function testWithdraw() public {
         uint256 startingBalance = address(this).balance;
 
         weth.deposit{value: 1 ether}();
@@ -50,7 +49,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 0);
     }
 
-    function testPartialWithdraw() external {
+    function testPartialWithdraw() public {
         weth.deposit{value: 1 ether}();
 
         uint256 balanceBeforeWithdraw = address(this).balance;
@@ -64,7 +63,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), 0.5 ether);
     }
 
-    function testFallbackDeposit(uint256 amount) external {
+    function testFallbackDeposit(uint256 amount) public {
         amount = bound(amount, 0, address(this).balance);
 
         assertEq(weth.balanceOf(address(this)), 0);
@@ -76,7 +75,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), amount);
     }
 
-    function testDeposit(uint256 amount) external {
+    function testDeposit(uint256 amount) public {
         amount = bound(amount, 0, address(this).balance);
 
         assertEq(weth.balanceOf(address(this)), 0);
@@ -88,7 +87,7 @@ contract WETHTest is Test {
         assertEq(weth.totalSupply(), amount);
     }
 
-    function testWithdraw(uint256 depositAmount, uint256 withdrawAmount) external {
+    function testWithdraw(uint256 depositAmount, uint256 withdrawAmount) public {
         depositAmount = bound(depositAmount, 0, address(this).balance);
         withdrawAmount = bound(withdrawAmount, 0, depositAmount);
 
@@ -103,6 +102,44 @@ contract WETHTest is Test {
         assertEq(balanceAfterWithdraw, balanceBeforeWithdraw + withdrawAmount);
         assertEq(weth.balanceOf(address(this)), depositAmount - withdrawAmount);
         assertEq(weth.totalSupply(), depositAmount - withdrawAmount);
+    }
+
+    receive() external payable {}
+}
+
+contract WETHInvariants is DSTestPlus, DSInvariantTest {
+    WETHTester wethTester;
+    WETH weth;
+
+    function setUp() public {
+        weth = new WETH();
+        wethTester = new WETHTester{value: address(this).balance}(weth);
+
+        addTargetContract(address(wethTester));
+    }
+
+    function invariantTotalSupplyEqualsBalance() public {
+        assertEq(address(weth).balance, weth.totalSupply());
+    }
+}
+
+contract WETHTester {
+    WETH weth;
+
+    constructor(WETH _weth) payable {
+        weth = _weth;
+    }
+
+    function deposit(uint256 amount) public {
+        weth.deposit{value: amount}();
+    }
+
+    function fallbackDeposit(uint256 amount) public {
+        SafeTransferLib.safeTransferETH(address(weth), amount);
+    }
+
+    function withdraw(uint256 amount) public {
+        weth.withdraw(amount);
     }
 
     receive() external payable {}

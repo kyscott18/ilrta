@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {ERC20} from "./ERC20.sol";
-import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 
 /// @notice Wrapped Ether implementation with ilrta
 /// @author Kyle Scott
