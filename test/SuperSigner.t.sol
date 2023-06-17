@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
+import {SignatureVerification} from "src/SignatureVerification.sol";
 
 contract SuperSignerTest is Test {
     SuperSignature private superSignature;
@@ -48,7 +49,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        assertEq(vm.load(address(superSignature), 0), keccak256(abi.encodePacked(dataHash)));
+        assertEq(vm.load(address(superSignature), 0), keccak256(abi.encodePacked(owner, dataHash)));
     }
 
     function testVerifyData() external {
@@ -64,7 +65,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        assertTrue(superSignature.verifyData(dataHash));
+        superSignature.verifyData(owner, dataHash);
 
         assertEq(vm.load(address(superSignature), 0), 0);
     }
@@ -85,7 +86,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        superSignature.verifyData(dataHash);
+        superSignature.verifyData(owner, dataHash);
     }
 
     function testGasTwoData() external {
@@ -108,8 +109,8 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        superSignature.verifyData(dataHash);
-        superSignature.verifyData(dataHash1);
+        superSignature.verifyData(owner, dataHash);
+        superSignature.verifyData(owner, dataHash1);
     }
 
     function testGasTwoDataWithOffset() external {
@@ -132,6 +133,105 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        superSignature.verifyData(dataHash, 2);
+        superSignature.verifyData(owner, dataHash, 2);
+    }
+
+    function testSignatureBadNonce1() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 1, block.timestamp), privateKey);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+    }
+
+    function testSignatureBadNonce2() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 1, block.timestamp), signature);
+    }
+
+    function testSignatureBadDeadline() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        vm.expectRevert(SignatureVerification.InvalidSigner.selector);
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp + 1), signature);
+    }
+
+    function testSignaturePastDeadline() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        vm.warp(block.timestamp + 1);
+
+        vm.expectRevert(abi.encodeWithSelector(SuperSignature.SignatureExpired.selector, block.timestamp - 1));
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp - 1), signature);
+    }
+
+    function testSignatureReplay() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        vm.expectRevert(abi.encodeWithSelector(SuperSignature.InvalidNonce.selector, 0));
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+    }
+
+    function testVerifyDataInvalid() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        vm.expectRevert(SuperSignature.InvalidSignature.selector);
+        superSignature.verifyData(address(this), dataHash);
+    }
+
+    function testVerifyDataOffsetInvalid() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = bytes32(uint256(0x69));
+
+        bytes memory signature = signSuperSignature(SuperSignature.Verify(dataHash, 0, block.timestamp), privateKey);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        vm.expectRevert(SuperSignature.InvalidSignature.selector);
+        superSignature.verifyData(address(this), dataHash, 1);
     }
 }

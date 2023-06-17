@@ -24,7 +24,9 @@ abstract contract ILRTA is EIP712 {
 
     error InvalidRequest(bytes transferDetailsBytes);
 
-    error InvalidNonce();
+    error InvalidNonce(uint256 nonce);
+
+    error DataHashMismatch();
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
@@ -148,7 +150,7 @@ abstract contract ILRTA is EIP712 {
         SignatureVerification.verify(signature, signatureHash, from);
     }
 
-    function verifySuperSignature(bytes calldata transferDetails, bytes32[] calldata dataHash) internal {
+    function verifySuperSignature(address from, bytes calldata transferDetails, bytes32[] calldata dataHash) internal {
         bytes32 signatureHash = keccak256(
             abi.encode(
                 SUPER_SIGNATURE_TRANSFER_TYPEHASH,
@@ -157,9 +159,9 @@ abstract contract ILRTA is EIP712 {
             )
         );
 
-        if (dataHash[0] != signatureHash) revert();
+        if (dataHash[0] != signatureHash) revert DataHashMismatch();
 
-        if (!superSignature.verifyData(dataHash)) revert();
+        superSignature.verifyData(from, dataHash);
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -176,6 +178,6 @@ abstract contract ILRTA is EIP712 {
         uint256 bit = 1 << bitPos;
         uint256 flipped = nonceBitmap[from][wordPos] ^= bit;
 
-        if (flipped & bit == 0) revert InvalidNonce();
+        if (flipped & bit == 0) revert InvalidNonce(nonce);
     }
 }

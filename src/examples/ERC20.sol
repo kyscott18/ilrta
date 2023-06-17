@@ -146,7 +146,7 @@ abstract contract ERC20 is ILRTA {
             revert InvalidRequest(abi.encode(transferDetails));
         }
 
-        verifySuperSignature(transferDetails, dataHash);
+        verifySuperSignature(from, transferDetails, dataHash);
 
         return
         /* solhint-disable-next-line max-line-length */

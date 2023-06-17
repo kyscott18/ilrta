@@ -48,7 +48,7 @@ contract MockILRTA is ILRTA {
         override
         returns (bool)
     {
-        verifySuperSignature(transferDetails, dataHash);
+        verifySuperSignature(from, transferDetails, dataHash);
 
         emit Transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
 

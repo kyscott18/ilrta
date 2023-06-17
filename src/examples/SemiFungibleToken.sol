@@ -120,7 +120,7 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
             revert InvalidRequest(transferDetails);
         }
 
-        verifySuperSignature(transferDetails, dataHash);
+        verifySuperSignature(from, transferDetails, dataHash);
 
         return
         /* solhint-disable-next-line max-line-length */

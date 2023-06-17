@@ -21,6 +21,8 @@ contract SuperSignature is EIP712 {
 
     error InvalidNonce(uint256 nonce);
 
+    error InvalidSignature();
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -65,20 +67,20 @@ contract SuperSignature is EIP712 {
 
         SignatureVerification.verify(signature, signatureHash, signer);
 
-        root = buildRoot(verify.dataHash);
+        root = buildRoot(signer, verify.dataHash);
     }
 
-    function verifyData(bytes32[] calldata dataHash) external returns (bool isValid) {
-        isValid = buildRoot(dataHash) == root;
+    function verifyData(address signer, bytes32[] calldata dataHash) external {
+        if (buildRoot(signer, dataHash) != root) revert InvalidSignature();
 
-        if (dataHash.length > 1) root = buildRoot(dataHash[1:]);
+        if (dataHash.length > 1) root = buildRoot(signer, dataHash[1:]);
         else delete root;
     }
 
-    function verifyData(bytes32[] calldata dataHash, uint256 offset) external returns (bool isValid) {
-        isValid = buildRoot(dataHash) == root;
+    function verifyData(address signer, bytes32[] calldata dataHash, uint256 offset) external {
+        if (buildRoot(signer, dataHash) != root) revert InvalidSignature();
 
-        if (dataHash.length > offset) root = buildRoot(dataHash[offset:]);
+        if (dataHash.length > offset) root = buildRoot(signer, dataHash[offset:]);
         else delete root;
     }
 
@@ -105,7 +107,7 @@ contract SuperSignature is EIP712 {
         if (flipped & bit == 0) revert InvalidNonce(nonce);
     }
 
-    function buildRoot(bytes32[] calldata dataHash) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(dataHash));
+    function buildRoot(address signer, bytes32[] calldata dataHash) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(signer, dataHash));
     }
 }

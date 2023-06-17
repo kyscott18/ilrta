@@ -11,6 +11,12 @@ contract SemiFungibleTokenTest is Test {
     MockSemiFungibleToken private sft;
     SuperSignature private superSignature;
 
+    bytes32 private constant VERIFY_TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
+
+    bytes32 private constant SUPER_SIGNATURE_TRANSFER_TYPEHASH = keccak256(
+        bytes("Transfer(TransferDetails transferDetails,address spender)TransferDetails(uint256 id,uint256 amount)")
+    );
+
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         bytes(
             /* solhint-disable-next-line max-line-length */
@@ -104,6 +110,49 @@ contract SemiFungibleTokenTest is Test {
         assertEq(sft.balanceOf(address(owner), 69), 0);
     }
 
+    function testTransferBySuperSignature() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        sft.mint(address(owner), bytes32(uint256(69)), 1e18);
+
+        ILRTASemiFungibleToken.ILRTATransferDetails memory transferDetails =
+            ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))});
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                address(this)
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            privateKey,
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    superSignature.DOMAIN_SEPARATOR(),
+                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                )
+            )
+        );
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        assertTrue(
+            sft.transferBySuperSignature(
+                owner,
+                abi.encode(transferDetails),
+                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                dataHash
+            )
+        );
+    }
+
     function testGasTransfer() external {
         vm.pauseGasMetering();
         sft.mint(address(this), bytes32(uint256(69)), 1e18);
@@ -154,6 +203,51 @@ contract SemiFungibleTokenTest is Test {
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),
             ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
             signature
+        );
+    }
+
+    function testGasTransferBySuperSignature() external {
+        vm.pauseGasMetering();
+
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        sft.mint(address(owner), bytes32(uint256(69)), 1e18);
+
+        ILRTASemiFungibleToken.ILRTATransferDetails memory transferDetails =
+            ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))});
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                address(this)
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            privateKey,
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    superSignature.DOMAIN_SEPARATOR(),
+                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                )
+            )
+        );
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        vm.resumeGasMetering();
+
+        sft.transferBySuperSignature(
+            owner,
+            abi.encode(transferDetails),
+            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            dataHash
         );
     }
 }

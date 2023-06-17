@@ -71,47 +71,6 @@ contract ILRTATest is Test {
         );
     }
 
-    function testGasTransferBySuperSignature() external {
-        vm.pauseGasMetering();
-
-        uint256 privateKey = 0xC0FFEE;
-        address owner = vm.addr(privateKey);
-
-        bytes32[] memory dataHash = new bytes32[](1);
-        dataHash[0] = keccak256(
-            abi.encode(
-                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                address(this)
-            )
-        );
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
-                )
-            )
-        );
-
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
-
-        vm.resumeGasMetering();
-
-        ilrta.transferBySuperSignature(
-            owner, bytes(""), ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}), dataHash
-        );
-    }
-
-    function testGasTransfer() external {
-        ilrta.transfer(address(0xC0FFEE), "");
-    }
-
     function testGasTransferBySignature() external {
         vm.pauseGasMetering();
         uint256 privateKey = 0xC0FFEE;
@@ -148,6 +107,10 @@ contract ILRTATest is Test {
         );
     }
 
+    function testGasTransfer() external {
+        ilrta.transfer(address(0xC0FFEE), "");
+    }
+
     function testTransferBySuperSignature() external {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
@@ -180,6 +143,43 @@ contract ILRTATest is Test {
             ilrta.transferBySuperSignature(
                 owner, bytes(""), ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}), dataHash
             )
+        );
+    }
+
+    function testGasTransferBySuperSignature() external {
+        vm.pauseGasMetering();
+
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
+                address(this)
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            privateKey,
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    superSignature.DOMAIN_SEPARATOR(),
+                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                )
+            )
+        );
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        vm.resumeGasMetering();
+
+        ilrta.transferBySuperSignature(
+            owner, bytes(""), ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}), dataHash
         );
     }
 
@@ -352,12 +352,48 @@ contract ILRTATest is Test {
             ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
-        vm.expectRevert(ILRTA.InvalidNonce.selector);
+        vm.expectRevert(abi.encodeWithSelector(ILRTA.InvalidNonce.selector, 0));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),
             ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
+        );
+    }
+
+    function testDataHashMismatch() external {
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        bytes32[] memory dataHash = new bytes32[](1);
+        dataHash[0] = keccak256(
+            abi.encode(
+                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
+                address(this)
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            privateKey,
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    superSignature.DOMAIN_SEPARATOR(),
+                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                )
+            )
+        );
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
+
+        dataHash[0] = bytes32(uint256(0x69));
+
+        vm.expectRevert(ILRTA.DataHashMismatch.selector);
+        ilrta.transferBySuperSignature(
+            owner, bytes(""), ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}), dataHash
         );
     }
 }
