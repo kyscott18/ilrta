@@ -25,7 +25,11 @@ contract SuperSignerTest is Test {
                 abi.encodePacked(
                     "\x19\x01",
                     superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(TYPEHASH, verify.dataHash, verify.nonce, verify.deadline))
+                    keccak256(
+                        abi.encode(
+                            TYPEHASH, keccak256(abi.encodePacked(verify.dataHash)), verify.nonce, verify.deadline
+                        )
+                    )
                 )
             )
         );

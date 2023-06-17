@@ -53,8 +53,9 @@ contract SuperSignature is EIP712, UnorderedNonce {
 
         useUnorderedNonce(signer, verify.nonce);
 
-        bytes32 signatureHash =
-            hashTypedData(keccak256(abi.encode(TYPEHASH, verify.dataHash, verify.nonce, verify.deadline)));
+        bytes32 signatureHash = hashTypedData(
+            keccak256(abi.encode(TYPEHASH, keccak256(abi.encodePacked(verify.dataHash)), verify.nonce, verify.deadline))
+        );
 
         SignatureVerification.verify(signature, signatureHash, signer);
 

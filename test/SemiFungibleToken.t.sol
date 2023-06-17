@@ -134,7 +134,7 @@ contract SemiFungibleTokenTest is Test {
                 abi.encodePacked(
                     "\x19\x01",
                     superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                    keccak256(abi.encode(VERIFY_TYPEHASH, keccak256(abi.encodePacked(dataHash)), 0, block.timestamp))
                 )
             )
         );
@@ -232,7 +232,7 @@ contract SemiFungibleTokenTest is Test {
                 abi.encodePacked(
                     "\x19\x01",
                     superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(VERIFY_TYPEHASH, dataHash, 0, block.timestamp))
+                    keccak256(abi.encode(VERIFY_TYPEHASH, keccak256(abi.encodePacked(dataHash)), 0, block.timestamp))
                 )
             )
         );
