@@ -6,6 +6,7 @@ import {MockILRTA} from "./mocks/MockILRTA.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {SignatureVerification} from "src/SignatureVerification.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
+import {UnorderedNonce} from "src/UnorderedNonce.sol";
 
 contract ILRTATest is Test {
     MockILRTA private ilrta;
@@ -352,7 +353,7 @@ contract ILRTATest is Test {
             ILRTA.RequestedTransfer({to: address(this), transferDetails: bytes("")}),
             signature
         );
-        vm.expectRevert(abi.encodeWithSelector(ILRTA.InvalidNonce.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(UnorderedNonce.InvalidNonce.selector, 0));
         ilrta.transferBySignature(
             owner,
             ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: bytes("")}),

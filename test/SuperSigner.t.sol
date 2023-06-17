@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
 import {SignatureVerification} from "src/SignatureVerification.sol";
+import {UnorderedNonce} from "src/UnorderedNonce.sol";
 
 contract SuperSignerTest is Test {
     SuperSignature private superSignature;
@@ -49,7 +50,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        assertEq(vm.load(address(superSignature), 0), keccak256(abi.encodePacked(owner, dataHash)));
+        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), keccak256(abi.encodePacked(owner, dataHash)));
     }
 
     function testVerifyData() external {
@@ -67,7 +68,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyData(owner, dataHash);
 
-        assertEq(vm.load(address(superSignature), 0), 0);
+        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), 0);
     }
 
     function testGas() external {
@@ -201,7 +202,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
 
-        vm.expectRevert(abi.encodeWithSelector(SuperSignature.InvalidNonce.selector, 0));
+        vm.expectRevert(abi.encodeWithSelector(UnorderedNonce.InvalidNonce.selector, 0));
         superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
     }
 

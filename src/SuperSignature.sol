@@ -3,23 +3,16 @@ pragma solidity ^0.8.19;
 
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
+import {UnorderedNonce} from "./UnorderedNonce.sol";
 
 /// @author Kyle Scott
 /// @custom:question Is there a potential vulnerability with using a dirty root
-contract SuperSignature is EIP712 {
-    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                                 EVENTS
-    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    event UnorderedNonceInvalidation(address indexed owner, uint256 word, uint256 mask);
-
+contract SuperSignature is EIP712, UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     error SignatureExpired(uint256 signatureDeadline);
-
-    error InvalidNonce(uint256 nonce);
 
     error InvalidSignature();
 
@@ -44,8 +37,6 @@ contract SuperSignature is EIP712 {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     bytes32 private constant TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
-
-    mapping(address => mapping(uint256 => uint256)) public nonceBitmap;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
@@ -84,28 +75,9 @@ contract SuperSignature is EIP712 {
         else delete root;
     }
 
-    function invalidateUnorderedNonces(uint256 wordPos, uint256 mask) external {
-        nonceBitmap[msg.sender][wordPos] |= mask;
-
-        emit UnorderedNonceInvalidation(msg.sender, wordPos, mask);
-    }
-
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                              INTERNAL LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    function bitmapPositions(uint256 nonce) private pure returns (uint256 wordPos, uint256 bitPos) {
-        wordPos = uint248(nonce >> 8);
-        bitPos = uint8(nonce);
-    }
-
-    function useUnorderedNonce(address from, uint256 nonce) private {
-        (uint256 wordPos, uint256 bitPos) = bitmapPositions(nonce);
-        uint256 bit = 1 << bitPos;
-        uint256 flipped = nonceBitmap[from][wordPos] ^= bit;
-
-        if (flipped & bit == 0) revert InvalidNonce(nonce);
-    }
 
     function buildRoot(address signer, bytes32[] calldata dataHash) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(signer, dataHash));

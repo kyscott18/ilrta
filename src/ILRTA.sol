@@ -4,17 +4,16 @@ pragma solidity ^0.8.19;
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
 import {SuperSignature} from "./SuperSignature.sol";
+import {UnorderedNonce} from "./UnorderedNonce.sol";
 
 /// @notice Custom and composable token standard with signature capabilities
 /// @author Kyle Scott
-abstract contract ILRTA is EIP712 {
+abstract contract ILRTA is EIP712, UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     event Transfer(address indexed from, address indexed to, bytes data);
-
-    event UnorderedNonceInvalidation(address indexed owner, uint256 word, uint256 mask);
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
@@ -23,8 +22,6 @@ abstract contract ILRTA is EIP712 {
     error SignatureExpired(uint256 signatureDeadline);
 
     error InvalidRequest(bytes transferDetailsBytes);
-
-    error InvalidNonce(uint256 nonce);
 
     error DataHashMismatch();
 
@@ -68,8 +65,6 @@ abstract contract ILRTA is EIP712 {
     bytes32 private immutable SUPER_SIGNATURE_TRANSFER_TYPEHASH;
 
     bytes32 private immutable TRANSFER_DETAILS_TYPEHASH;
-
-    mapping(address => mapping(uint256 => uint256)) public nonceBitmap;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
@@ -162,22 +157,5 @@ abstract contract ILRTA is EIP712 {
         if (dataHash[0] != signatureHash) revert DataHashMismatch();
 
         superSignature.verifyData(from, dataHash);
-    }
-
-    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                             INTERNAL LOGIC
-    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    function bitmapPositions(uint256 nonce) private pure returns (uint256 wordPos, uint256 bitPos) {
-        wordPos = uint248(nonce >> 8);
-        bitPos = uint8(nonce);
-    }
-
-    function useUnorderedNonce(address from, uint256 nonce) private {
-        (uint256 wordPos, uint256 bitPos) = bitmapPositions(nonce);
-        uint256 bit = 1 << bitPos;
-        uint256 flipped = nonceBitmap[from][wordPos] ^= bit;
-
-        if (flipped & bit == 0) revert InvalidNonce(nonce);
     }
 }
