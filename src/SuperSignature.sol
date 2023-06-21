@@ -42,6 +42,7 @@ contract SuperSignature is EIP712, UnorderedNonce {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    /// @dev store root as 1 for gas refund savings purposes
     constructor() EIP712(keccak256(bytes("SuperSignatureV1"))) {
         root = bytes32(uint256(1));
     }
@@ -82,6 +83,7 @@ contract SuperSignature is EIP712, UnorderedNonce {
                              INTERNAL LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    /// @dev I believe hashing with the signer is unnecessary, but prevents possible footguns
     function buildRoot(address signer, bytes32[] calldata dataHash) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(signer, dataHash));
     }
