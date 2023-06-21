@@ -87,10 +87,11 @@ contract Permit3 is EIP712, UnorderedNonce {
                                  LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    /// @notice transfer a token using a signed message
     function transferBySignature(
+        address signer,
         SignatureTransfer calldata signatureTransfer,
         RequestedTransferDetails calldata requestedTransfer,
-        address signer,
         bytes calldata signature
     )
         external
@@ -100,8 +101,7 @@ contract Permit3 is EIP712, UnorderedNonce {
             revert InvalidAmount(signatureTransfer.transferDetails.amount);
         }
 
-        useUnorderedNonce(signer, signatureTransfer.nonce);
-
+        // compute data hash
         bytes32 signatureHash = hashTypedData(
             keccak256(
                 abi.encode(
@@ -114,6 +114,8 @@ contract Permit3 is EIP712, UnorderedNonce {
             )
         );
 
+        // validate signature
+        useUnorderedNonce(signer, signatureTransfer.nonce);
         SignatureVerification.verify(signature, signatureHash, signer);
 
         ERC20(signatureTransfer.transferDetails.token).safeTransferFrom(
@@ -121,10 +123,11 @@ contract Permit3 is EIP712, UnorderedNonce {
         );
     }
 
+    /// @notice transfer a batch of tokens using a signed message
     function transferBySignature(
+        address signer,
         SignatureTransferBatch calldata signatureTransfer,
         RequestedTransferDetails[] calldata requestedTransfer,
-        address signer,
         bytes calldata signature
     )
         external
@@ -136,10 +139,8 @@ contract Permit3 is EIP712, UnorderedNonce {
             revert LengthMismatch();
         }
 
-        useUnorderedNonce(signer, signatureTransfer.nonce);
-
+        // compute data hash
         bytes32[] memory transfeDetailsHashes = new bytes32[](length);
-
         for (uint256 i = 0; i < length;) {
             transfeDetailsHashes[i] =
                 keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails[i]));
@@ -148,7 +149,6 @@ contract Permit3 is EIP712, UnorderedNonce {
                 i++;
             }
         }
-
         bytes32 signatureHash = hashTypedData(
             keccak256(
                 abi.encode(
@@ -161,8 +161,11 @@ contract Permit3 is EIP712, UnorderedNonce {
             )
         );
 
+        // validate signature
+        useUnorderedNonce(signer, signatureTransfer.nonce);
         SignatureVerification.verify(signature, signatureHash, signer);
 
+        // check requests and transfer out tokens
         for (uint256 i = 0; i < length;) {
             TransferDetails memory transferDetails = signatureTransfer.transferDetails[i];
 
@@ -182,10 +185,12 @@ contract Permit3 is EIP712, UnorderedNonce {
         }
     }
 
+    /// @notice transfer a token using a signed message, relying on the super signature contract to validate the data
+    /// @dev assumes that the data has already been verified in the super signature contract
     function transferBySuperSignature(
+        address signer,
         TransferDetails calldata transferDetails,
         RequestedTransferDetails calldata requestedTransfer,
-        address signer,
         bytes32[] calldata dataHash
     )
         external
@@ -194,6 +199,7 @@ contract Permit3 is EIP712, UnorderedNonce {
             revert InvalidAmount(transferDetails.amount);
         }
 
+        // compute data hash
         bytes32 signatureHash = keccak256(
             abi.encode(
                 SUPER_SIGNATURE_TRANSFER_TYPEHASH,
@@ -202,17 +208,21 @@ contract Permit3 is EIP712, UnorderedNonce {
             )
         );
 
+        // validate that this data was signed using super signature
         if (dataHash[0] != signatureHash) revert DataHashMismatch();
-
         superSignature.verifyData(signer, dataHash);
 
+        // transfer out tokens
         ERC20(transferDetails.token).safeTransferFrom(signer, requestedTransfer.to, requestedTransfer.amount);
     }
 
+    /// @notice transfer a batch of tokens using a signed message, relying on the super signature contract to validate
+    /// the data
+    /// @dev assumes that the data has already been verified in the super signature contract
     function transferBySuperSignature(
+        address signer,
         TransferDetails[] calldata transferDetails,
         RequestedTransferDetails[] calldata requestedTransfer,
-        address signer,
         bytes32[] calldata dataHash
     )
         external
@@ -223,8 +233,8 @@ contract Permit3 is EIP712, UnorderedNonce {
             revert LengthMismatch();
         }
 
+        // compute data hash
         bytes32[] memory transfeDetailsHashes = new bytes32[](length);
-
         for (uint256 i = 0; i < length;) {
             transfeDetailsHashes[i] = keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i]));
 
@@ -232,17 +242,17 @@ contract Permit3 is EIP712, UnorderedNonce {
                 i++;
             }
         }
-
         bytes32 signatureHash = keccak256(
             abi.encode(
                 SUPER_SIGNATURE_TRANSFER_BATCH_TYPEHASH, keccak256(abi.encodePacked(transfeDetailsHashes)), msg.sender
             )
         );
 
+        // validate that this data was signed using super signature
         if (dataHash[0] != signatureHash) revert DataHashMismatch();
-
         superSignature.verifyData(signer, dataHash);
 
+        // check requests and transfer out tokens
         for (uint256 i = 0; i < length;) {
             if (requestedTransfer[i].amount > transferDetails[i].amount) {
                 revert InvalidAmount(transferDetails[i].amount);

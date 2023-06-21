@@ -7,9 +7,33 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
+**ilrta** is a collection of smart contracts focused on signature-based token transfers. This currently consists of:
+
+- `SuperSignature.sol`: A next-generation signature authentication scheme where a group of data is verified with one signature, then this contract is called back into later in the transaction to validate the data.
+- `Permit3.sol`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
+- `ILRTA.sol`: Token standard for token standards. Easily tokenize any data adn inherit a composable signature transfer scheme.
+
+There are also some shared files and examples implementations.
+
 **Token standard for token standards.** Easily tokenize any type of data and inherit a composable signature transfer scheme.
 
-## Features
+## SuperSignature
+
+### Abstract
+
+### Features
+
+## Permit3
+
+### Features
+
+- Allows for a highly composable SuperSignature transfer scheme.
+- Supports signatures for undeployed smart contract wallets (EIP 6492)
+- Implementation for ERC20, WETH, ERC721, ERC1155, and ERC4626
+
+## ILRTA
+
+### Features
 
 - Easiest way to create a token type for one-off contracts
 - Consistent events across all inheriting contracts
@@ -17,11 +41,11 @@
 - Contract based signatures included by default
 - Full test suite running with Foundry
 
-## Abstract
+### Abstract
 
 This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal.
 
-## Example Implementations
+### Example Implementations
 
 To show backwards compatibility, many popular token standards have been implementing while also conforming to the ilrta standard.
 
@@ -73,6 +97,11 @@ forge test
 ```sh
 forge snapshot
 ```
+
+## Potential Improvments
+
+- Pass in the address of the super signature contract
+- Anything to make super signatures show up in a more readable way in wallets
 
 ## Acknowledgements
 
