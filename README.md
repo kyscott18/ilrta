@@ -29,7 +29,7 @@ There are also some shared files and examples implementations.
 
 - Allows for a highly composable SuperSignature transfer scheme.
 - Supports signatures for undeployed smart contract wallets (EIP 6492)
-- Implementation for ERC20, WETH, ERC721, ERC1155, and ERC4626
+- Implementation for ERC20, ERC721, and ERC1155
 
 ## ILRTA
 
