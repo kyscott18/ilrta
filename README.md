@@ -9,17 +9,17 @@
 
 **ilrta** is a collection of smart contracts focused on signature-based token transfers. This currently consists of:
 
-- `SuperSignature.sol`: A next-generation signature authentication scheme where a group of data is verified with one signature, then this contract is called back into later in the transaction to validate the data.
+- `SuperSignature.sol`: A next-generation signature authentication scheme based around sign + verify once, use everywhere architecture.
 - `Permit3.sol`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
 - `ILRTA.sol`: Token standard for token standards. Easily tokenize any data adn inherit a composable signature transfer scheme.
 
 There are also some shared files and examples implementations.
 
-**Token standard for token standards.** Easily tokenize any type of data and inherit a composable signature transfer scheme.
-
 ## SuperSignature
 
 ### Abstract
+
+Inspired by witness data in permit2, SuperSignature allows for arbitrary to be signed in a batch, and only verified on chain once. This is primarily useful when trying to save gas, by cutting down on calldata size and on-chain computation. It generally works by signing and verifying an array of typed datahashed, storing the root of these hashes, and calling back later in the transaction to validate an individual typed datahash.
 
 ### Features
 
@@ -33,6 +33,10 @@ There are also some shared files and examples implementations.
 
 ## ILRTA
 
+### Abstract
+
+This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal.
+
 ### Features
 
 - Easiest way to create a token type for one-off contracts
@@ -40,10 +44,6 @@ There are also some shared files and examples implementations.
 - Signature based transfers with EIP712 typed data
 - Contract based signatures included by default
 - Full test suite running with Foundry
-
-### Abstract
-
-This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal.
 
 ### Example Implementations
 
