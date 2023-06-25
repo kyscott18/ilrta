@@ -15,7 +15,7 @@
 
 There are also some shared files and examples implementations.
 
-## SuperSignature
+## `SuperSignature.sol`
 
 ### Abstract
 
@@ -26,7 +26,7 @@ Inspired by witness data in permit2, SuperSignature allows for arbitrary to be s
 - Standardized api for batched signature verification
 - Highly scalable gas savings for meta transactions
 
-## Permit3
+## `Permit3.sol`
 
 ### Features
 
@@ -34,7 +34,7 @@ Inspired by witness data in permit2, SuperSignature allows for arbitrary to be s
 - Supports signatures for undeployed smart contract wallets (EIP 6492)
 - Implementation for ERC20, ERC721, and ERC1155
 
-## ILRTA
+## `ILRTA.sol`
 
 ### Abstract
 
