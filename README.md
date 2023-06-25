@@ -23,6 +23,9 @@ Inspired by witness data in permit2, SuperSignature allows for arbitrary to be s
 
 ### Features
 
+- Standardized api for batched signature verification
+- Highly scalable gas savings for meta transactions
+
 ## Permit3
 
 ### Features
