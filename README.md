@@ -11,7 +11,7 @@
 
 - `SuperSignature.sol`: A next-generation signature authentication scheme based around sign + verify once, use everywhere architecture.
 - `Permit3.sol`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
-- `ILRTA.sol`: Token standard for token standards. Easily tokenize any data adn inherit a composable signature transfer scheme.
+- `ILRTA.sol`: Token standard for token standards. Easily tokenize any data and inherit a composable signature transfer scheme.
 
 There are also some shared files and examples implementations.
 
