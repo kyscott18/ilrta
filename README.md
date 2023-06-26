@@ -101,10 +101,11 @@ forge test
 forge snapshot
 ```
 
-## Potential Improvments
+## Potential Improvements
 
 - Pass in the address of the super signature contract
 - Anything to make super signatures show up in a more readable way in wallets
+- Combine `permit3` with `SuperSignature` because they are most likely to be used together
 
 ## Acknowledgements
 
