@@ -106,6 +106,7 @@ forge snapshot
 - Pass in the address of the super signature contract
 - Anything to make super signatures show up in a more readable way in wallets
 - Combine `permit3` with `SuperSignature` because they are most likely to be used together
+- Use msg.data as part of the signature to make sure signatures aren't misused
 
 ## Acknowledgements
 
