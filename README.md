@@ -19,7 +19,7 @@ There are also some shared files and examples implementations.
 
 ### Abstract
 
-Inspired by witness data in permit2, SuperSignature allows for arbitrary to be signed in a batch, and only verified on-chain once. This is primarily useful when trying to save gas, by cutting down on calldata size and on-chain computation. It generally works by signing and verifying an array of typed datahashed, storing the root of these hashes, and calling back later in the transaction to validate an individual typed datahash.
+Inspired by witness data in permit2, SuperSignature allows for arbitrary to be signed in a batch, and only verified on-chain once. This is primarily useful when trying to save gas, by cutting down on calldata size and on-chain computation. It generally works by signing and verifying an array of typed datahashes, storing the root of these hashes, and calling back later in the transaction to validate an individual typed datahash.
 
 ### Features
 
