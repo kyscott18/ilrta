@@ -9,7 +9,7 @@
 
 **ilrta** is a collection of smart contracts focused on signature-based token transfers. This currently consists of:
 
-- `SuperSignature.sol`: A next-generation signature authentication scheme based around sign + verify once, use everywhere architecture.
+- `SuperSignature.sol`: A next-generation batch signature authentication scheme based around sign + verify once, use everywhere architecture.
 - `Permit3.sol`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
 - `ILRTA.sol`: Token standard for token standards. Easily tokenize any data and inherit a composable signature transfer scheme.
 
