@@ -107,6 +107,7 @@ forge snapshot
 - Anything to make super signatures show up in a more readable way in wallets
 - Combine `permit3` with `SuperSignature` because they are most likely to be used together
 - Use msg.data as part of the signature to make sure signatures aren't misused
+- Allow for multiple signers to use at once, changing SuperSignature root to a mapping
 
 ## Acknowledgements
 
