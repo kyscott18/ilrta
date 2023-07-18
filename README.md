@@ -9,9 +9,9 @@
 
 **ilrta** is a collection of smart contracts focused on signature-based token transfers. This currently consists of:
 
-- `SuperSignature.sol`: A next-generation signature authentication scheme based around sign + verify once, use everywhere architecture.
+- `SuperSignature.sol`: A next-generation batch signature authentication scheme based around sign + verify once, use everywhere architecture.
 - `Permit3.sol`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
-- `ILRTA.sol`: Token standard for token standards. Easily tokenize any data adn inherit a composable signature transfer scheme.
+- `ILRTA.sol`: Token standard for token standards. Easily tokenize any data and inherit a composable signature transfer scheme.
 
 There are also some shared files and examples implementations.
 
@@ -19,7 +19,7 @@ There are also some shared files and examples implementations.
 
 ### Abstract
 
-Inspired by witness data in permit2, SuperSignature allows for arbitrary to be signed in a batch, and only verified on chain once. This is primarily useful when trying to save gas, by cutting down on calldata size and on-chain computation. It generally works by signing and verifying an array of typed datahashed, storing the root of these hashes, and calling back later in the transaction to validate an individual typed datahash.
+Inspired by witness data in permit2, SuperSignature allows for arbitrary to be signed in a batch, and only verified on-chain once. This is primarily useful when trying to save gas, by cutting down on calldata size and on-chain computation. It generally works by signing and verifying an array of typed datahashes, storing the root of these hashes, and calling back later in the transaction to validate an individual typed datahash.
 
 ### Features
 
@@ -101,10 +101,13 @@ forge test
 forge snapshot
 ```
 
-## Potential Improvments
+## Potential Improvements
 
 - Pass in the address of the super signature contract
 - Anything to make super signatures show up in a more readable way in wallets
+- Combine `permit3` with `SuperSignature` because they are most likely to be used together
+- Use msg.data as part of the signature to make sure signatures aren't misused
+- Allow for multiple signers to use at once, changing SuperSignature root to a mapping
 
 ## Acknowledgements
 
