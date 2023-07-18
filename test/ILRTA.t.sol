@@ -118,10 +118,16 @@ contract ILRTATest is Test {
 
         bytes32[] memory dataHash = new bytes32[](1);
         dataHash[0] = keccak256(
-            abi.encode(
-                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                address(this)
+            abi.encodePacked(
+                "\x19\x01",
+                ilrta.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
+                        address(this)
+                    )
+                )
             )
         );
 
@@ -155,10 +161,16 @@ contract ILRTATest is Test {
 
         bytes32[] memory dataHash = new bytes32[](1);
         dataHash[0] = keccak256(
-            abi.encode(
-                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
-                address(this)
+            abi.encodePacked(
+                "\x19\x01",
+                ilrta.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, bytes(""))),
+                        address(this)
+                    )
+                )
             )
         );
 

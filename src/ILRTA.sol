@@ -146,11 +146,13 @@ abstract contract ILRTA is EIP712, UnorderedNonce {
     }
 
     function verifySuperSignature(address from, bytes calldata transferDetails, bytes32[] calldata dataHash) internal {
-        bytes32 signatureHash = keccak256(
-            abi.encode(
-                SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                msg.sender
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                    msg.sender
+                )
             )
         );
 

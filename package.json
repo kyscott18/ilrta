@@ -2,7 +2,7 @@
 	"name": "ilrta",
 	"version": "0.0.1",
 	"description": "",
-	"main": "index.js",
+	"files": ["src/**/*.sol", "out/"],
 	"scripts": {
 		"format": "rome format . --write && forge fmt",
 		"clean": "rm -rf cache out",
