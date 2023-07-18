@@ -9,18 +9,18 @@ contract EIP712 {
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    uint256 internal immutable INITIAL_CHAIN_ID;
+    uint256 private immutable INITIAL_CHAIN_ID;
 
-    bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
+    bytes32 private immutable INITIAL_DOMAIN_SEPARATOR;
 
-    bytes32 internal immutable ID_HASH;
+    string private name;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(bytes32 _idHash) {
-        ID_HASH = _idHash;
+    constructor(string memory _name) {
+        name = _name;
         INITIAL_CHAIN_ID = block.chainid;
         INITIAL_DOMAIN_SEPARATOR = computeDomainSeparator();
     }
@@ -37,7 +37,7 @@ contract EIP712 {
         return keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                ID_HASH,
+                name,
                 keccak256("1"),
                 block.chainid,
                 address(this)

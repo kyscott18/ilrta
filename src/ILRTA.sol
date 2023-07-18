@@ -76,7 +76,7 @@ abstract contract ILRTA is EIP712, UnorderedNonce {
         string memory _symbol,
         string memory transferDetailsEncodeType
     )
-        EIP712(keccak256(bytes(_name)))
+        EIP712(_name)
     {
         superSignature = SuperSignature(_superSignature);
 

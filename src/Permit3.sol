@@ -79,7 +79,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(address _superSignature) EIP712(keccak256(bytes("Permit3"))) {
+    constructor(address _superSignature) EIP712("Permit3") {
         superSignature = SuperSignature(_superSignature);
     }
 

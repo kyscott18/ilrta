@@ -7,7 +7,7 @@ import {SuperSignature} from "src/SuperSignature.sol";
 import {UnorderedNonce} from "src/UnorderedNonce.sol";
 
 contract MockRegularVerfication is EIP712, UnorderedNonce {
-    constructor() EIP712(keccak256(bytes("MockVerification"))) {}
+    constructor() EIP712("MockVerification") {}
 
     bytes32 private constant TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
 

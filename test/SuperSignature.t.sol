@@ -54,7 +54,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyAndStoreRoot(owner, verify, signature);
 
-        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), keccak256(abi.encodePacked(owner, dataHash)));
+        assertEq(vm.load(address(superSignature), bytes32(uint256(2))), keccak256(abi.encodePacked(owner, dataHash)));
     }
 
     function testVerifyData() external {
@@ -72,7 +72,7 @@ contract SuperSignerTest is Test {
 
         superSignature.verifyData(owner, dataHash);
 
-        assertEq(vm.load(address(superSignature), bytes32(uint256(1))), bytes32(uint256(1)));
+        assertEq(vm.load(address(superSignature), bytes32(uint256(2))), bytes32(uint256(1)));
     }
 
     function testGas() external {

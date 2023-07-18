@@ -43,7 +43,7 @@ contract SuperSignature is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @dev store root as 1 for gas refund savings purposes
-    constructor() EIP712(keccak256(bytes("SuperSignatureV1"))) {
+    constructor() EIP712("SuperSignatureV1") {
         root = bytes32(uint256(1));
     }
 
