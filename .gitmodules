@@ -1,0 +1,3 @@
+[submodule "ilrta-evm/lib/forge-std"]
+	path = ilrta-evm/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
