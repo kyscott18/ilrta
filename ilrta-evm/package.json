@@ -1,0 +1,22 @@
+{
+	"name": "ilrta-evm",
+	"version": "0.0.1",
+	"description": "",
+	"files": [
+		"src/**/*.sol",
+		"out/"
+	],
+	"scripts": {
+		"format": "rome format . --write && forge fmt",
+		"clean": "rm -rf cache out",
+		"lint": "pnpm solhint \"{script,src,test}/**/*.sol\" && rome check ."
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"husky": "^8.0.3",
+		"rome": "^12.1.3",
+		"solhint": "^3.4.1"
+	}
+}
