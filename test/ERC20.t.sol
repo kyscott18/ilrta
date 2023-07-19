@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {ILRTA} from "src/ILRTA.sol";
-import {ERC20} from "src/examples/ERC20.sol";
+import {ILRTAERC20} from "src/examples/ERC20.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
 
 contract ERC20Test is Test {
@@ -67,7 +67,7 @@ contract ERC20Test is Test {
 
         erc20.mint(address(owner), 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        ILRTAERC20.ILRTATransferDetails memory transferDetails = ILRTAERC20.ILRTATransferDetails({amount: 1e18});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
@@ -114,7 +114,7 @@ contract ERC20Test is Test {
 
         erc20.mint(owner, 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        ILRTAERC20.ILRTATransferDetails memory transferDetails = ILRTAERC20.ILRTATransferDetails({amount: 1e18});
 
         bytes32[] memory dataHash = new bytes32[](1);
         dataHash[0] = keccak256(
@@ -171,7 +171,7 @@ contract ERC20Test is Test {
 
         erc20.mint(address(owner), 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        ILRTAERC20.ILRTATransferDetails memory transferDetails = ILRTAERC20.ILRTATransferDetails({amount: 1e18});
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             privateKey,
@@ -212,7 +212,7 @@ contract ERC20Test is Test {
 
         erc20.mint(owner, 1e18);
 
-        ERC20.ILRTATransferDetails memory transferDetails = ERC20.ILRTATransferDetails({amount: 1e18});
+        ILRTAERC20.ILRTATransferDetails memory transferDetails = ILRTAERC20.ILRTATransferDetails({amount: 1e18});
 
         bytes32[] memory dataHash = new bytes32[](1);
         dataHash[0] = keccak256(

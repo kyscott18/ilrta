@@ -5,7 +5,7 @@ import {ILRTA} from "../ILRTA.sol";
 
 /// @notice Implement both ERC20 and ILRTA
 /// @author Kyle Scott
-abstract contract ERC20 is ILRTA {
+abstract contract ILRTAERC20 is ILRTA {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/

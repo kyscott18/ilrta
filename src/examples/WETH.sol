@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ERC20} from "./ERC20.sol";
+import {ILRTAERC20} from "./ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 
 /// @notice Wrapped Ether implementation with ilrta
 /// @author Kyle Scott
-contract WETH is ERC20 {
+contract ILRTAWETH is ILRTAERC20 {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -19,7 +19,7 @@ contract WETH is ERC20 {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(address _superSignature) ERC20(_superSignature, "Wrapped Ether", "WETH", 18) {}
+    constructor(address _superSignature) ILRTAERC20(_superSignature, "Wrapped Ether", "WETH", 18) {}
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC
