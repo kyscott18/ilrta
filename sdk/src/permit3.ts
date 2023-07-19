@@ -265,3 +265,5 @@ export const permit3TransferBatchBySignature = async (
   const hash = await walletClient.writeContract(request);
   return { hash, result, request };
 };
+
+// TODO: is nonce used
