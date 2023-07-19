@@ -6,10 +6,10 @@ export default defineConfig({
   contracts: [],
   plugins: [
     foundry({
-      project: "../ilrta-evm/",
+      project: "node_modules/ilrta-evm/",
     }),
     foundry({
-      project: "../ilrta-evm/lib/solmate/",
+      project: "node_modules/ilrta-evm/lib/solmate/",
       include: ["MockERC20.sol/**"],
       namePrefix: "solmate",
     }),

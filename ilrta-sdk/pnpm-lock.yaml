@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  ilrta-evm:
+    specifier: link:../ilrta-evm
+    version: link:../ilrta-evm
   reverse-mirage:
     specifier: link:../../reverse-mirage
     version: link:../../reverse-mirage
