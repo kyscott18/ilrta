@@ -50,7 +50,7 @@ contract Permit3 is SuperSignature {
                            SIGNATURE STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    bytes32 public constant TRANSFER_DETAILS_TYPEHASH = keccak256("TransferDetails(address token,uint256 amount)");
+    bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256("TransferDetails(address token,uint256 amount)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
