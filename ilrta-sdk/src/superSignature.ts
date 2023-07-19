@@ -1,13 +1,13 @@
 import { Permit3Address } from "./constants.js";
 import invariant from "tiny-invariant";
 import {
-  keccak256,
   type Account,
   type Address,
+  type Hash,
   type Hex,
   type WalletClient,
   encodePacked,
-  type Hash,
+  keccak256,
 } from "viem";
 
 export const VerifyType = {

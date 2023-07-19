@@ -1,5 +1,11 @@
 import MockERC20 from "../../ilrta-evm/lib/solmate/out/MockERC20.sol/MockERC20.json";
 import Permit3 from "../../ilrta-evm/out/Permit3.sol/Permit3.json";
+import { Permit3Address } from "./constants.js";
+import {
+  permit3ABI,
+  solmateMockErc20ABI,
+  superSignatureABI,
+} from "./generated.js";
 import {
   getTransferBatchTypedDataHash,
   getTransferTypedDataHash,
@@ -11,16 +17,10 @@ import {
 import { signSuperSignature } from "./superSignature.js";
 import { ALICE, BOB } from "./test/constants.js";
 import { anvil, publicClient, testClient, walletClient } from "./test/utils.js";
-import { makeCurrencyAmountFromString, type Token } from "reverse-mirage";
-import { type Hex, parseEther, getAddress } from "viem";
-import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
+import { type Token, makeCurrencyAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
-import {
-  permit3ABI,
-  solmateMockErc20ABI,
-  superSignatureABI,
-} from "./generated.js";
-import { Permit3Address } from "./constants.js";
+import { type Hex, getAddress, parseEther } from "viem";
+import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
 
 let id: Hex;
 let mockERC20_1: Token;

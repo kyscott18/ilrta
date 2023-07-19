@@ -1,16 +1,16 @@
 import { Permit3Address } from "./constants.js";
+import { permit3ABI } from "./generated.js";
 import type { CurrencyAmount, ReverseMirageWrite, Token } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import {
   type Account,
   type Address,
   type Hex,
-  type WalletClient,
-  hashTypedData,
   type PublicClient,
+  type WalletClient,
   getAddress,
+  hashTypedData,
 } from "viem";
-import { permit3ABI } from "./generated.js";
 
 export type SignatureTransfer = {
   transferDetails: CurrencyAmount<Token>;
