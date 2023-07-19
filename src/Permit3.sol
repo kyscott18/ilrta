@@ -4,18 +4,15 @@ pragma solidity ^0.8.19;
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
 import {SuperSignature} from "./SuperSignature.sol";
-import {UnorderedNonce} from "./UnorderedNonce.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 
-contract Permit3 is EIP712, UnorderedNonce {
+contract Permit3 is SuperSignature {
     using SafeTransferLib for ERC20;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    error SignatureExpired(uint256 signatureDeadline);
 
     error InvalidAmount(uint256 maxAmount);
 
@@ -53,8 +50,6 @@ contract Permit3 is EIP712, UnorderedNonce {
                            SIGNATURE STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    SuperSignature private immutable superSignature;
-
     bytes32 public constant TRANSFER_DETAILS_TYPEHASH = keccak256("TransferDetails(address token,uint256 amount)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
@@ -79,9 +74,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(address _superSignature) EIP712("Permit3") {
-        superSignature = SuperSignature(_superSignature);
-    }
+    constructor() EIP712("Permit3") {}
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC
@@ -212,7 +205,7 @@ contract Permit3 is EIP712, UnorderedNonce {
 
         // validate that this data was signed using super signature
         if (dataHash[0] != signatureHash) revert DataHashMismatch();
-        superSignature.verifyData(signer, dataHash);
+        verifyData(signer, dataHash);
 
         // transfer out tokens
         ERC20(transferDetails.token).safeTransferFrom(signer, requestedTransfer.to, requestedTransfer.amount);
@@ -256,7 +249,7 @@ contract Permit3 is EIP712, UnorderedNonce {
 
         // validate that this data was signed using super signature
         if (dataHash[0] != signatureHash) revert DataHashMismatch();
-        superSignature.verifyData(signer, dataHash);
+        verifyData(signer, dataHash);
 
         // check requests and transfer out tokens
         for (uint256 i = 0; i < length;) {

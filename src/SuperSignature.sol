@@ -7,7 +7,7 @@ import {UnorderedNonce} from "./UnorderedNonce.sol";
 
 /// @author Kyle Scott
 /// @custom:question Is there a potential vulnerability with using a dirty root
-contract SuperSignature is EIP712, UnorderedNonce {
+abstract contract SuperSignature is EIP712, UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -43,7 +43,7 @@ contract SuperSignature is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @dev store root as 1 for gas refund savings purposes
-    constructor() EIP712("SuperSignatureV1") {
+    constructor() {
         root = bytes32(uint256(1));
     }
 
@@ -65,7 +65,7 @@ contract SuperSignature is EIP712, UnorderedNonce {
         root = buildRoot(signer, verify.dataHash);
     }
 
-    function verifyData(address signer, bytes32[] calldata dataHash) external {
+    function verifyData(address signer, bytes32[] calldata dataHash) public {
         if (buildRoot(signer, dataHash) != root) revert InvalidSignature();
 
         if (dataHash.length > 1) root = buildRoot(signer, dataHash[1:]);

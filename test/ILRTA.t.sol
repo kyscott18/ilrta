@@ -6,6 +6,7 @@ import {MockILRTA} from "./mocks/MockILRTA.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {SignatureVerification} from "src/SignatureVerification.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
+import {Permit3} from "src/Permit3.sol";
 import {UnorderedNonce} from "src/UnorderedNonce.sol";
 
 contract ILRTATest is Test {
@@ -25,7 +26,7 @@ contract ILRTATest is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails()"));
 
     function setUp() external {
-        superSignature = new SuperSignature();
+        superSignature = new Permit3();
         ilrta = new MockILRTA(address(superSignature));
     }
 

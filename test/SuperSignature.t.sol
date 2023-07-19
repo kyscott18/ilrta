@@ -2,8 +2,9 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {SuperSignature} from "src/SuperSignature.sol";
+import {Permit3} from "src/Permit3.sol";
 import {SignatureVerification} from "src/SignatureVerification.sol";
+import {SuperSignature} from "src/SuperSignature.sol";
 import {UnorderedNonce} from "src/UnorderedNonce.sol";
 
 contract SuperSignerTest is Test {
@@ -38,7 +39,7 @@ contract SuperSignerTest is Test {
     }
 
     function setUp() external {
-        superSignature = new SuperSignature();
+        superSignature = new Permit3();
     }
 
     function testVerifyAndStoreRoot() external {

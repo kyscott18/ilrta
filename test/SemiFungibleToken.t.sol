@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {MockSemiFungibleToken} from "./mocks/MockSemiFungibleToken.sol";
 import {ILRTA} from "src/ILRTA.sol";
 import {ILRTASemiFungibleToken} from "src/examples/SemiFungibleToken.sol";
+import {Permit3} from "src/Permit3.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
 
 contract SemiFungibleTokenTest is Test {
@@ -27,7 +28,7 @@ contract SemiFungibleTokenTest is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 id,uint256 amount)"));
 
     function setUp() external {
-        superSignature = new SuperSignature();
+        superSignature = new Permit3();
         sft = new MockSemiFungibleToken(address(superSignature));
     }
 
