@@ -238,16 +238,19 @@ contract Permit3 is EIP712, UnorderedNonce {
         // compute data hash
         bytes32[] memory transfeDetailsHashes = new bytes32[](length);
         for (uint256 i = 0; i < length;) {
-            transfeDetailsHashes[i] =
-                hashTypedData(keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i])));
+            transfeDetailsHashes[i] = keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i]));
 
             unchecked {
                 i++;
             }
         }
-        bytes32 signatureHash = keccak256(
-            abi.encode(
-                SUPER_SIGNATURE_TRANSFER_BATCH_TYPEHASH, keccak256(abi.encodePacked(transfeDetailsHashes)), msg.sender
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    SUPER_SIGNATURE_TRANSFER_BATCH_TYPEHASH,
+                    keccak256(abi.encodePacked(transfeDetailsHashes)),
+                    msg.sender
+                )
             )
         );
 
