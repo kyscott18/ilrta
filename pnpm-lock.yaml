@@ -15,7 +15,7 @@ importers:
         specifier: ^5.1.6
         version: 5.1.6
 
-  ilrta-evm:
+  evm:
     devDependencies:
       rome:
         specifier: ^12.1.3
@@ -24,11 +24,11 @@ importers:
         specifier: ^3.4.1
         version: 3.4.1
 
-  ilrta-sdk:
+  sdk:
     dependencies:
       ilrta-evm:
         specifier: workspace:^
-        version: link:../ilrta-evm
+        version: link:../evm
       reverse-mirage:
         specifier: link:../../reverse-mirage
         version: link:../../reverse-mirage

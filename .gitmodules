@@ -1,6 +1,6 @@
 [submodule "ilrta-evm/lib/forge-std"]
-	path = ilrta-evm/lib/forge-std
+	path = evm/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 [submodule "ilrta-evm/lib/solmate"]
-	path = ilrta-evm/lib/solmate
+	path = evm/lib/solmate
 	url = https://github.com/transmissions11/solmate
