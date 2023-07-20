@@ -10,7 +10,8 @@ import {
   ilrtaTransfer,
   ilrtaTransferBySignature,
 } from "../ilrta.js";
-import type { Hex } from "viem";
+import invariant from "tiny-invariant";
+import type { Account, Hex, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
 import {
   decodeAbiParameters,
@@ -18,7 +19,7 @@ import {
   hashTypedData,
 } from "viem/utils";
 
-export type FungibleToken = ILRTA & { decimals: number };
+export type FungibleToken = ILRTA & { decimals: number; id: "0x" };
 
 export type SignatureTransfer = ILRTASignatureTransfer<
   FungibleToken,
@@ -48,16 +49,16 @@ export const SuperSignatureTransfer =
 
 export const getTransferTypedDataHash = (
   chainID: number,
-  transfers: {
+  transfer: {
     transferDetails: TransferDetailsType;
     spender: Address;
   },
 ) => {
   const domain = {
-    name: transfers.transferDetails.ilrta.name,
+    name: transfer.transferDetails.ilrta.name,
     version: "1",
     chainId: chainID,
-    verifyingContract: transfers.transferDetails.ilrta.address,
+    verifyingContract: transfer.transferDetails.ilrta.address,
   } as const;
 
   return hashTypedData({
@@ -66,9 +67,40 @@ export const getTransferTypedDataHash = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
-        amount: transfers.transferDetails.data.amount,
+        amount: transfer.transferDetails.data.amount,
       },
-      spender: transfers.spender,
+      spender: transfer.spender,
+    },
+  });
+};
+
+export const signTransfer = (
+  walletClient: WalletClient,
+  account: Account | Address,
+  transfer: SignatureTransfer & { spender: Address },
+): Promise<Hex> => {
+  const chainID = walletClient.chain?.id;
+  invariant(chainID);
+
+  const domain = {
+    name: transfer.transferDetails.ilrta.name,
+    version: "1",
+    chainId: chainID,
+    verifyingContract: transfer.transferDetails.ilrta.address,
+  } as const;
+
+  return walletClient.signTypedData({
+    domain,
+    account,
+    types: Transfer,
+    primaryType: "Transfer",
+    message: {
+      transferDetails: {
+        amount: transfer.transferDetails.data.amount,
+      },
+      spender: transfer.spender,
+      nonce: transfer.nonce,
+      deadline: transfer.deadline,
     },
   });
 };

@@ -8,6 +8,7 @@ export type ILRTA = {
   name: string;
   symbol: string;
   address: Address;
+  id: Hex;
 };
 
 export type ILRTAData<TILRTA extends ILRTA, TData extends object> = {
@@ -53,7 +54,7 @@ export const ILRTASuperSignatureTransfer = (
 ) =>
   ({
     Transfer: [
-      { name: "transferDetails", type: "bytes" },
+      { name: "transferDetails", type: "TransferDetails" },
       { name: "spender", type: "address" },
     ],
     TransferDetails: transferDetails,
@@ -130,17 +131,14 @@ export const ilrtaDataOf =
   <TILRTA extends ILRTA, TData extends object>(
     decodeBytesToData: (bytes: Hex, ilrta: TILRTA) => TData,
   ) =>
-  (
-    publicClient: PublicClient,
-    args: { ilrta: TILRTA; owner: Address; id: Hex },
-  ) =>
+  (publicClient: PublicClient, args: { ilrta: TILRTA; owner: Address }) =>
     ({
       read: () =>
         publicClient.readContract({
           abi: ilrtaABI,
           address: args.ilrta.address,
           functionName: "dataOf",
-          args: [args.owner, args.id],
+          args: [args.owner, args.ilrta.id],
         }),
       parse: (data): TData => decodeBytesToData(data, args.ilrta),
     }) satisfies ReverseMirageRead<Hex>;

@@ -3,3 +3,7 @@
 
 # Dotenv file
 .env
+
+# typescript
+*.tsbuildinfo
+
