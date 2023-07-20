@@ -1,5 +1,5 @@
-import MockERC20 from "../../ilrta-evm/lib/solmate/out/MockERC20.sol/MockERC20.json";
-import Permit3 from "../../ilrta-evm/out/Permit3.sol/Permit3.json";
+import MockERC20 from "../node_modules/ilrta-evm/lib/solmate/out/MockERC20.sol/MockERC20.json";
+import Permit3 from "../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
 import { Permit3Address } from "./constants.js";
 import {
   permit3ABI,

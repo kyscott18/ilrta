@@ -1,17 +1,6 @@
 import { ilrtaABI } from "./generated.js";
-import type {
-  AbiParameter,
-  AbiParametersToPrimitiveTypes,
-  Narrow,
-} from "abitype";
 import type { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
-import {
-  type Hex,
-  type PublicClient,
-  type WalletClient,
-  decodeAbiParameters,
-  encodeAbiParameters,
-} from "viem";
+import { type Hex, type PublicClient, type WalletClient } from "viem";
 import type { Account, Address } from "viem/accounts";
 
 export type ILRTA = {
@@ -124,35 +113,3 @@ export const ilrtaDataOf = (
       }),
     parse: (data) => data,
   }) satisfies ReverseMirageRead<Hex>;
-
-export const convertBytesToData = <
-  TDataType extends readonly AbiParameter[] | readonly unknown[],
->(
-  dataType: Narrow<TDataType>,
-  bytes: Hex,
-) => decodeAbiParameters(dataType, bytes);
-
-export const convertBytesToTransferData = <
-  TTransferDetailsType extends readonly AbiParameter[] | readonly unknown[],
->(
-  dataType: Narrow<TTransferDetailsType>,
-  bytes: Hex,
-) => decodeAbiParameters(dataType, bytes);
-
-export const convertDataToBytes = <
-  TDataType extends readonly AbiParameter[] | readonly unknown[],
->(
-  dataType: Narrow<TDataType>,
-  data: TDataType extends readonly AbiParameter[]
-    ? AbiParametersToPrimitiveTypes<TDataType>
-    : never,
-): Hex => encodeAbiParameters<TDataType>(dataType, data);
-
-export const convertTransferDetailsToBytes = <
-  TTransferDetailsType extends readonly AbiParameter[] | readonly unknown[],
->(
-  dataType: Narrow<TTransferDetailsType>,
-  data: TTransferDetailsType extends readonly AbiParameter[]
-    ? AbiParametersToPrimitiveTypes<TTransferDetailsType>
-    : never,
-): Hex => encodeAbiParameters<TTransferDetailsType>(dataType, data);
