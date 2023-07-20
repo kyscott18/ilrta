@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
-import {ILRTA} from "src/ILRTA.sol";
 import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
 import {Permit3} from "src/Permit3.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
@@ -55,7 +54,7 @@ contract FungibleTokenTest is Test {
     function testTransfer() external {
         ft.mint(address(this), 1e18);
 
-        assertTrue(ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}))));
+        assertTrue(ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
         assertEq(ft.totalSupply(), 1e18);
 
         assertEq(ft.balanceOf(address(this)), 0);
@@ -80,7 +79,7 @@ contract FungibleTokenTest is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -95,12 +94,12 @@ contract FungibleTokenTest is Test {
         assertTrue(
             ft.transferBySignature(
                 owner,
-                ILRTA.SignatureTransfer({
+                ILRTAFungibleToken.SignatureTransfer({
                     nonce: 0,
                     deadline: block.timestamp,
-                    transferDetails: abi.encode(transferDetails)
+                    transferDetails: transferDetails
                 }),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 signature
             )
         );
@@ -127,7 +126,7 @@ contract FungibleTokenTest is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -152,8 +151,8 @@ contract FungibleTokenTest is Test {
         assertTrue(
             ft.transferBySuperSignature(
                 owner,
-                abi.encode(transferDetails),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                transferDetails,
+                ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 dataHash
             )
         );
@@ -164,7 +163,7 @@ contract FungibleTokenTest is Test {
         ft.mint(address(this), 1e18);
         vm.resumeGasMetering();
 
-        ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
+        ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
     }
 
     function testGasTransferBySignature() external {
@@ -186,7 +185,7 @@ contract FungibleTokenTest is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -197,11 +196,13 @@ contract FungibleTokenTest is Test {
         );
 
         bytes memory signature = abi.encodePacked(r, s, v);
-        ILRTA.SignatureTransfer memory transfer =
-        /* solhint-disable-next-line max-line-length */
-         ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)});
-        ILRTA.RequestedTransfer memory request =
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)});
+        ILRTAFungibleToken.SignatureTransfer memory transfer = ILRTAFungibleToken.SignatureTransfer({
+            nonce: 0,
+            deadline: block.timestamp,
+            transferDetails: transferDetails
+        });
+        ILRTAFungibleToken.RequestedTransfer memory request =
+            ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails});
 
         vm.resumeGasMetering();
 
@@ -227,7 +228,7 @@ contract FungibleTokenTest is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -252,8 +253,8 @@ contract FungibleTokenTest is Test {
         vm.resumeGasMetering();
         ft.transferBySuperSignature(
             owner,
-            abi.encode(transferDetails),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            transferDetails,
+            ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
             dataHash
         );
     }

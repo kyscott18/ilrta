@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {ILRTA} from "../ILRTA.sol";
+import {SignatureVerification} from "../SignatureVerification.sol";
 
 /// @notice Implement a semi-fungible token with ilrta
 /// @author Kyle Scott
@@ -23,11 +24,22 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         uint256 amount;
     }
 
+    struct SignatureTransfer {
+        uint256 nonce;
+        uint256 deadline;
+        ILRTATransferDetails transferDetails;
+    }
+
+    struct RequestedTransfer {
+        address to;
+        ILRTATransferDetails transferDetails;
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    mapping(address owner => mapping(bytes32 id => ILRTAData data)) internal _dataOf;
+    mapping(address owner => mapping(bytes32 id => ILRTAData data)) private _dataOf;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
@@ -56,17 +68,15 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataID(bytes calldata idBytes) external pure override returns (bytes32) {
-        ILRTADataID memory id = abi.decode(idBytes, (ILRTADataID));
+    function dataID(ILRTADataID calldata id) external pure returns (bytes32) {
         return bytes32(id.id);
     }
 
-    function dataOf(address owner, bytes32 id) external view override returns (bytes memory) {
-        return abi.encode(_dataOf[owner][id]);
+    function dataOf(address owner, bytes32 id) external view returns (ILRTAData memory) {
+        return _dataOf[owner][id];
     }
 
-    function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
-        ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
+    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
         return _transfer(msg.sender, to, transferDetails);
     }
 
@@ -77,59 +87,92 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         bytes calldata signature
     )
         external
-        override
         returns (bool)
     {
-        ILRTATransferDetails memory transferDetails =
-            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails));
-        ILRTATransferDetails memory signatureTransferDetails =
-            abi.decode(signatureTransfer.transferDetails, (ILRTATransferDetails));
-
         if (
-            transferDetails.amount > signatureTransferDetails.amount
-                || transferDetails.id != signatureTransferDetails.id
+            requestedTransfer.transferDetails.amount > signatureTransfer.transferDetails.amount
+                || signatureTransfer.transferDetails.id != requestedTransfer.transferDetails.id
         ) {
             revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
         }
 
-        verifySignature(from, signatureTransfer, signature);
+        _verifySignature(from, signatureTransfer, signature);
 
-        return
-        /* solhint-disable-next-line max-line-length */
-        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
+        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
     }
 
     function transferBySuperSignature(
         address from,
-        bytes calldata transferDetails,
+        ILRTATransferDetails calldata transferDetails,
         RequestedTransfer calldata requestedTransfer,
         bytes32[] calldata dataHash
     )
         external
-        override
         returns (bool)
     {
-        ILRTATransferDetails memory requestedTransferDetails =
-            abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails));
-        ILRTATransferDetails memory signatureTransferDetails = abi.decode(transferDetails, (ILRTATransferDetails));
-
         if (
-            requestedTransferDetails.amount > signatureTransferDetails.amount
-                || requestedTransferDetails.id != signatureTransferDetails.id
+            requestedTransfer.transferDetails.amount > transferDetails.amount
+                || transferDetails.id != requestedTransfer.transferDetails.id
         ) {
-            revert InvalidRequest(transferDetails);
+            revert InvalidRequest(abi.encode(transferDetails));
         }
 
-        verifySuperSignature(from, transferDetails, dataHash);
+        _verifySuperSignature(from, transferDetails, dataHash);
 
-        return
-        /* solhint-disable-next-line max-line-length */
-        _transfer(from, requestedTransfer.to, abi.decode(requestedTransfer.transferDetails, (ILRTATransferDetails)));
+        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                              INTERNAL LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    function _verifySignature(
+        address from,
+        SignatureTransfer calldata signatureTransfer,
+        bytes calldata signature
+    )
+        private
+    {
+        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
+
+        useUnorderedNonce(from, signatureTransfer.nonce);
+
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    TRANSFER_TYPEHASH,
+                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
+                    msg.sender,
+                    signatureTransfer.nonce,
+                    signatureTransfer.deadline
+                )
+            )
+        );
+
+        SignatureVerification.verify(signature, signatureHash, from);
+    }
+
+    function _verifySuperSignature(
+        address from,
+        ILRTATransferDetails calldata transferDetails,
+        bytes32[] calldata dataHash
+    )
+        private
+    {
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    SUPER_SIGNATURE_TRANSFER_TYPEHASH,
+                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                    msg.sender
+                )
+            )
+        );
+
+        if (dataHash[0] != signatureHash) revert DataHashMismatch();
+
+        superSignature.verifyData(from, dataHash);
+    }
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from][transferDetails.id].balance -= transferDetails.amount;

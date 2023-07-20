@@ -1,3 +1,4 @@
+import { ilrtaFungibleTokenABI } from "../generated.js";
 import {
   type ILRTA,
   type ILRTAData,
@@ -6,12 +7,10 @@ import {
   ILRTASuperSignatureTransfer,
   ILRTATransfer,
   type ILRTATransferDetails,
-  ilrtaDataOf,
-  ilrtaTransfer,
-  ilrtaTransferBySignature,
 } from "../ilrta.js";
+import { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
 import invariant from "tiny-invariant";
-import type { Account, Hex, WalletClient } from "viem";
+import type { Account, Hex, PublicClient, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
 import {
   decodeAbiParameters,
@@ -19,7 +18,10 @@ import {
   hashTypedData,
 } from "viem/utils";
 
-export type FungibleToken = ILRTA & { decimals: number; id: "0x" };
+export type FungibleToken = ILRTA & {
+  decimals: number;
+  id: "0x0000000000000000000000000000000000000000000000000000000000000000";
+};
 
 export type SignatureTransfer = ILRTASignatureTransfer<
   FungibleToken,
@@ -66,9 +68,7 @@ export const getTransferTypedDataHash = (
     types: SuperSignatureTransfer,
     primaryType: "Transfer",
     message: {
-      transferDetails: {
-        amount: transfer.transferDetails.data.amount,
-      },
+      transferDetails: transfer.transferDetails.data,
       spender: transfer.spender,
     },
   });
@@ -105,18 +105,74 @@ export const signTransfer = (
   });
 };
 
-export const transfer = ilrtaTransfer((data: TransferDetailsType["data"]) =>
-  encodeAbiParameters(TransferDetails, [data.amount]),
-);
+export const transfer = async (
+  publicClient: PublicClient,
+  walletClient: WalletClient,
+  account: Account | Address,
+  args: { to: Address; transferDetails: TransferDetailsType },
+): Promise<ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transfer">> => {
+  const { request, result } = await publicClient.simulateContract({
+    account,
+    abi: ilrtaFungibleTokenABI,
+    functionName: "transfer",
+    args: [args.to, args.transferDetails.data],
+    address: args.transferDetails.ilrta.address,
+  });
+  const hash = await walletClient.writeContract(request);
+  return { hash, result, request };
+};
 
-export const transferBySignature = ilrtaTransferBySignature(
-  (data: TransferDetailsType["data"]) =>
-    encodeAbiParameters(TransferDetails, [data.amount]),
-);
+export const transferBySignature = async (
+  publicClient: PublicClient,
+  walletClient: WalletClient,
+  account: Account | Address,
+  args: {
+    signer: Address;
+    signatureTransfer: SignatureTransfer;
+    requestedTransfer: RequestedTransfer;
+    signature: Hex;
+  },
+): Promise<
+  ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transferBySignature">
+> => {
+  const { request, result } = await publicClient.simulateContract({
+    account,
+    abi: ilrtaFungibleTokenABI,
+    functionName: "transferBySignature",
+    args: [
+      args.signer,
+      {
+        transferDetails: {
+          amount: args.signatureTransfer.transferDetails.data.amount,
+        },
+        nonce: args.signatureTransfer.nonce,
+        deadline: args.signatureTransfer.deadline,
+      },
+      {
+        to: args.requestedTransfer.to,
+        transferDetails: {
+          amount: args.requestedTransfer.transferDetails.data.amount,
+        },
+      },
+      args.signature,
+    ],
+    address: args.signatureTransfer.transferDetails.ilrta.address,
+  });
+  const hash = await walletClient.writeContract(request);
+  return { hash, result, request };
+};
 
-export const dataOf = ilrtaDataOf(
-  (bytes: Hex, ft: FungibleToken): DataType => ({
-    data: { balance: decodeAbiParameters(Data, bytes)[0] },
-    ilrta: ft,
-  }),
-);
+export const dataOf = (
+  publicClient: PublicClient,
+  args: { ilrta: FungibleToken; owner: Address },
+) =>
+  ({
+    read: () =>
+      publicClient.readContract({
+        abi: ilrtaFungibleTokenABI,
+        address: args.ilrta.address,
+        functionName: "dataOf",
+        args: [args.owner, args.ilrta.id],
+      }),
+    parse: (data): DataType => ({ ilrta: args.ilrta, data }),
+  }) satisfies ReverseMirageRead<{ balance: bigint }>;

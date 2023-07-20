@@ -1,17 +1,34 @@
 import MockFungibleToken from "../../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
 import Permit3 from "../../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
-import { mockFungibleTokenABI, permit3ABI } from "../generated.js";
+import { Permit3Address } from "../constants";
+import {
+  ilrtaFungibleTokenABI,
+  mockFungibleTokenABI,
+  permit3ABI,
+  superSignatureABI,
+} from "../generated.js";
+import { signSuperSignature } from "../superSignature";
 import { ALICE, BOB } from "../test/constants.js";
 import { publicClient, testClient, walletClient } from "../test/utils.js";
 import {
   type FungibleToken,
+  dataOf,
+  getTransferTypedDataHash,
   signTransfer,
   transfer,
   transferBySignature,
 } from "./fungibleToken.js";
+import { readAndParse } from "reverse-mirage";
 import invariant from "tiny-invariant";
-import { type Hex, parseEther } from "viem";
-import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
+import { type Hex, getAddress, parseEther } from "viem";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
 
 let id: Hex;
 let ft: FungibleToken;
@@ -47,10 +64,10 @@ beforeAll(async () => {
 
   ft = {
     decimals: 18,
-    name: "Mock ERC20",
-    symbol: "MOCK",
+    name: "Test FT",
+    symbol: "TEST",
     address: mockFTAddress,
-    id: "0x",
+    id: "0x0000000000000000000000000000000000000000000000000000000000000000",
   } as const;
 
   // mint to alice
@@ -97,7 +114,6 @@ describe("fungible token", () => {
       signatureTransfer,
     );
 
-    // should the signature just be bytes?
     const { hash } = await transferBySignature(
       publicClient,
       walletClient,
@@ -115,7 +131,52 @@ describe("fungible token", () => {
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
-  test.todo("transfer by super signature");
+  test("transfer by super signature", async () => {
+    const block = await publicClient.getBlock();
 
-  test.todo("read data");
+    const transferDetails = { ilrta: ft, data: { amount: parseEther("1") } };
+
+    const dataHash = getTransferTypedDataHash(1, {
+      transferDetails,
+      spender: ALICE,
+    });
+
+    const verify = {
+      dataHash: [dataHash],
+      deadline: block.timestamp + 100n,
+      nonce: 0n,
+    } as const;
+
+    const signature = await signSuperSignature(walletClient, ALICE, verify);
+
+    let hash = await walletClient.writeContract({
+      abi: superSignatureABI,
+      address: Permit3Address,
+      functionName: "verifyAndStoreRoot",
+      args: [ALICE, verify, signature],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+
+    hash = await walletClient.writeContract({
+      abi: ilrtaFungibleTokenABI,
+      functionName: "transferBySuperSignature",
+      address: ft.address,
+      args: [
+        ALICE,
+        {
+          amount: transferDetails.data.amount,
+        },
+        { to: BOB, transferDetails: { amount: transferDetails.data.amount } },
+        [dataHash],
+      ],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+  });
+
+  test("read data", async () => {
+    const balanceOfAlice = await readAndParse(
+      dataOf(publicClient, { ilrta: ft, owner: ALICE }),
+    );
+    expect(balanceOfAlice.data.balance).toBe(parseEther("1"));
+  });
 });

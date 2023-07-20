@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
-import {ILRTA} from "src/ILRTA.sol";
 import {ILRTAERC20} from "src/examples/ERC20.sol";
 import {Permit3} from "src/Permit3.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
@@ -79,7 +78,7 @@ contract ERC20Test is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -94,12 +93,8 @@ contract ERC20Test is Test {
         assertTrue(
             erc20.transferBySignature(
                 owner,
-                ILRTA.SignatureTransfer({
-                    nonce: 0,
-                    deadline: block.timestamp,
-                    transferDetails: abi.encode(transferDetails)
-                }),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                ILRTAERC20.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: transferDetails}),
+                ILRTAERC20.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 signature
             )
         );
@@ -125,7 +120,7 @@ contract ERC20Test is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -150,8 +145,8 @@ contract ERC20Test is Test {
         assertTrue(
             erc20.transferBySuperSignature(
                 owner,
-                abi.encode(transferDetails),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                transferDetails,
+                ILRTAERC20.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 dataHash
             )
         );
@@ -183,7 +178,7 @@ contract ERC20Test is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -199,8 +194,8 @@ contract ERC20Test is Test {
         erc20.transferBySignature(
             owner,
             /* solhint-disable-next-line max-line-length */
-            ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            ILRTAERC20.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: transferDetails}),
+            ILRTAERC20.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
             signature
         );
     }
@@ -223,7 +218,7 @@ contract ERC20Test is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -249,8 +244,8 @@ contract ERC20Test is Test {
 
         erc20.transferBySuperSignature(
             owner,
-            abi.encode(transferDetails),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            transferDetails,
+            ILRTAERC20.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
             dataHash
         );
     }

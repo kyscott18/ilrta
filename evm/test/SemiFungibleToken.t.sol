@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {MockSemiFungibleToken} from "./mocks/MockSemiFungibleToken.sol";
-import {ILRTA} from "src/ILRTA.sol";
 import {ILRTASemiFungibleToken} from "src/examples/SemiFungibleToken.sol";
 import {Permit3} from "src/Permit3.sol";
 import {SuperSignature} from "src/SuperSignature.sol";
@@ -55,8 +54,7 @@ contract SemiFungibleTokenTest is Test {
 
         assertTrue(
             sft.transfer(
-                address(0xC0FFEE),
-                abi.encode(ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))}))
+                address(0xC0FFEE), ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))})
             )
         );
 
@@ -82,7 +80,7 @@ contract SemiFungibleTokenTest is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -97,12 +95,12 @@ contract SemiFungibleTokenTest is Test {
         assertTrue(
             sft.transferBySignature(
                 owner,
-                ILRTA.SignatureTransfer({
+                ILRTASemiFungibleToken.SignatureTransfer({
                     nonce: 0,
                     deadline: block.timestamp,
-                    transferDetails: abi.encode(transferDetails)
+                    transferDetails: transferDetails
                 }),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                ILRTASemiFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 signature
             )
         );
@@ -128,7 +126,7 @@ contract SemiFungibleTokenTest is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -153,8 +151,8 @@ contract SemiFungibleTokenTest is Test {
         assertTrue(
             sft.transferBySuperSignature(
                 owner,
-                abi.encode(transferDetails),
-                ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+                transferDetails,
+                ILRTASemiFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
                 dataHash
             )
         );
@@ -166,8 +164,7 @@ contract SemiFungibleTokenTest is Test {
         vm.resumeGasMetering();
 
         sft.transfer(
-            address(0xC0FFEE),
-            abi.encode(ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))}))
+            address(0xC0FFEE), ILRTASemiFungibleToken.ILRTATransferDetails({amount: 1e18, id: bytes32(uint256(69))})
         );
     }
 
@@ -190,7 +187,7 @@ contract SemiFungibleTokenTest is Test {
                     keccak256(
                         abi.encode(
                             TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                             address(this),
                             0,
                             block.timestamp
@@ -206,9 +203,12 @@ contract SemiFungibleTokenTest is Test {
 
         sft.transferBySignature(
             owner,
-            // solhint-disable-next-line max-line-length
-            ILRTA.SignatureTransfer({nonce: 0, deadline: block.timestamp, transferDetails: abi.encode(transferDetails)}),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            ILRTASemiFungibleToken.SignatureTransfer({
+                nonce: 0,
+                deadline: block.timestamp,
+                transferDetails: transferDetails
+            }),
+            ILRTASemiFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
             signature
         );
     }
@@ -232,7 +232,7 @@ contract SemiFungibleTokenTest is Test {
                 keccak256(
                     abi.encode(
                         SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, abi.encode(transferDetails))),
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
                         address(this)
                     )
                 )
@@ -258,8 +258,8 @@ contract SemiFungibleTokenTest is Test {
 
         sft.transferBySuperSignature(
             owner,
-            abi.encode(transferDetails),
-            ILRTA.RequestedTransfer({to: address(this), transferDetails: abi.encode(transferDetails)}),
+            transferDetails,
+            ILRTASemiFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
             dataHash
         );
     }
