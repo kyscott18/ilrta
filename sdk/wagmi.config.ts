@@ -13,5 +13,8 @@ export default defineConfig({
       include: ["MockERC20.sol/**"],
       namePrefix: "solmate",
     }),
+    foundry({
+      project: "contracts",
+    }),
   ],
 });

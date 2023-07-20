@@ -45,6 +45,9 @@ importers:
       abitype:
         specifier: ^0.8.11
         version: 0.8.11(typescript@5.1.6)(zod@3.21.4)
+      bun:
+        specifier: ^0.6.14
+        version: 0.6.14
       rome:
         specifier: ^12.1.3
         version: 12.1.3
@@ -342,6 +345,54 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
     dev: true
+
+  /@oven/bun-darwin-aarch64@0.6.14:
+    resolution: {integrity: sha512-zdaXiab5UYHThmiKm+C1QFKYK08f6+AyEEpiVr7sVupWLnFPM/tabz/uglYGQeTudgKTUlUcOYevZ1IpU86AJQ==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@oven/bun-darwin-x64-baseline@0.6.14:
+    resolution: {integrity: sha512-ssRND1eXceAdAWWrec6tZ7pAZNAEvktyB7Tm9wgjBRMxyVi/0+HBq4yl7AJJ4VqQvyDqIMCAr7W8fv3xTi7gUw==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@oven/bun-darwin-x64@0.6.14:
+    resolution: {integrity: sha512-WAHTBJZwE0sKbHWFkiTLuRZo3AquFI8HEJZlz/lDL1YgYLvhNmuW7yMsGqYxCMTK3lL2tUgXlQK5IV+twSxCXw==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@oven/bun-linux-aarch64@0.6.14:
+    resolution: {integrity: sha512-66hnNPEX8QPdsGuCn2PSa5O/YEntJEUA5+a4mKq2EOIs3XyUziSMOJGg3x/v3faTIcDaQKZpcUwrBjYMAK9A8w==}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@oven/bun-linux-x64-baseline@0.6.14:
+    resolution: {integrity: sha512-/ZpgWlkaWzcwYV0rJAOKv0CRFq73+/NNQfcNlyoEDY/TESYqYAIPVrMXTlZAmNe1ADhTSrueav11C6eoO/mr7g==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
+
+  /@oven/bun-linux-x64@0.6.14:
+    resolution: {integrity: sha512-nYvao1C0Nx5wO759cqFQmxDZo26wRfNsDHBhkcib/StTTjTaATvHQEMgSQpQLupbbuwE+aWFD6LY3GgeEqTrlQ==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: true
+    optional: true
 
   /@rometools/cli-darwin-arm64@12.1.3:
     resolution: {integrity: sha512-AmFTUDYjBuEGQp/Wwps+2cqUr+qhR7gyXAUnkL5psCuNCz3807TrUq/ecOoct5MIavGJTH6R4aaSL6+f+VlBEg==}
@@ -716,6 +767,21 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+    dev: true
+
+  /bun@0.6.14:
+    resolution: {integrity: sha512-0EorJvs4Ung607UGTqno8Mlx1ToEcYPpzlEiXTiX+ySyoBcEIUUy0TlPloryp8/QVRL9+fAoMwhJNQAjF2GuQQ==}
+    cpu: [arm64, x64]
+    os: [darwin, linux]
+    hasBin: true
+    requiresBuild: true
+    optionalDependencies:
+      '@oven/bun-darwin-aarch64': 0.6.14
+      '@oven/bun-darwin-x64': 0.6.14
+      '@oven/bun-darwin-x64-baseline': 0.6.14
+      '@oven/bun-linux-aarch64': 0.6.14
+      '@oven/bun-linux-x64': 0.6.14
+      '@oven/bun-linux-x64-baseline': 0.6.14
     dev: true
 
   /bundle-require@3.1.2(esbuild@0.15.13):
