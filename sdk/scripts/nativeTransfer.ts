@@ -2,13 +2,13 @@ import MockFungibleToken from "../node_modules/ilrta-evm/out/MockFungibleToken.s
 import {
   signTransfer,
   transferBySignature,
-} from "../src/example/fungibleToken";
-import { mockFungibleTokenABI } from "../src/generated";
-import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants";
-import { publicClient, walletClient } from "../src/test/utils";
+} from "../src/example/fungibleToken.js";
+import { mockFungibleTokenABI } from "../src/generated.js";
+import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
+import { publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
 import invariant from "tiny-invariant";
-import { Hex, parseEther, zeroAddress } from "viem";
+import { type Hex, parseEther, zeroAddress } from "viem";
 
 const main = async () => {
   const shutdown = await startProxy({

@@ -86,37 +86,45 @@ beforeAll(async () => {
   };
 
   // mint to alice
-  let mintHash = await walletClient.writeContract({
+  const { request: mintRequest1 } = await publicClient.simulateContract({
     abi: solmateMockErc20ABI,
     functionName: "mint",
     address: mockERC20Address1,
     args: [ALICE, parseEther("1")],
+    account: ALICE,
   });
+  let mintHash = await walletClient.writeContract(mintRequest1);
   await publicClient.waitForTransactionReceipt({ hash: mintHash });
 
-  mintHash = await walletClient.writeContract({
+  const { request: mintRequest2 } = await publicClient.simulateContract({
     abi: solmateMockErc20ABI,
     functionName: "mint",
     address: mockERC20Address2,
     args: [ALICE, parseEther("1")],
+    account: ALICE,
   });
+  mintHash = await walletClient.writeContract(mintRequest2);
   await publicClient.waitForTransactionReceipt({ hash: mintHash });
 
   // approve permit3
-  let approveHash = await walletClient.writeContract({
+  const { request: approveRequest1 } = await publicClient.simulateContract({
     abi: solmateMockErc20ABI,
     functionName: "approve",
     address: mockERC20Address1,
     args: [Permit3Address, parseEther("1")],
+    account: ALICE,
   });
+  let approveHash = await walletClient.writeContract(approveRequest1);
   await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
-  approveHash = await walletClient.writeContract({
+  const { request: approveRequest2 } = await publicClient.simulateContract({
     abi: solmateMockErc20ABI,
     functionName: "approve",
     address: mockERC20Address2,
     args: [Permit3Address, parseEther("1")],
+    account: ALICE,
   });
+  approveHash = await walletClient.writeContract(approveRequest2);
   await publicClient.waitForTransactionReceipt({ hash: approveHash });
 }, 100_000);
 
@@ -206,28 +214,35 @@ describe("permit 3", () => {
 
     const signature = await signSuperSignature(walletClient, ALICE, verify);
 
-    let hash = await walletClient.writeContract({
+    const { request: verifyRequest } = await publicClient.simulateContract({
+      account: ALICE,
       abi: superSignatureABI,
       address: Permit3Address,
       functionName: "verifyAndStoreRoot",
       args: [ALICE, verify, signature],
     });
+
+    let hash = await walletClient.writeContract(verifyRequest);
     await publicClient.waitForTransactionReceipt({ hash });
 
-    hash = await walletClient.writeContract({
-      abi: permit3ABI,
-      functionName: "transferBySuperSignature",
-      address: Permit3Address,
-      args: [
-        ALICE,
-        {
-          token: getAddress(transfer.transferDetails.currency.address),
-          amount: transfer.transferDetails.amount,
-        },
-        { to: BOB, amount: transfer.transferDetails.amount },
-        [dataHash],
-      ],
-    });
+    const { request: transferBySuperSignatureRequest } =
+      await publicClient.simulateContract({
+        account: ALICE,
+        abi: permit3ABI,
+        functionName: "transferBySuperSignature",
+        address: Permit3Address,
+        args: [
+          ALICE,
+          {
+            token: getAddress(transfer.transferDetails.currency.address),
+            amount: transfer.transferDetails.amount,
+          },
+          { to: BOB, amount: transfer.transferDetails.amount },
+          [dataHash],
+        ],
+      });
+
+    hash = await walletClient.writeContract(transferBySuperSignatureRequest);
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
@@ -253,31 +268,38 @@ describe("permit 3", () => {
 
     const signature = await signSuperSignature(walletClient, ALICE, verify);
 
-    let hash = await walletClient.writeContract({
+    const { request: verifyRequest } = await publicClient.simulateContract({
+      account: ALICE,
       abi: superSignatureABI,
       address: Permit3Address,
       functionName: "verifyAndStoreRoot",
       args: [ALICE, verify, signature],
     });
+
+    let hash = await walletClient.writeContract(verifyRequest);
     await publicClient.waitForTransactionReceipt({ hash });
 
-    hash = await walletClient.writeContract({
-      abi: permit3ABI,
-      functionName: "transferBySuperSignature",
-      address: Permit3Address,
-      args: [
-        ALICE,
-        transfer.transferDetails.map((t) => ({
-          token: getAddress(t.currency.address),
-          amount: t.amount,
-        })),
-        transfer.transferDetails.map((t) => ({
-          to: BOB,
-          amount: t.amount,
-        })),
-        [dataHash],
-      ],
-    });
+    const { request: transferBySuperSignatureRequest } =
+      await publicClient.simulateContract({
+        account: ALICE,
+        abi: permit3ABI,
+        functionName: "transferBySuperSignature",
+        address: Permit3Address,
+        args: [
+          ALICE,
+          transfer.transferDetails.map((t) => ({
+            token: getAddress(t.currency.address),
+            amount: t.amount,
+          })),
+          transfer.transferDetails.map((t) => ({
+            to: BOB,
+            amount: t.amount,
+          })),
+          [dataHash],
+        ],
+      });
+
+    hash = await walletClient.writeContract(transferBySuperSignatureRequest);
     await publicClient.waitForTransactionReceipt({ hash });
   });
 });

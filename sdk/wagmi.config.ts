@@ -7,6 +7,14 @@ export default defineConfig({
   plugins: [
     foundry({
       project: "node_modules/ilrta-evm/",
+      include: [
+        "ILRTA.sol/**",
+        "Permit3.sol/**",
+        "SuperSignature.sol/**",
+        "FungibleToken.sol/**",
+        "MockFungibleToken.sol/**",
+        "TransferBatch.sol/**",
+      ],
     }),
     foundry({
       project: "node_modules/ilrta-evm/lib/solmate/",

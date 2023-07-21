@@ -40,7 +40,7 @@ contract TransferBatch {
                             abi.encode(
                                 SUPER_SIGNATURE_TRANSFER_TYPEHASH,
                                 keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i])),
-                                from
+                                address(this)
                             )
                         )
                     )
@@ -54,10 +54,10 @@ contract TransferBatch {
         // transfer tokens
         unchecked {
             for (uint256 i = 0; i < transferDetails.length; i++) {
+                if (i != 0) dataHash = removeFirstElement(dataHash);
                 ILRTAFungibleToken(tokens[i]).transferBySuperSignature(
                     from, transferDetails[i], requestedTransfers[i], dataHash
                 );
-                dataHash = removeFirstElement(dataHash);
             }
         }
     }

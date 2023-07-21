@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
 describe("super signature", () => {
   test("sign", async () => {
     const domain = {
-      name: "SuperSignature",
+      name: "Permit3",
       version: "1",
       chainId: anvil.id,
       verifyingContract: Permit3Address,

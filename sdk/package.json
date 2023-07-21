@@ -19,7 +19,7 @@
   "scripts": {
     "bench": "vitest bench",
     "bench:ci": "CI=true vitest bench",
-    "build": "tsc --outdir ./dist",
+    "build": "tsc --project tsconfig.build.json --outdir ./dist",
     "format": "rome format . --write",
     "lint": "rome check .",
     "lint:fix": "pnpm lint --apply",

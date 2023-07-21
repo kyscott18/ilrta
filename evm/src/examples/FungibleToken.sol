@@ -54,7 +54,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
         string memory _symbol,
         uint8 _decimals
     )
-        ILRTA(_superSignature, _name, symbol, "TransferDetails(uint256 amount)")
+        ILRTA(_superSignature, _name, _symbol, "TransferDetails(uint256 amount)")
     {
         name = _name;
         symbol = _symbol;

@@ -8,15 +8,11 @@ import {
   ILRTATransfer,
   type ILRTATransferDetails,
 } from "../ilrta.js";
-import { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
+import type { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import type { Account, Hex, PublicClient, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  hashTypedData,
-} from "viem/utils";
+import { getAddress, hashTypedData } from "viem/utils";
 
 export type FungibleToken = ILRTA & {
   decimals: number;
@@ -60,7 +56,7 @@ export const getTransferTypedDataHash = (
     name: transfer.transferDetails.ilrta.name,
     version: "1",
     chainId: chainID,
-    verifyingContract: transfer.transferDetails.ilrta.address,
+    verifyingContract: getAddress(transfer.transferDetails.ilrta.address),
   } as const;
 
   return hashTypedData({
@@ -68,8 +64,8 @@ export const getTransferTypedDataHash = (
     types: SuperSignatureTransfer,
     primaryType: "Transfer",
     message: {
-      transferDetails: transfer.transferDetails.data,
-      spender: transfer.spender,
+      transferDetails: { amount: transfer.transferDetails.data.amount },
+      spender: getAddress(transfer.spender),
     },
   });
 };

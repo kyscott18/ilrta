@@ -34,13 +34,13 @@ export const signSuperSignature = async (
   invariant(chainID);
 
   const domain = {
-    name: "SuperSignature",
+    name: "Permit3",
     version: "1",
     chainId: chainID,
     verifyingContract: Permit3Address,
   } as const;
 
-  return await walletClient.signTypedData({
+  return walletClient.signTypedData({
     domain,
     account,
     types: VerifyType,

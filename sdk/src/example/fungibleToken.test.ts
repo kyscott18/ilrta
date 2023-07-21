@@ -1,13 +1,13 @@
 import MockFungibleToken from "../../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
 import Permit3 from "../../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
-import { Permit3Address } from "../constants";
+import { Permit3Address } from "../constants.js";
 import {
   ilrtaFungibleTokenABI,
   mockFungibleTokenABI,
   permit3ABI,
   superSignatureABI,
 } from "../generated.js";
-import { signSuperSignature } from "../superSignature";
+import { signSuperSignature } from "../superSignature.js";
 import { ALICE, BOB } from "../test/constants.js";
 import { publicClient, testClient, walletClient } from "../test/utils.js";
 import {
@@ -20,7 +20,7 @@ import {
 } from "./fungibleToken.js";
 import { readAndParse } from "reverse-mirage";
 import invariant from "tiny-invariant";
-import { type Hex, getAddress, parseEther } from "viem";
+import { type Hex, parseEther } from "viem";
 import {
   afterAll,
   beforeAll,
@@ -71,12 +71,14 @@ beforeAll(async () => {
   } as const;
 
   // mint to alice
-  const mintHash = await walletClient.writeContract({
+  const { request: mintRequest } = await publicClient.simulateContract({
+    account: ALICE,
     abi: mockFungibleTokenABI,
     functionName: "mint",
     address: mockFTAddress,
     args: [ALICE, parseEther("1")],
   });
+  const mintHash = await walletClient.writeContract(mintRequest);
   await publicClient.waitForTransactionReceipt({ hash: mintHash });
 }, 100_000);
 
@@ -149,27 +151,35 @@ describe("fungible token", () => {
 
     const signature = await signSuperSignature(walletClient, ALICE, verify);
 
-    let hash = await walletClient.writeContract({
-      abi: superSignatureABI,
-      address: Permit3Address,
-      functionName: "verifyAndStoreRoot",
-      args: [ALICE, verify, signature],
-    });
+    const { request: verifyAndStoreRequest } =
+      await publicClient.simulateContract({
+        account: ALICE,
+        abi: superSignatureABI,
+        address: Permit3Address,
+        functionName: "verifyAndStoreRoot",
+        args: [ALICE, verify, signature],
+      });
+
+    let hash = await walletClient.writeContract(verifyAndStoreRequest);
     await publicClient.waitForTransactionReceipt({ hash });
 
-    hash = await walletClient.writeContract({
-      abi: ilrtaFungibleTokenABI,
-      functionName: "transferBySuperSignature",
-      address: ft.address,
-      args: [
-        ALICE,
-        {
-          amount: transferDetails.data.amount,
-        },
-        { to: BOB, transferDetails: { amount: transferDetails.data.amount } },
-        [dataHash],
-      ],
-    });
+    const { request: transferBySigRequest } =
+      await publicClient.simulateContract({
+        abi: ilrtaFungibleTokenABI,
+        functionName: "transferBySuperSignature",
+        address: ft.address,
+        account: ALICE,
+        args: [
+          ALICE,
+          {
+            amount: transferDetails.data.amount,
+          },
+          { to: BOB, transferDetails: { amount: transferDetails.data.amount } },
+          [dataHash],
+        ],
+      });
+
+    hash = await walletClient.writeContract(transferBySigRequest);
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
