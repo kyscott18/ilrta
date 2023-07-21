@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {SuperSignature} from "ilrta-evm/src/SuperSignature.sol";
-import {ILRTAFungibleToken} from "ilrta-evm/src/examples/FungibleToken.sol";
+import {SuperSignature} from "../SuperSignature.sol";
+import {ILRTAFungibleToken} from "./FungibleToken.sol";
 
 contract TransferBatch {
-    bytes32 private constant VERIFY_TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
-
     bytes32 private constant SUPER_SIGNATURE_TRANSFER_TYPEHASH =
         keccak256(bytes("Transfer(TransferDetails transferDetails,address spender)TransferDetails(uint256 amount)"));
 
@@ -26,7 +24,9 @@ contract TransferBatch {
         uint256 nonce,
         uint256 deadline,
         bytes calldata signature
-    ) external {
+    )
+        external
+    {
         bytes32[] memory dataHash = new bytes32[](transferDetails.length);
 
         // calculate roots
@@ -39,8 +39,8 @@ contract TransferBatch {
                         keccak256(
                             abi.encode(
                                 SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                                address(this)
+                                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i])),
+                                from
                             )
                         )
                     )

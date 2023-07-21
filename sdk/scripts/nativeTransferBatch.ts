@@ -1,11 +1,17 @@
 import MockFungibleToken from "../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
 import Permit3 from "../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
+import TransferBatch from "../node_modules/ilrta-evm/out/TransferBatch.sol/TransferBatch.json";
 import {
   getTransferTypedDataHash,
   signTransfer,
   transferBySignature,
 } from "../src/example/fungibleToken";
-import { mockFungibleTokenABI, permit3ABI } from "../src/generated";
+import {
+  mockFungibleTokenABI,
+  permit3ABI,
+  transferBatchABI,
+} from "../src/generated";
+import { signSuperSignature } from "../src/superSignature";
 import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants";
 import { publicClient, walletClient } from "../src/test/utils";
 import { startProxy } from "@viem/anvil";
@@ -37,15 +43,16 @@ const main = async () => {
 
   deployHash = await walletClient.deployContract({
     account: ALICE,
-    abi: permit3ABI,
-    bytecode: Permit3.bytecode.object as Hex,
+    abi: transferBatchABI,
+    bytecode: TransferBatch.bytecode.object as Hex,
+    args: [Permit3Address],
   });
 
-  const { contractAddress: Permit3Address } =
+  const { contractAddress: TransferBatchAddress } =
     await publicClient.waitForTransactionReceipt({
       hash: deployHash,
     });
-  invariant(Permit3Address);
+  invariant(TransferBatchAddress);
 
   // deploy token
   deployHash = await walletClient.deployContract({
@@ -108,35 +115,43 @@ const main = async () => {
   await publicClient.waitForTransactionReceipt({ hash: mintHash });
 
   // sign
-  // const hash1 = getTransferTypedDataHash(1, {
-  //   transferDetails: { ilrta: ft_1, data: { amount: parseEther("1") } },
-  //   spender:
-  // });
-  const block = await publicClient.getBlock();
-  const signatureTransfer = {
+  const hash1 = getTransferTypedDataHash(1, {
     transferDetails: { ilrta: ft_1, data: { amount: parseEther("1") } },
+    spender: ALICE,
+  });
+  const hash2 = getTransferTypedDataHash(1, {
+    transferDetails: { ilrta: ft_2, data: { amount: parseEther("1") } },
+    spender: ALICE,
+  });
+  const block = await publicClient.getBlock();
+
+  const verify = {
+    dataHash: [hash1, hash2],
     nonce: 0n,
     deadline: block.timestamp + 100n,
-    spender: ALICE,
-  };
+  } as const;
 
-  const signature = await signTransfer(walletClient, ALICE, signatureTransfer);
+  const signature = await signSuperSignature(walletClient, ALICE, verify);
 
   // transfer
-  const { hash } = await transferBySignature(
-    publicClient,
-    walletClient,
-    ALICE,
-    {
-      signer: ALICE,
-      signatureTransfer,
-      requestedTransfer: {
-        to: BOB,
-        transferDetails: { ilrta: ft_1, data: { amount: parseEther("0.5") } },
-      },
+  const { request } = await publicClient.simulateContract({
+    abi: transferBatchABI,
+    address: TransferBatchAddress,
+    functionName: "transferBatch",
+    args: [
+      ALICE,
+      [ft_1.address, ft_2.address],
+      [{ amount: parseEther("1") }, { amount: parseEther("1") }],
+      [
+        { to: BOB, transferDetails: { amount: parseEther("0.5") } },
+        { to: BOB, transferDetails: { amount: parseEther("0.5") } },
+      ],
+      0n,
+      block.timestamp + 100n,
       signature,
-    },
-  );
+    ],
+  });
+  const hash = await walletClient.writeContract(request);
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
   console.log("gas used:", receipt.cumulativeGasUsed);

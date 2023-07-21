@@ -4,6 +4,3 @@
 [submodule "evm/lib/solmate"]
 	path = evm/lib/solmate
 	url = https://github.com/transmissions11/solmate
-[submodule "sdk/contracts/lib/forge-std"]
-	path = sdk/contracts/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
