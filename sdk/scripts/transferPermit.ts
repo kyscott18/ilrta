@@ -1,16 +1,16 @@
 import MockERC20 from "../node_modules/ilrta-evm/lib/solmate/out/MockERC20.sol/MockERC20.json";
 import Permit3 from "../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
-import { permit3ABI, solmateMockErc20ABI } from "../src/generated";
+import { permit3ABI, solmateMockErc20ABI } from "../src/generated.js";
 import {
   permit3SignTransfer,
   permit3TransferBySignature,
-} from "../src/permit3";
-import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants";
-import { anvil, publicClient, walletClient } from "../src/test/utils";
+} from "../src/permit3.js";
+import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
+import { anvil, publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
 import { makeCurrencyAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
-import { Hex, parseEther } from "viem";
+import { type Hex, parseEther } from "viem";
 
 const main = async () => {
   const shutdown = await startProxy({
