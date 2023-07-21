@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {SuperSignature} from "../../node_modules/ilrta-evm/src/SuperSignature.sol";
-import {ILRTAFungibleToken} from "../../node_modules/ilrta-evm/src/examples/FungibleToken.sol";
+import {SuperSignature} from "ilrta-evm/src/SuperSignature.sol";
+import {ILRTAFungibleToken} from "ilrta-evm/src/examples/FungibleToken.sol";
 
 contract TransferBatch {
     bytes32 private constant VERIFY_TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
@@ -57,7 +57,19 @@ contract TransferBatch {
                 ILRTAFungibleToken(tokens[i]).transferBySuperSignature(
                     from, transferDetails[i], requestedTransfers[i], dataHash
                 );
+                dataHash = removeFirstElement(dataHash);
             }
+        }
+    }
+
+    function removeFirstElement(bytes32[] memory dataHash) private pure returns (bytes32[] memory) {
+        unchecked {
+            uint256 newLength = dataHash.length - 1;
+            bytes32[] memory newArr = new bytes32[](newLength);
+            for (uint256 i = 0; i < newLength; i++) {
+                newArr[i] = dataHash[i + 1];
+            }
+            return newArr;
         }
     }
 }

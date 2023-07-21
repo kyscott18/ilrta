@@ -14,7 +14,7 @@ export default defineConfig({
       namePrefix: "solmate",
     }),
     foundry({
-      project: "contracts",
+      project: "contracts/",
     }),
   ],
 });

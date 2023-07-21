@@ -35,6 +35,18 @@ const main = async () => {
     });
   invariant(Permit3Address);
 
+  deployHash = await walletClient.deployContract({
+    account: ALICE,
+    abi: permit3ABI,
+    bytecode: Permit3.bytecode.object as Hex,
+  });
+
+  const { contractAddress: Permit3Address } =
+    await publicClient.waitForTransactionReceipt({
+      hash: deployHash,
+    });
+  invariant(Permit3Address);
+
   // deploy token
   deployHash = await walletClient.deployContract({
     account: ALICE,
