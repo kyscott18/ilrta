@@ -5,8 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "module": "./dist/index.js",
-  "types": "./dist/types/index.d.ts",
-  "typings": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "files": [
     "dist",
     "!dist/**/*.tsbuildinfo",
@@ -19,7 +19,7 @@
   "scripts": {
     "bench": "vitest bench",
     "bench:ci": "CI=true vitest bench",
-    "build": "tsc --project tsconfig.build.json --outdir ./dist",
+    "build": "tsup",
     "format": "rome format . --write",
     "lint": "rome check .",
     "lint:fix": "pnpm lint --apply",
@@ -31,12 +31,11 @@
   "license": "ISC",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
   "dependencies": {
-    "ilrta-evm": "workspace:^",
     "reverse-mirage": "link:../../reverse-mirage",
     "tiny-invariant": "^1.3.1"
   },
@@ -49,7 +48,9 @@
     "@wagmi/cli": "^1.3.0",
     "abitype": "^0.9.5",
     "bun": "^0.7.0",
+    "ilrta-evm": "workspace:^",
     "rome": "^12.1.3",
+    "tsup": "^7.1.0",
     "typescript": "^5.1.6",
     "viem": "^1.4.1",
     "vitest": "^0.33.0"
