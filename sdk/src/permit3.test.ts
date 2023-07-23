@@ -17,14 +17,14 @@ import {
 import { signSuperSignature } from "./superSignature.js";
 import { ALICE, BOB } from "./test/constants.js";
 import { anvil, publicClient, testClient, walletClient } from "./test/utils.js";
-import { type Token, makeCurrencyAmountFromString } from "reverse-mirage";
+import { type ERC20, makeAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, getAddress, parseEther } from "viem";
 import { afterAll, beforeAll, beforeEach, describe, test } from "vitest";
 
 let id: Hex;
-let mockERC20_1: Token;
-let mockERC20_2: Token;
+let mockERC20_1: ERC20;
+let mockERC20_2: ERC20;
 
 beforeAll(async () => {
   // deploy permit3
@@ -56,7 +56,7 @@ beforeAll(async () => {
   invariant(mockERC20Address1);
 
   mockERC20_1 = {
-    type: "token",
+    type: "erc20",
     decimals: 18,
     name: "Mock ERC20",
     symbol: "MOCK",
@@ -77,7 +77,7 @@ beforeAll(async () => {
   invariant(mockERC20Address2);
 
   mockERC20_2 = {
-    type: "token",
+    type: "erc20",
     decimals: 18,
     name: "Mock ERC20",
     symbol: "MOCK",
@@ -141,7 +141,7 @@ describe("permit 3", () => {
   test("transfer by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: makeCurrencyAmountFromString(mockERC20_1, "1"),
+      transferDetails: makeAmountFromString(mockERC20_1, "1"),
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
@@ -166,8 +166,8 @@ describe("permit 3", () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        makeCurrencyAmountFromString(mockERC20_1, "1"),
-        makeCurrencyAmountFromString(mockERC20_2, "1"),
+        makeAmountFromString(mockERC20_1, "1"),
+        makeAmountFromString(mockERC20_2, "1"),
       ],
       spender: ALICE,
       nonce: 0n,
@@ -198,7 +198,7 @@ describe("permit 3", () => {
   test("transfer by super signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: makeCurrencyAmountFromString(mockERC20_1, "1"),
+      transferDetails: makeAmountFromString(mockERC20_1, "1"),
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
@@ -234,7 +234,7 @@ describe("permit 3", () => {
         args: [
           ALICE,
           {
-            token: getAddress(transfer.transferDetails.currency.address),
+            token: getAddress(transfer.transferDetails.token.address),
             amount: transfer.transferDetails.amount,
           },
           { to: BOB, amount: transfer.transferDetails.amount },
@@ -250,8 +250,8 @@ describe("permit 3", () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        makeCurrencyAmountFromString(mockERC20_1, "1"),
-        makeCurrencyAmountFromString(mockERC20_2, "1"),
+        makeAmountFromString(mockERC20_1, "1"),
+        makeAmountFromString(mockERC20_2, "1"),
       ],
       spender: ALICE,
       nonce: 0n,
@@ -288,7 +288,7 @@ describe("permit 3", () => {
         args: [
           ALICE,
           transfer.transferDetails.map((t) => ({
-            token: getAddress(t.currency.address),
+            token: getAddress(t.token.address),
             amount: t.amount,
           })),
           transfer.transferDetails.map((t) => ({

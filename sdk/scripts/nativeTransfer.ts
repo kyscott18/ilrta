@@ -1,5 +1,6 @@
 import MockFungibleToken from "../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
 import {
+  type FungibleToken,
   signTransfer,
   transferBySignature,
 } from "../src/example/fungibleToken.js";
@@ -36,12 +37,14 @@ const main = async () => {
   invariant(mockFTAddress);
 
   const ft = {
+    type: "fungible token",
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
     address: mockFTAddress,
     id: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  } as const;
+    chainID: 1,
+  } as const satisfies FungibleToken;
 
   // mint token
   const mintHash = await walletClient.writeContract({
@@ -55,11 +58,15 @@ const main = async () => {
   // sign
   const block = await publicClient.getBlock();
   const signatureTransfer = {
-    transferDetails: { ilrta: ft, data: { amount: parseEther("1") } },
+    transferDetails: {
+      type: "fungible tokenTransfer",
+      ilrta: ft,
+      amount: parseEther("1"),
+    },
     nonce: 0n,
     deadline: block.timestamp + 100n,
     spender: ALICE,
-  };
+  } as const;
 
   const signature = await signTransfer(walletClient, ALICE, signatureTransfer);
 
@@ -73,7 +80,11 @@ const main = async () => {
       signatureTransfer,
       requestedTransfer: {
         to: BOB,
-        transferDetails: { ilrta: ft, data: { amount: parseEther("0.5") } },
+        transferDetails: {
+          type: "fungible tokenTransfer",
+          ilrta: ft,
+          amount: parseEther("0.5"),
+        },
       },
       signature,
     },

@@ -1,6 +1,6 @@
 import { Permit3Address } from "./constants.js";
 import { permit3ABI } from "./generated.js";
-import type { CurrencyAmount, ReverseMirageWrite, Token } from "reverse-mirage";
+import type { ERC20, ERC20Amount, ReverseMirageWrite } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import {
   type Account,
@@ -13,20 +13,20 @@ import {
 } from "viem";
 
 export type SignatureTransfer = {
-  transferDetails: CurrencyAmount<Token>;
+  transferDetails: ERC20Amount<ERC20>;
   nonce: bigint;
   deadline: bigint;
 };
 
 export type SignatureTransferBatch = {
-  transferDetails: readonly CurrencyAmount<Token>[];
+  transferDetails: readonly ERC20Amount<ERC20>[];
   nonce: bigint;
   deadline: bigint;
 };
 
 export type RequestedTransfer = {
   to: Address;
-  amount: Pick<CurrencyAmount<Token>, "amount">;
+  amount: Pick<ERC20Amount<ERC20>, "amount">;
 };
 
 export const TransferDetails = [
@@ -75,7 +75,7 @@ export const SuperSignatureTransferBatch = {
 
 export const getTransferTypedDataHash = (
   chainID: number,
-  transfer: { transferDetails: CurrencyAmount<Token>; spender: Address },
+  transfer: { transferDetails: ERC20Amount<ERC20>; spender: Address },
 ): Hex => {
   const domain = {
     name: "Permit3",
@@ -90,7 +90,7 @@ export const getTransferTypedDataHash = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
-        token: transfer.transferDetails.currency.address,
+        token: transfer.transferDetails.token.address,
         amount: transfer.transferDetails.amount,
       },
       spender: transfer.spender,
@@ -101,7 +101,7 @@ export const getTransferTypedDataHash = (
 export const getTransferBatchTypedDataHash = (
   chainID: number,
   transfers: {
-    transferDetails: readonly CurrencyAmount<Token>[];
+    transferDetails: readonly ERC20Amount<ERC20>[];
     spender: Address;
   },
 ) => {
@@ -118,7 +118,7 @@ export const getTransferBatchTypedDataHash = (
     primaryType: "Transfer",
     message: {
       transferDetails: transfers.transferDetails.map((c) => ({
-        token: c.currency.address,
+        token: c.token.address,
         amount: c.amount,
       })),
       spender: transfers.spender,
@@ -148,7 +148,7 @@ export const permit3SignTransfer = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
-        token: getAddress(transfer.transferDetails.currency.address),
+        token: getAddress(transfer.transferDetails.token.address),
         amount: transfer.transferDetails.amount,
       },
       spender: transfer.spender,
@@ -180,7 +180,7 @@ export const permit3SignTransferBatch = (
     primaryType: "Transfer",
     message: {
       transferDetails: transfers.transferDetails.map((c) => ({
-        token: c.currency.address,
+        token: c.token.address,
         amount: c.amount,
       })),
       spender: transfers.spender,
@@ -210,7 +210,7 @@ export const permit3TransferBySignature = async (
       {
         transferDetails: {
           token: getAddress(
-            args.signatureTransfer.transferDetails.currency.address,
+            args.signatureTransfer.transferDetails.token.address,
           ),
           amount: args.signatureTransfer.transferDetails.amount,
         },
@@ -248,7 +248,7 @@ export const permit3TransferBatchBySignature = async (
       args.signer,
       {
         transferDetails: args.signatureTransfer.transferDetails.map((t) => ({
-          token: t.currency.address,
+          token: t.token.address,
           amount: t.amount,
         })),
         nonce: args.signatureTransfer.nonce,

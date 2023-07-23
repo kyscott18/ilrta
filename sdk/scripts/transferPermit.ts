@@ -8,7 +8,7 @@ import {
 import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
 import { anvil, publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
-import { makeCurrencyAmountFromString } from "reverse-mirage";
+import { makeAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther } from "viem";
 
@@ -50,7 +50,7 @@ const main = async () => {
   invariant(mockERC20Address1);
 
   const mockERC20 = {
-    type: "token",
+    type: "erc20",
     decimals: 18,
     name: "Mock ERC20",
     symbol: "MOCK",
@@ -79,7 +79,7 @@ const main = async () => {
   // sign
   const block = await publicClient.getBlock();
   const transfer = {
-    transferDetails: makeCurrencyAmountFromString(mockERC20, "1"),
+    transferDetails: makeAmountFromString(mockERC20, "1"),
     spender: ALICE,
     nonce: 0n,
     deadline: block.timestamp + 100n,
@@ -96,7 +96,7 @@ const main = async () => {
       signatureTransfer: transfer,
       requestedTransfer: {
         to: BOB,
-        amount: makeCurrencyAmountFromString(mockERC20, "0.5"),
+        amount: makeAmountFromString(mockERC20, "0.5"),
       },
       signature,
     },

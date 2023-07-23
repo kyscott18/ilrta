@@ -1,6 +1,16 @@
 export { Permit3Address } from "./constants.js";
 
 export {
+  type ILRTA,
+  type ILRTAData,
+  type ILRTATransferDetails,
+  type ILRTASignatureTransfer,
+  type ILRTARequestedTransfer,
+  ILRTATransfer,
+  ILRTASuperSignatureTransfer,
+} from "./ilrta.js";
+
+export {
   type SignatureTransfer,
   type SignatureTransferBatch,
   type RequestedTransfer,

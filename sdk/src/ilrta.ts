@@ -1,39 +1,39 @@
 import type { AbiParameter } from "abitype";
+import type { Token } from "reverse-mirage";
 import { type Hex } from "viem";
 import type { Address } from "viem/accounts";
 
-export type ILRTA = {
-  name: string;
-  symbol: string;
+export type ILRTA<TType extends string = string> = Token<TType> & {
   address: Address;
   id: Hex;
 };
 
 export type ILRTAData<TILRTA extends ILRTA, TData extends object> = {
+  type: `${TILRTA["type"]}Data`;
   ilrta: TILRTA;
-  data: TData;
-};
+} & TData;
 
-export type ILRTATransferDetails<TILRTA extends ILRTA, TData extends object> = {
+export type ILRTATransferDetails<
+  TILRTA extends ILRTA = ILRTA,
+  TData extends object = object,
+> = {
+  type: `${TILRTA["type"]}Transfer`;
   ilrta: TILRTA;
-  data: TData;
-};
+} & TData;
 
 export type ILRTASignatureTransfer<
-  TILRTA extends ILRTA,
-  TData extends object,
+  TTransferDetails extends ILRTATransferDetails,
 > = {
   nonce: bigint;
   deadline: bigint;
-  transferDetails: ILRTATransferDetails<TILRTA, TData>;
+  transferDetails: TTransferDetails;
 };
 
 export type ILRTARequestedTransfer<
-  TILRTA extends ILRTA,
-  TData extends object,
+  TTransferDetails extends ILRTATransferDetails,
 > = {
   to: Address;
-  transferDetails: ILRTATransferDetails<TILRTA, TData>;
+  transferDetails: TTransferDetails;
 };
 
 export const ILRTATransfer = <TTransferDetails extends readonly AbiParameter[]>(

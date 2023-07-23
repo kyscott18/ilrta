@@ -63,11 +63,14 @@ beforeAll(async () => {
   invariant(mockFTAddress);
 
   ft = {
+    type: "fungible token",
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
     address: mockFTAddress,
     id: "0x0000000000000000000000000000000000000000000000000000000000000000",
+
+    chainID: 1,
   } as const;
 
   // mint to alice
@@ -95,7 +98,11 @@ describe("fungible token", () => {
   test("transfer", async () => {
     const { hash } = await transfer(publicClient, walletClient, ALICE, {
       to: BOB,
-      transferDetails: { ilrta: ft, data: { amount: parseEther("1") } },
+      transferDetails: {
+        type: "fungible tokenTransfer",
+        ilrta: ft,
+        amount: parseEther("1"),
+      },
     });
     await publicClient.waitForTransactionReceipt({ hash });
   });
@@ -104,11 +111,15 @@ describe("fungible token", () => {
     const block = await publicClient.getBlock();
 
     const signatureTransfer = {
-      transferDetails: { ilrta: ft, data: { amount: parseEther("1") } },
+      transferDetails: {
+        type: "fungible tokenTransfer",
+        ilrta: ft,
+        amount: parseEther("1"),
+      },
       nonce: 0n,
       deadline: block.timestamp + 100n,
       spender: ALICE,
-    };
+    } as const;
 
     const signature = await signTransfer(
       walletClient,
@@ -136,7 +147,11 @@ describe("fungible token", () => {
   test("transfer by super signature", async () => {
     const block = await publicClient.getBlock();
 
-    const transferDetails = { ilrta: ft, data: { amount: parseEther("1") } };
+    const transferDetails = {
+      type: "fungible tokenTransfer",
+      ilrta: ft,
+      amount: parseEther("1"),
+    } as const;
 
     const dataHash = getTransferTypedDataHash(1, {
       transferDetails,
@@ -172,9 +187,9 @@ describe("fungible token", () => {
         args: [
           ALICE,
           {
-            amount: transferDetails.data.amount,
+            amount: transferDetails.amount,
           },
-          { to: BOB, transferDetails: { amount: transferDetails.data.amount } },
+          { to: BOB, transferDetails: { amount: transferDetails.amount } },
           [dataHash],
         ],
       });
@@ -187,6 +202,6 @@ describe("fungible token", () => {
     const balanceOfAlice = await readAndParse(
       dataOf(publicClient, { ilrta: ft, owner: ALICE }),
     );
-    expect(balanceOfAlice.data.balance).toBe(parseEther("1"));
+    expect(balanceOfAlice.balance).toBe(parseEther("1"));
   });
 });

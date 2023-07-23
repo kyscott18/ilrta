@@ -65,6 +65,8 @@ const main = async () => {
   invariant(mockFTAddress1);
 
   const ft_1 = {
+    type: "fungible token",
+    chainID: 1,
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -86,6 +88,8 @@ const main = async () => {
   invariant(mockFTAddress2);
 
   const ft_2 = {
+    type: "fungible token",
+    chainID: 1,
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -116,11 +120,19 @@ const main = async () => {
 
   // sign
   const hash1 = getTransferTypedDataHash(1, {
-    transferDetails: { ilrta: ft_1, data: { amount: parseEther("1") } },
+    transferDetails: {
+      type: "fungible tokenTransfer",
+      ilrta: ft_1,
+      amount: parseEther("1"),
+    },
     spender: TransferBatchAddress,
   });
   const hash2 = getTransferTypedDataHash(1, {
-    transferDetails: { ilrta: ft_2, data: { amount: parseEther("1") } },
+    transferDetails: {
+      type: "fungible tokenTransfer",
+      ilrta: ft_2,
+      amount: parseEther("1"),
+    },
     spender: TransferBatchAddress,
   });
   const block = await publicClient.getBlock();

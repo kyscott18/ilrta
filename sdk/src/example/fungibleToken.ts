@@ -14,20 +14,10 @@ import type { Account, Hex, PublicClient, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
 import { getAddress, hashTypedData } from "viem/utils";
 
-export type FungibleToken = ILRTA & {
+export type FungibleToken = ILRTA<"fungible token"> & {
   decimals: number;
   id: "0x0000000000000000000000000000000000000000000000000000000000000000";
 };
-
-export type SignatureTransfer = ILRTASignatureTransfer<
-  FungibleToken,
-  { amount: bigint }
->;
-
-export type RequestedTransfer = ILRTARequestedTransfer<
-  FungibleToken,
-  { amount: bigint }
->;
 
 export type DataType = ILRTAData<FungibleToken, { balance: bigint }>;
 
@@ -35,6 +25,10 @@ export type TransferDetailsType = ILRTATransferDetails<
   FungibleToken,
   { amount: bigint }
 >;
+
+export type SignatureTransfer = ILRTASignatureTransfer<TransferDetailsType>;
+
+export type RequestedTransfer = ILRTARequestedTransfer<TransferDetailsType>;
 
 export const Data = [{ name: "balance", type: "uint256" }] as const;
 
@@ -64,7 +58,7 @@ export const getTransferTypedDataHash = (
     types: SuperSignatureTransfer,
     primaryType: "Transfer",
     message: {
-      transferDetails: { amount: transfer.transferDetails.data.amount },
+      transferDetails: { amount: transfer.transferDetails.amount },
       spender: getAddress(transfer.spender),
     },
   });
@@ -92,7 +86,7 @@ export const signTransfer = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
-        amount: transfer.transferDetails.data.amount,
+        amount: transfer.transferDetails.amount,
       },
       spender: transfer.spender,
       nonce: transfer.nonce,
@@ -111,7 +105,7 @@ export const transfer = async (
     account,
     abi: ilrtaFungibleTokenABI,
     functionName: "transfer",
-    args: [args.to, args.transferDetails.data],
+    args: [args.to, args.transferDetails],
     address: args.transferDetails.ilrta.address,
   });
   const hash = await walletClient.writeContract(request);
@@ -139,7 +133,7 @@ export const transferBySignature = async (
       args.signer,
       {
         transferDetails: {
-          amount: args.signatureTransfer.transferDetails.data.amount,
+          amount: args.signatureTransfer.transferDetails.amount,
         },
         nonce: args.signatureTransfer.nonce,
         deadline: args.signatureTransfer.deadline,
@@ -147,7 +141,7 @@ export const transferBySignature = async (
       {
         to: args.requestedTransfer.to,
         transferDetails: {
-          amount: args.requestedTransfer.transferDetails.data.amount,
+          amount: args.requestedTransfer.transferDetails.amount,
         },
       },
       args.signature,
@@ -170,5 +164,9 @@ export const dataOf = (
         functionName: "dataOf",
         args: [args.owner, args.ilrta.id],
       }),
-    parse: (data): DataType => ({ ilrta: args.ilrta, data }),
+    parse: (data): DataType => ({
+      type: "fungible tokenData",
+      ilrta: args.ilrta,
+      balance: data.balance,
+    }),
   }) satisfies ReverseMirageRead<{ balance: bigint }>;
