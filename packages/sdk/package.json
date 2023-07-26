@@ -18,7 +18,8 @@
     "!src/example/**/*"
   ],
   "scripts": {
-    "build": "wagmi generate && tsup",
+    "codegen": "wagmi generate",
+    "build": "pnpm codegen && tsup",
     "format": "rome format . --write",
     "lint": "rome check .",
     "lint:fix": "pnpm lint --apply",
