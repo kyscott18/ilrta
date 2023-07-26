@@ -36,7 +36,7 @@
     }
   },
   "dependencies": {
-    "reverse-mirage": "link:../../reverse-mirage",
+    "reverse-mirage": "link:../../reverse-mirage/packages/core",
     "tiny-invariant": "^1.3.1"
   },
   "peerDependencies": {

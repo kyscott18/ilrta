@@ -37,7 +37,7 @@ const main = async () => {
   invariant(mockFTAddress);
 
   const ft = {
-    type: "fungible token",
+    type: "fungibleToken",
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -59,7 +59,7 @@ const main = async () => {
   const block = await publicClient.getBlock();
   const signatureTransfer = {
     transferDetails: {
-      type: "fungible tokenTransfer",
+      type: "fungibleTokenTransfer",
       ilrta: ft,
       amount: parseEther("1"),
     },
@@ -81,7 +81,7 @@ const main = async () => {
       requestedTransfer: {
         to: BOB,
         transferDetails: {
-          type: "fungible tokenTransfer",
+          type: "fungibleTokenTransfer",
           ilrta: ft,
           amount: parseEther("0.5"),
         },

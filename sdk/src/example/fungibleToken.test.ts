@@ -63,7 +63,7 @@ beforeAll(async () => {
   invariant(mockFTAddress);
 
   ft = {
-    type: "fungible token",
+    type: "fungibleToken",
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -94,12 +94,12 @@ afterAll(async () => {
   await testClient.reset();
 });
 
-describe("fungible token", () => {
+describe("fungibleToken", () => {
   test("transfer", async () => {
     const { hash } = await transfer(publicClient, walletClient, ALICE, {
       to: BOB,
       transferDetails: {
-        type: "fungible tokenTransfer",
+        type: "fungibleTokenTransfer",
         ilrta: ft,
         amount: parseEther("1"),
       },
@@ -112,7 +112,7 @@ describe("fungible token", () => {
 
     const signatureTransfer = {
       transferDetails: {
-        type: "fungible tokenTransfer",
+        type: "fungibleTokenTransfer",
         ilrta: ft,
         amount: parseEther("1"),
       },
@@ -148,7 +148,7 @@ describe("fungible token", () => {
     const block = await publicClient.getBlock();
 
     const transferDetails = {
-      type: "fungible tokenTransfer",
+      type: "fungibleTokenTransfer",
       ilrta: ft,
       amount: parseEther("1"),
     } as const;

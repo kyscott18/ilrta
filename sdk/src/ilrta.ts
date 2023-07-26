@@ -1,5 +1,5 @@
 import type { AbiParameter } from "abitype";
-import type { Token } from "reverse-mirage";
+import type { Token, TokenData } from "reverse-mirage";
 import { type Hex } from "viem";
 import type { Address } from "viem/accounts";
 
@@ -8,10 +8,12 @@ export type ILRTA<TType extends string = string> = Token<TType> & {
   id: Hex;
 };
 
-export type ILRTAData<TILRTA extends ILRTA, TData extends object> = {
+export type ILRTAData<TILRTA extends ILRTA, TData extends object> = TokenData<
+  TILRTA,
+  TData
+> & {
   type: `${TILRTA["type"]}Data`;
-  ilrta: TILRTA;
-} & TData;
+};
 
 export type ILRTATransferDetails<
   TILRTA extends ILRTA = ILRTA,

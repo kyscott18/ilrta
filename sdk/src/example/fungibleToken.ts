@@ -14,7 +14,7 @@ import type { Account, Hex, PublicClient, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
 import { getAddress, hashTypedData } from "viem/utils";
 
-export type FungibleToken = ILRTA<"fungible token"> & {
+export type FungibleToken = ILRTA<"fungibleToken"> & {
   decimals: number;
   id: "0x0000000000000000000000000000000000000000000000000000000000000000";
 };
@@ -165,8 +165,8 @@ export const dataOf = (
         args: [args.owner, args.ilrta.id],
       }),
     parse: (data): DataType => ({
-      type: "fungible tokenData",
-      ilrta: args.ilrta,
+      type: "fungibleTokenData",
+      token: args.ilrta,
       balance: data.balance,
     }),
   }) satisfies ReverseMirageRead<{ balance: bigint }>;

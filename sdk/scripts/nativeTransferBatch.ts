@@ -65,7 +65,7 @@ const main = async () => {
   invariant(mockFTAddress1);
 
   const ft_1 = {
-    type: "fungible token",
+    type: "fungibleToken",
     chainID: 1,
     decimals: 18,
     name: "Test FT",
@@ -88,7 +88,7 @@ const main = async () => {
   invariant(mockFTAddress2);
 
   const ft_2 = {
-    type: "fungible token",
+    type: "fungibleToken",
     chainID: 1,
     decimals: 18,
     name: "Test FT",
@@ -121,7 +121,7 @@ const main = async () => {
   // sign
   const hash1 = getTransferTypedDataHash(1, {
     transferDetails: {
-      type: "fungible tokenTransfer",
+      type: "fungibleTokenTransfer",
       ilrta: ft_1,
       amount: parseEther("1"),
     },
@@ -129,7 +129,7 @@ const main = async () => {
   });
   const hash2 = getTransferTypedDataHash(1, {
     transferDetails: {
-      type: "fungible tokenTransfer",
+      type: "fungibleTokenTransfer",
       ilrta: ft_2,
       amount: parseEther("1"),
     },
