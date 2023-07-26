@@ -1,18 +1,25 @@
 {
-	"name": "ilrta",
-	"version": "0.0.0",
-	"description": "",
-	"private": "true",
-	"scripts": {},
-	"keywords": [],
-	"author": "",
-	"license": "MIT",
-	"engines": {
-		"node": ">=18",
-		"pnpm": ">=8"
-	},
-	"devDependencies": {
-		"rome": "^12.1.3",
-		"typescript": "^5.1.6"
-	}
+  "name": "ilrta-monorepo",
+  "version": "0.0.0",
+  "description": "",
+  "private": "true",
+  "scripts": {
+    "install:packages": "pnpm --filter './packages/**' install",
+    "preinstall": "npx -y only-allow pnpm",
+    "build": "pnpm --filter 'reverse-mirage' build",
+    "lint": "pnpm --parallel lint",
+    "format": "pnpm --parallel format",
+    "typecheck": "pnpm --parallel typecheck"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
+  "devDependencies": {
+    "rome": "^12.1.3",
+    "typescript": "^5.1.6"
+  }
 }

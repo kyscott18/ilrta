@@ -1,6 +1,6 @@
-[submodule "evm/lib/forge-std"]
+[submodule "packages/evm/lib/forge-std"]
 	path = evm/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "evm/lib/solmate"]
+[submodule "packages/evm/lib/solmate"]
 	path = evm/lib/solmate
 	url = https://github.com/transmissions11/solmate
