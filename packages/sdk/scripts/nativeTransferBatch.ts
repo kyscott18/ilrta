@@ -1,6 +1,3 @@
-import MockFungibleToken from "../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
-import Permit3 from "../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
-import TransferBatch from "../node_modules/ilrta-evm/out/TransferBatch.sol/TransferBatch.json";
 import { getTransferTypedDataHash } from "../src/example/fungibleToken.js";
 import {
   mockFungibleTokenABI,
@@ -11,6 +8,9 @@ import { signSuperSignature } from "../src/superSignature.js";
 import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
 import { publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
+import MockFungibleToken from "ilrta/out/MockFungibleToken.sol/MockFungibleToken.json";
+import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
+import TransferBatch from "ilrta/out/TransferBatch.sol/TransferBatch.json";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther } from "viem";
 

@@ -1,5 +1,3 @@
-import MockFungibleToken from "../../node_modules/ilrta-evm/out/MockFungibleToken.sol/MockFungibleToken.json";
-import Permit3 from "../../node_modules/ilrta-evm/out/Permit3.sol/Permit3.json";
 import { Permit3Address } from "../constants.js";
 import {
   ilrtaFungibleTokenABI,
@@ -18,6 +16,8 @@ import {
   transfer,
   transferBySignature,
 } from "./fungibleToken.js";
+import MockFungibleToken from "ilrta/out/MockFungibleToken.sol/MockFungibleToken.json";
+import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
 import { readAndParse } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther } from "viem";
