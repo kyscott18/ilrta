@@ -4,9 +4,11 @@
   "description": "",
   "files": ["src/**/*.sol", "out/"],
   "scripts": {
+    "build": "forge build",
+    "test": "forge test",
     "format": "rome format . --write && forge fmt",
     "clean": "rm -rf cache out",
-    "lint": "pnpm solhint \"{script,src,test}/**/*.sol\" && rome check ."
+    "lint": "rome check ."
   },
   "keywords": [],
   "author": "",

@@ -18,7 +18,7 @@
     "!src/example/**/*"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "wagmi generate && tsup",
     "format": "rome format . --write",
     "lint": "rome check .",
     "lint:fix": "pnpm lint --apply",

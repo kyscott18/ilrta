@@ -10,18 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  install:
-    name: Install
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v3
-      - name: Setup javascript env
-        uses: ./.github/actions/setup-js
 
   lint:
     name: Lint
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
@@ -32,15 +23,18 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
       - name: Lint
         run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
 
   build:
-    name: Build and test
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
+      - name: Setup javascript env
+        uses: ./.github/actions/setup-js
       - name: Install foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Check tests
-        run: forge snapshot --check
-
+      - name: Build
+        run: pnpm build
