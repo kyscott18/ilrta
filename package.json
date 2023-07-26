@@ -7,6 +7,7 @@
     "install:packages": "pnpm --filter './packages/**' install",
     "preinstall": "npx -y only-allow pnpm",
     "build": "pnpm --filter 'ilrta' build && pnpm --filter './packages/*' --filter !'ilrta' build",
+    "build:contracts": "pnpm --filter 'ilrta' build",
     "lint": "pnpm --parallel lint",
     "format": "pnpm --parallel format",
     "typecheck": "pnpm --parallel typecheck"

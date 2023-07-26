@@ -21,6 +21,8 @@ jobs:
         uses: ./.github/actions/setup-js
       - name: Install foundry
         uses: foundry-rs/foundry-toolchain@v1
+      - name: Build contracts
+        run: pnpm build:contracts
       - name: Lint
         run: pnpm lint
       - name: Typecheck
