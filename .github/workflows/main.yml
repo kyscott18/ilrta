@@ -23,6 +23,8 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
       - name: Build contracts
         run: pnpm build:contracts
+      - name: Codegen
+        run: pnpm codegen
       - name: Lint
         run: pnpm lint
       - name: Typecheck
