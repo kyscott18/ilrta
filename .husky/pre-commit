@@ -1,0 +1,12 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+pnpm build contracts
+
+pnpm codegen
+
+pnpm lint
+
+pnpm typecheck
+
+pnpm build
