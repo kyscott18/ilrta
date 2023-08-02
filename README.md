@@ -5,7 +5,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-**ilrta** is a protocol focused on signature-based token transfers. This currently consists of:
+**ilrta** is a protocol focused on creating token standards for exotic use cases. The goal is to allow for custom standards to be created yet still retain composability and learn from pitfalls for previous design patterns, namely `approve` and `transferFrom`. This currently consists of:
 
 - `SuperSignature`: A next-generation batch signature authentication scheme based around sign + verify once, use everywhere architecture.
 - `Permit3`: Next version of permit2 with SuperSignature, EIP 6492, and multiple token standard support.
@@ -48,9 +48,9 @@ This protocol is adapted around two main ideas: token standards at their core ju
 
 - Pass in the address of the super signature contract
 - Add `spender` field to a super signature for more safety of signature misuse
-- Does transient storage allow for storing more reasonable data instead of the hash of a typehash array
-- Anything to make super signatures show up in a more readable way in wallets
-- Use msg.data as part of the signature to make sure signatures aren't misused
+- Explore being forwards compatible with transient storage, new signature methods
+- Make signatures show up in wallets
+- Redundant checks to make sure signatures aren't misused
 - Allow for multiple signers to use at once, changing SuperSignature root to a mapping
 
 ## Acknowledgements
