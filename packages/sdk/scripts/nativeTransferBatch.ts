@@ -5,7 +5,7 @@ import {
   transferBatchABI,
 } from "../src/generated.js";
 import { signSuperSignature } from "../src/superSignature.js";
-import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
+import { ALICE, BOB } from "../src/test/constants.js";
 import { publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
 import MockFungibleToken from "ilrta/out/MockFungibleToken.sol/MockFungibleToken.json";
@@ -13,16 +13,12 @@ import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
 import TransferBatch from "ilrta/out/TransferBatch.sol/TransferBatch.json";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther } from "viem";
+import { foundry } from "viem/chains";
 
 const main = async () => {
   const shutdown = await startProxy({
     port: 8545, // By default, the proxy will listen on port 8545.
     host: "::", // By default, the proxy will listen on all interfaces.
-    options: {
-      chainId: 1,
-      forkUrl,
-      forkBlockNumber,
-    },
   });
 
   let deployHash = await walletClient.deployContract({
@@ -66,7 +62,7 @@ const main = async () => {
 
   const ft_1 = {
     type: "fungibleToken",
-    chainID: 1,
+    chainID: foundry.id,
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -89,7 +85,7 @@ const main = async () => {
 
   const ft_2 = {
     type: "fungibleToken",
-    chainID: 1,
+    chainID: foundry.id,
     decimals: 18,
     name: "Test FT",
     symbol: "TEST",
@@ -119,7 +115,7 @@ const main = async () => {
   await publicClient.waitForTransactionReceipt({ hash: mintHash });
 
   // sign
-  const hash1 = getTransferTypedDataHash(1, {
+  const hash1 = getTransferTypedDataHash(foundry.id, {
     transferDetails: {
       type: "fungibleTokenTransfer",
       ilrta: ft_1,
@@ -127,7 +123,7 @@ const main = async () => {
     },
     spender: TransferBatchAddress,
   });
-  const hash2 = getTransferTypedDataHash(1, {
+  const hash2 = getTransferTypedDataHash(foundry.id, {
     transferDetails: {
       type: "fungibleTokenTransfer",
       ilrta: ft_2,

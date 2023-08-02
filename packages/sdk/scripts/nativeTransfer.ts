@@ -4,22 +4,18 @@ import {
   transferBySignature,
 } from "../src/example/fungibleToken.js";
 import { mockFungibleTokenABI } from "../src/generated.js";
-import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
+import { ALICE, BOB } from "../src/test/constants.js";
 import { publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
 import MockFungibleToken from "ilrta/out/MockFungibleToken.sol/MockFungibleToken.json";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther, zeroAddress } from "viem";
+import { foundry } from "viem/chains";
 
 const main = async () => {
   const shutdown = await startProxy({
     port: 8545, // By default, the proxy will listen on port 8545.
     host: "::", // By default, the proxy will listen on all interfaces.
-    options: {
-      chainId: 1,
-      forkUrl,
-      forkBlockNumber,
-    },
   });
 
   // deploy token
@@ -43,7 +39,7 @@ const main = async () => {
     symbol: "TEST",
     address: mockFTAddress,
     id: "0x0000000000000000000000000000000000000000000000000000000000000000",
-    chainID: 1,
+    chainID: foundry.id,
   } as const satisfies FungibleToken;
 
   // mint token

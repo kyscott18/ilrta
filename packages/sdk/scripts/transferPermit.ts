@@ -3,12 +3,12 @@ import {
   permit3SignTransfer,
   permit3TransferBySignature,
 } from "../src/permit3.js";
-import { ALICE, BOB, forkBlockNumber, forkUrl } from "../src/test/constants.js";
+import { ALICE, BOB } from "../src/test/constants.js";
 import { anvil, publicClient, walletClient } from "../src/test/utils.js";
 import { startProxy } from "@viem/anvil";
 import MockERC20 from "ilrta/lib/solmate/out/MockERC20.sol/MockERC20.json";
 import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
-import { makeAmountFromString } from "reverse-mirage";
+import { createAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, parseEther } from "viem";
 
@@ -16,11 +16,6 @@ const main = async () => {
   const shutdown = await startProxy({
     port: 8545, // By default, the proxy will listen on port 8545.
     host: "::", // By default, the proxy will listen on all interfaces.
-    options: {
-      chainId: 1,
-      forkUrl,
-      forkBlockNumber,
-    },
   });
 
   let deployHash = await walletClient.deployContract({
@@ -79,7 +74,7 @@ const main = async () => {
   // sign
   const block = await publicClient.getBlock();
   const transfer = {
-    transferDetails: makeAmountFromString(mockERC20, "1"),
+    transferDetails: createAmountFromString(mockERC20, "1"),
     spender: ALICE,
     nonce: 0n,
     deadline: block.timestamp + 100n,
@@ -96,7 +91,7 @@ const main = async () => {
       signatureTransfer: transfer,
       requestedTransfer: {
         to: BOB,
-        amount: makeAmountFromString(mockERC20, "0.5"),
+        amount: createAmountFromString(mockERC20, "0.5"),
       },
       signature,
     },
