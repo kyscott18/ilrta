@@ -2,6 +2,8 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
+import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
+import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
 
 import {console2} from "forge-std/console2.sol";
 
@@ -24,9 +26,11 @@ contract C {
 
 contract AssemblyTest is Test {
     address private c;
+    MockFungibleToken private mockFT;
 
     function setUp() external {
         c = address(new C());
+        mockFT = new MockFungibleToken();
     }
 
     function testAssembly() external {
@@ -39,6 +43,9 @@ contract AssemblyTest is Test {
         // address i = c;
 
         // C(c).t1(C.S(to));
+        address a = address(mockFT);
+
+        console2.log("%x", uint32(ILRTAFungibleToken.validateRequest.selector));
 
         // assembly {
         //     let freeMemoryPointer := mload(0x40)

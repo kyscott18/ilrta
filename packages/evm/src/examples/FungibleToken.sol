@@ -63,8 +63,8 @@ abstract contract ILRTAFungibleToken is ILRTA {
     }
 
     function validateRequest(
-        ILRTATransferDetails memory signedTransferDetails,
-        ILRTATransferDetails memory requestedTransferDetails
+        ILRTATransferDetails calldata signedTransferDetails,
+        ILRTATransferDetails calldata requestedTransferDetails
     )
         external
         pure

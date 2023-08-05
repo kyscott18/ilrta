@@ -30,10 +30,10 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     struct TransferDetails {
+        bytes transferDetails;
         address token;
         TokenType tokenType;
         bytes4 functionSelector;
-        bytes transferDetails;
     }
 
     struct SignatureTransfer {
@@ -49,8 +49,8 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     struct RequestedTransferDetails {
-        address to;
         bytes transferDetails;
+        address to;
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -114,6 +114,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of tokens using a signed message
+    /// @custom:team make sure the signature and the request are the same length
     function transferBySignature(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
@@ -180,11 +181,65 @@ contract Permit3 is EIP712, UnorderedNonce {
         view
     {
         if (signedTransferDetails.tokenType == TokenType.ERC20) {
-            // revert InvalidRequest(requestedTransferDetails);
+            uint256 signedAmount = abi.decode(signedTransferDetails.transferDetails, (uint256));
+            uint256 requestedAmount = abi.decode(requestedTransferDetails, (uint256));
+            if (requestedAmount > signedAmount) revert InvalidRequest(requestedTransferDetails);
         } else {
-            // revert InvalidRequest(requestedTransferDetails);
-            // call to ilrta
-            // mine the function selector
+            bool success;
+
+            if (signedTransferDetails.transferDetails.length != requestedTransferDetails.length) {
+                revert InvalidRequest(requestedTransferDetails);
+            }
+
+            assembly {
+                let freeMemoryPointer := mload(0x40)
+
+                // Determine the length of the transfer details
+                let transferDetailsLength := mload(requestedTransferDetails)
+
+                // Write the abi-encoded calldata into memory, beginning with the function selector.
+                mstore(freeMemoryPointer, 0x8dc2c69e00000000000000000000000000000000000000000000000000000000)
+
+                // Append the signature transfer details
+                // signedTransferDetails represents the pointer to data in memory
+                // The first word contains the location of the transferDetails bytes array
+                // The first word of the transferDetails bytes array is the length, the next words are the data
+                for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                    mstore(add(freeMemoryPointer, add(4, i)), mload(add(add(mload(signedTransferDetails), 0x20), i)))
+                }
+
+                // Append the requested transfer details
+                // requestedTransferDetials represents the pointer to data in memory
+                // The first word is the length of the bytes array, the next words are the data
+                for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                    mstore(
+                        add(freeMemoryPointer, add(add(4, transferDetailsLength), i)),
+                        mload(add(add(requestedTransferDetails, 0x20), i))
+                    )
+                }
+
+                success :=
+                    and(
+                        // Set success to whether the call reverted, if not we check it
+                        // returned exactly 1
+                        eq(mload(0), 1),
+                        // The token address is located in the next word after the location of the bytes array
+                        // The length of the data is 4 + 2 * length of transferDetails
+                        // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
+                        // Counterintuitively, this call must be positioned second to the or() call in the
+                        // surrounding and() call or else returndatasize() will be zero during the computation.
+                        staticcall(
+                            gas(),
+                            mload(add(signedTransferDetails, 0x20)),
+                            freeMemoryPointer,
+                            add(4, mul(2, transferDetailsLength)),
+                            0,
+                            32
+                        )
+                    )
+            }
+
+            if (!success) revert InvalidRequest(requestedTransferDetails);
         }
     }
 
