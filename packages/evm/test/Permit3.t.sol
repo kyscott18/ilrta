@@ -68,6 +68,8 @@ contract Permit3Test is Test {
             Permit3.RequestedTransferDetails(abi.encode(1e18), address(this)),
             signature
         );
+
+        assertEq(mockERC20.balanceOf(address(this)), 1e18);
     }
 
     function testTransferBySignatureILRTA() external {
@@ -108,9 +110,11 @@ contract Permit3Test is Test {
         permit3.transferBySignature(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(0.5e18)), address(this)),
+            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)), address(this)),
             signature
         );
+
+        assertEq(mockFT.balanceOf(address(this)), 1e18);
     }
 
     function testGasTransferBySignatureERC20() external {
@@ -196,7 +200,7 @@ contract Permit3Test is Test {
         permit3.transferBySignature(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(0.5e18)), address(this)),
+            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)), address(this)),
             signature
         );
     }
