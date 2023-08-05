@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {MockERC20} from "solmate/test/utils/mocks/MockERC20.sol";
+import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
 import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
 import {Permit3} from "src/Permit3.sol";

@@ -188,57 +188,54 @@ contract Permit3 is EIP712, UnorderedNonce {
             if (requestedAmount > signedAmount) revert InvalidRequest(requestedTransferDetails);
         } else {
             bool success;
-
-            if (signedTransferDetails.transferDetails.length != requestedTransferDetails.length) {
-                revert InvalidRequest(requestedTransferDetails);
-            }
-
             assembly {
-                let freeMemoryPointer := mload(0x40)
-
                 // Determine the length of the transfer details
                 let transferDetailsLength := mload(requestedTransferDetails)
 
-                // Write the abi-encoded calldata into memory, beginning with the function selector.
-                mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
+                success := eq(mload(add(signedTransferDetails, 0x80)), transferDetailsLength)
 
-                // Append the signature transfer details
-                // signedTransferDetails represents the pointer to data in memory
-                // The first word contains the location of the transferDetails bytes array
-                // The first word of the transferDetails bytes array is the length, the next words are the data
-                for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
-                    mstore(add(freeMemoryPointer, add(4, i)), mload(add(add(mload(signedTransferDetails), 0x20), i)))
-                }
+                if success {
+                    let freeMemoryPointer := mload(0x40)
+                    // Write the abi-encoded calldata into memory, beginning with the function selector.
+                    mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
 
-                // Append the requested transfer details
-                // requestedTransferDetials represents the pointer to data in memory
-                // The first word is the length of the bytes array, the next words are the data
-                for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
-                    mstore(
-                        add(freeMemoryPointer, add(add(4, transferDetailsLength), i)),
-                        mload(add(add(requestedTransferDetails, 0x20), i))
-                    )
-                }
+                    // Append the signature transfer details
+                    // signedTransferDetails represents the pointer to data in memory
+                    // The start of the transferDetails bytes array data is signedTransferDetails + 0x100
+                    for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                        mstore(add(freeMemoryPointer, add(4, i)), mload(add(add(signedTransferDetails, 0x100), i)))
+                    }
 
-                success :=
-                    and(
-                        // Set success to whether the call reverted, if not we check it
-                        // returned exactly 1
-                        eq(mload(0), 1),
-                        // The token address is located in the next word after the location of the bytes array
-                        // The length of the data is 4 + 2 * length of transferDetails
-                        // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
-                        // Counterintuitively, this call must be positioned second to the or() call in the
-                        // surrounding and() call or else returndatasize() will be zero during the computation.
-                        staticcall(
-                            gas(),
-                            mload(add(signedTransferDetails, 0x20)),
-                            freeMemoryPointer,
-                            add(4, mul(2, transferDetailsLength)),
-                            0,
-                            32
+                    // Append the requested transfer details
+                    // requestedTransferDetials represents the pointer to data in memory
+                    // The first word is the length of the bytes array, the next words are the data
+                    for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                        mstore(
+                            add(freeMemoryPointer, add(add(4, transferDetailsLength), i)),
+                            mload(add(add(requestedTransferDetails, 0x20), i))
                         )
-                    )
+                    }
+
+                    success :=
+                        and(
+                            // Set success to whether the call reverted, if not we check it
+                            // returned exactly 1
+                            eq(mload(0), 1),
+                            // The token address is located in the next word after the location of the bytes array
+                            // The length of the data is 4 + 2 * length of transferDetails
+                            // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
+                            // Counterintuitively, this call must be positioned second to the or() call in the
+                            // surrounding and() call or else returndatasize() will be zero during the computation.
+                            staticcall(
+                                gas(),
+                                mload(add(signedTransferDetails, 0x20)),
+                                freeMemoryPointer,
+                                add(4, mul(2, transferDetailsLength)),
+                                0,
+                                32
+                            )
+                        )
+                }
             }
 
             if (!success) revert InvalidRequest(requestedTransferDetails);

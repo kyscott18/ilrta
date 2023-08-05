@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {MockSemiFungibleToken} from "./mocks/MockSemiFungibleToken.sol";
 import {ILRTASemiFungibleToken} from "src/examples/SemiFungibleToken.sol";
-import {Permit3} from "src/Permit3.sol";
 
 contract SemiFungibleTokenTest is Test {
     MockSemiFungibleToken private sft;
