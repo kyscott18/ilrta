@@ -36,7 +36,7 @@ contract FungibleTokenTest is Test {
     function testTransfer() external {
         ft.mint(address(this), 1e18);
 
-        assertTrue(ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}))));
+        assertTrue(ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
         assertEq(ft.totalSupply(), 1e18);
 
         assertEq(ft.balanceOf(address(this)), 0);
@@ -48,6 +48,6 @@ contract FungibleTokenTest is Test {
         ft.mint(address(this), 1e18);
         vm.resumeGasMetering();
 
-        ft.transfer(address(0xC0FFEE), abi.encode(ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
+        ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
     }
 }

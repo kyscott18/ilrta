@@ -54,41 +54,33 @@ abstract contract ILRTAFungibleToken is ILRTA {
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataOf(address owner, bytes32) external view override returns (bytes memory) {
-        return abi.encode(_dataOf[owner]);
+    function dataOf(address owner, bytes32) external view returns (ILRTAData memory) {
+        return _dataOf[owner];
     }
 
-    function allowanceOf(address owner, address spender, bytes32) external view override returns (bytes memory) {
-        return abi.encode(_allowanceOf[owner][spender]);
+    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTATransferDetails memory) {
+        return _allowanceOf[owner][spender];
     }
 
     function validateRequest(
-        bytes memory signedTransferDetailsBytes,
-        bytes memory requestedTransferDetailsBytes
+        ILRTATransferDetails memory signedTransferDetails,
+        ILRTATransferDetails memory requestedTransferDetails
     )
         external
         pure
-        override
+        returns (bool)
     {
-        ILRTATransferDetails memory signedTransferDetails =
-            abi.decode(signedTransferDetailsBytes, (ILRTATransferDetails));
-
-        ILRTATransferDetails memory requestedTransferDetails =
-            abi.decode(requestedTransferDetailsBytes, (ILRTATransferDetails));
-
-        if (requestedTransferDetails.amount > signedTransferDetails.amount) {
-            revert InvalidRequest(requestedTransferDetailsBytes);
-        }
+        return requestedTransferDetails.amount > signedTransferDetails.amount ? false : true;
     }
 
-    function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
-        return _transfer(msg.sender, to, abi.decode(transferDetailsBytes, (ILRTATransferDetails)));
+    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+        return _transfer(msg.sender, to, transferDetails);
     }
 
-    function approve(address spender, bytes calldata transferDetailsBytes) external override returns (bool) {
-        _allowanceOf[msg.sender][spender] = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
+    function approve(address spender, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+        _allowanceOf[msg.sender][spender] = transferDetails;
 
-        emit Approval(msg.sender, spender, transferDetailsBytes);
+        emit Approval(msg.sender, spender, abi.encode(transferDetails));
 
         return true;
     }
@@ -96,14 +88,12 @@ abstract contract ILRTAFungibleToken is ILRTA {
     function transferFrom(
         address from,
         address to,
-        bytes calldata transferDetailsBytes
+        ILRTATransferDetails calldata transferDetails
     )
         external
-        override
         returns (bool)
     {
         ILRTATransferDetails memory allowed = _allowanceOf[from][msg.sender];
-        ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
 
         if (allowed.amount != type(uint256).max) {
             _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed.amount - transferDetails.amount);
