@@ -32,13 +32,17 @@ abstract contract ILRTAERC20 is ILRTA {
         uint256 amount;
     }
 
+    struct ILRTAApprovalDetails {
+        uint256 amount;
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) private _dataOf;
 
-    mapping(address owner => mapping(address spender => ILRTATransferDetails transferDetails)) private _allowanceOf;
+    mapping(address owner => mapping(address spender => ILRTAApprovalDetails approvalDetails)) private _allowanceOf;
 
     uint256 public totalSupply;
 
@@ -63,7 +67,7 @@ abstract contract ILRTAERC20 is ILRTA {
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
-        _allowanceOf[msg.sender][spender] = ILRTATransferDetails(amount);
+        _allowanceOf[msg.sender][spender] = ILRTAApprovalDetails(amount);
 
         emit Approval(msg.sender, spender, amount);
 
@@ -78,7 +82,7 @@ abstract contract ILRTAERC20 is ILRTA {
         uint256 allowed = _allowanceOf[from][msg.sender].amount;
 
         if (allowed != type(uint256).max) {
-            _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed - amount);
+            _allowanceOf[from][msg.sender] = ILRTAApprovalDetails(allowed - amount);
         }
 
         return _transfer(from, to, ILRTATransferDetails({amount: amount}));
@@ -92,13 +96,13 @@ abstract contract ILRTAERC20 is ILRTA {
         return _dataOf[owner];
     }
 
-    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTATransferDetails memory) {
+    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTAApprovalDetails memory) {
         return _allowanceOf[owner][spender];
     }
 
-    function validateRequest(
-        ILRTATransferDetails memory signedTransferDetails,
-        ILRTATransferDetails memory requestedTransferDetails
+    function validateRequest_sUsyFN(
+        ILRTATransferDetails calldata signedTransferDetails,
+        ILRTATransferDetails calldata requestedTransferDetails
     )
         external
         pure
@@ -107,19 +111,19 @@ abstract contract ILRTAERC20 is ILRTA {
         return requestedTransferDetails.amount > signedTransferDetails.amount ? false : true;
     }
 
-    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+    function transfer_dMWqQA(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
         return _transfer(msg.sender, to, transferDetails);
     }
 
-    function approve(address spender, ILRTATransferDetails calldata transferDetails) external returns (bool) {
-        _allowanceOf[msg.sender][spender] = transferDetails;
+    function approve_cMebqQ(address spender, ILRTAApprovalDetails calldata approvalDetails) external returns (bool) {
+        _allowanceOf[msg.sender][spender] = approvalDetails;
 
-        emit Approval(msg.sender, spender, abi.encode(transferDetails));
+        emit Approval(msg.sender, spender, abi.encode(approvalDetails));
 
         return true;
     }
 
-    function transferFrom(
+    function transferFrom_AVXnah(
         address from,
         address to,
         ILRTATransferDetails calldata transferDetails
@@ -127,10 +131,10 @@ abstract contract ILRTAERC20 is ILRTA {
         external
         returns (bool)
     {
-        ILRTATransferDetails memory allowed = _allowanceOf[from][msg.sender];
+        ILRTAApprovalDetails memory allowed = _allowanceOf[from][msg.sender];
 
         if (allowed.amount != type(uint256).max) {
-            _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed.amount - transferDetails.amount);
+            _allowanceOf[from][msg.sender] = ILRTAApprovalDetails(allowed.amount - transferDetails.amount);
         }
 
         return _transfer(from, to, transferDetails);

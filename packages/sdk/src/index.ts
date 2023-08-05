@@ -26,9 +26,3 @@ export {
   permit3TransferBySignature,
   permit3TransferBatchBySignature,
 } from "./permit3.js";
-
-export {
-  VerifyType,
-  signSuperSignature,
-  calculateRoot,
-} from "./superSignature.js";

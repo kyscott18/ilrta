@@ -36,7 +36,7 @@ contract FungibleTokenTest is Test {
     function testTransfer() external {
         ft.mint(address(this), 1e18);
 
-        assertTrue(ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
+        assertTrue(ft.transfer_dMWqQA(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
         assertEq(ft.totalSupply(), 1e18);
 
         assertEq(ft.balanceOf(address(this)), 0);
@@ -48,13 +48,13 @@ contract FungibleTokenTest is Test {
         ft.mint(address(this), 1e18);
         vm.resumeGasMetering();
 
-        ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
+        ft.transfer_dMWqQA(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
     }
 
     function testFunctionSelectors() external {
-        assertTrue(ILRTAFungibleToken.transfer.selector == 0x8a4068dd);
-        assertTrue(ILRTAFungibleToken.approve.selector == 0x12424e3f);
-        assertTrue(ILRTAFungibleToken.transferFrom.selector == 0x811c34d3);
-        assertTrue(ILRTAFungibleToken.validateRequest.selector == 0x95a41eb5);
+        assertTrue(ILRTAFungibleToken.transfer_dMWqQA.selector == 0x8a4068dd);
+        assertTrue(ILRTAFungibleToken.approve_cMebqQ.selector == 0x12424e3f);
+        assertTrue(ILRTAFungibleToken.transferFrom_AVXnah.selector == 0x811c34d3);
+        assertTrue(ILRTAFungibleToken.validateRequest_sUsyFN.selector == 0x95a41eb5);
     }
 }

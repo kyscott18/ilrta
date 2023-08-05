@@ -200,7 +200,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                 let transferDetailsLength := mload(requestedTransferDetails)
 
                 // Write the abi-encoded calldata into memory, beginning with the function selector.
-                mstore(freeMemoryPointer, 0x8dc2c69e00000000000000000000000000000000000000000000000000000000)
+                mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
 
                 // Append the signature transfer details
                 // signedTransferDetails represents the pointer to data in memory

@@ -24,13 +24,17 @@ abstract contract ILRTAFungibleToken is ILRTA {
         uint256 amount;
     }
 
+    struct ILRTAApprovalDetails {
+        uint256 amount;
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) private _dataOf;
 
-    mapping(address owner => mapping(address spender => ILRTATransferDetails transferDetails)) private _allowanceOf;
+    mapping(address owner => mapping(address spender => ILRTAApprovalDetails approvalDetails)) private _allowanceOf;
 
     uint256 public totalSupply;
 
@@ -58,11 +62,11 @@ abstract contract ILRTAFungibleToken is ILRTA {
         return _dataOf[owner];
     }
 
-    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTATransferDetails memory) {
+    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTAApprovalDetails memory) {
         return _allowanceOf[owner][spender];
     }
 
-    function validateRequest(
+    function validateRequest_sUsyFN(
         ILRTATransferDetails calldata signedTransferDetails,
         ILRTATransferDetails calldata requestedTransferDetails
     )
@@ -73,19 +77,19 @@ abstract contract ILRTAFungibleToken is ILRTA {
         return requestedTransferDetails.amount > signedTransferDetails.amount ? false : true;
     }
 
-    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+    function transfer_dMWqQA(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
         return _transfer(msg.sender, to, transferDetails);
     }
 
-    function approve(address spender, ILRTATransferDetails calldata transferDetails) external returns (bool) {
-        _allowanceOf[msg.sender][spender] = transferDetails;
+    function approve_cMebqQ(address spender, ILRTAApprovalDetails calldata approvalDetails) external returns (bool) {
+        _allowanceOf[msg.sender][spender] = approvalDetails;
 
-        emit Approval(msg.sender, spender, abi.encode(transferDetails));
+        emit Approval(msg.sender, spender, abi.encode(approvalDetails));
 
         return true;
     }
 
-    function transferFrom(
+    function transferFrom_AVXnah(
         address from,
         address to,
         ILRTATransferDetails calldata transferDetails
@@ -93,10 +97,10 @@ abstract contract ILRTAFungibleToken is ILRTA {
         external
         returns (bool)
     {
-        ILRTATransferDetails memory allowed = _allowanceOf[from][msg.sender];
+        ILRTAApprovalDetails memory allowed = _allowanceOf[from][msg.sender];
 
         if (allowed.amount != type(uint256).max) {
-            _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed.amount - transferDetails.amount);
+            _allowanceOf[from][msg.sender] = ILRTAApprovalDetails(allowed.amount - transferDetails.amount);
         }
 
         return _transfer(from, to, transferDetails);

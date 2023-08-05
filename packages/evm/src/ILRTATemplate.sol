@@ -26,6 +26,11 @@ abstract contract ILRTATemplate is ILRTA {
         bytes32 data;
     }
 
+    /// @notice data is a filler to silence compiler errors, developer should replace this
+    struct ILRTAApprovalDetails {
+        bytes32 data;
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -48,7 +53,7 @@ abstract contract ILRTATemplate is ILRTA {
         external
         view
         virtual
-        returns (ILRTATransferDetails memory);
+        returns (ILRTAApprovalDetails memory);
 
     /// @notice check that the request is valid
     /// @dev Replace XXXXXX such that the function selector is 0x95a41eb5
@@ -76,7 +81,7 @@ abstract contract ILRTATemplate is ILRTA {
     /// @dev Replace XXXXXX such that the function selector is 0x12424e3f
     function approve_XXXXXX(
         address spender,
-        ILRTATransferDetails calldata transferDetails
+        ILRTAApprovalDetails calldata approvalDetails
     )
         external
         virtual

@@ -12,6 +12,11 @@ import {
   hashTypedData,
 } from "viem";
 
+export const TokenTypeEnum = {
+  ERC20: 0,
+  ILRTA: 1,
+} as const;
+
 export type SignatureTransfer = {
   transferDetails: ERC20Amount<ERC20>;
   nonce: bigint;

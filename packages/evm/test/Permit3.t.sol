@@ -76,13 +76,13 @@ contract Permit3Test is Test {
 
         mockFT.mint(owner, 1e18);
         vm.prank(owner);
-        mockFT.approve(address(permit3), ILRTAFungibleToken.ILRTATransferDetails(1e18));
+        mockFT.approve_cMebqQ(address(permit3), ILRTAFungibleToken.ILRTAApprovalDetails(1e18));
 
         Permit3.TransferDetails memory transferDetails = Permit3.TransferDetails(
             abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
             address(mockFT),
             Permit3.TokenType.ILRTA,
-            0x077adbce
+            0x811c34d3
         );
 
         bytes32 signatureHash = keccak256(
@@ -163,13 +163,13 @@ contract Permit3Test is Test {
 
         mockFT.mint(owner, 1e18);
         vm.prank(owner);
-        mockFT.approve(address(permit3), ILRTAFungibleToken.ILRTATransferDetails(type(uint256).max));
+        mockFT.approve_cMebqQ(address(permit3), ILRTAFungibleToken.ILRTAApprovalDetails(type(uint256).max));
 
         Permit3.TransferDetails memory transferDetails = Permit3.TransferDetails(
             abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
             address(mockFT),
             Permit3.TokenType.ILRTA,
-            0x077adbce
+            0x811c34d3
         );
 
         bytes32 signatureHash = keccak256(
