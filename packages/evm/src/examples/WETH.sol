@@ -19,7 +19,7 @@ contract ILRTAWETH is ILRTAERC20 {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(address _superSignature) ILRTAERC20(_superSignature, "Wrapped Ether", "WETH", 18) {}
+    constructor() ILRTAERC20("Wrapped Ether", "WETH", 18) {}
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC

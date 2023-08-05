@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {ILRTA} from "../ILRTA.sol";
-import {SignatureVerification} from "../SignatureVerification.sol";
 
 /// @notice Implement both ERC20 and ILRTA
 /// @author Kyle Scott
@@ -33,41 +32,21 @@ abstract contract ILRTAERC20 is ILRTA {
         uint256 amount;
     }
 
-    struct SignatureTransfer {
-        uint256 nonce;
-        uint256 deadline;
-        ILRTATransferDetails transferDetails;
-    }
-
-    struct RequestedTransfer {
-        address to;
-        ILRTATransferDetails transferDetails;
-    }
-
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) private _dataOf;
 
-    uint256 public totalSupply;
+    mapping(address owner => mapping(address spender => ILRTATransferDetails transferDetails)) private _allowanceOf;
 
-    mapping(address owner => mapping(address spender => uint256)) public allowance;
+    uint256 public totalSupply;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor(
-        address _superSignature,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
-    )
-        ILRTA(_superSignature, _name, _symbol, "TransferDetails(uint256 amount)")
-    {
-        name = _name;
-        symbol = _symbol;
+    constructor(string memory _name, string memory _symbol, uint8 _decimals) ILRTA(_name, _symbol) {
         decimals = _decimals;
     }
 
@@ -79,8 +58,12 @@ abstract contract ILRTAERC20 is ILRTA {
         return _dataOf[owner].balance;
     }
 
+    function allowance(address owner, address spender) external view returns (uint256 amount) {
+        return _allowanceOf[owner][spender].amount;
+    }
+
     function approve(address spender, uint256 amount) external returns (bool) {
-        allowance[msg.sender][spender] = amount;
+        _allowanceOf[msg.sender][spender] = ILRTATransferDetails(amount);
 
         emit Approval(msg.sender, spender, amount);
 
@@ -92,9 +75,11 @@ abstract contract ILRTAERC20 is ILRTA {
     }
 
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
-        uint256 allowed = allowance[from][msg.sender]; // Saves gas for limited approvals.
+        uint256 allowed = _allowanceOf[from][msg.sender].amount;
 
-        if (allowed != type(uint256).max) allowance[from][msg.sender] = allowed - amount;
+        if (allowed != type(uint256).max) {
+            _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed - amount);
+        }
 
         return _transfer(from, to, ILRTATransferDetails({amount: amount}));
     }
@@ -103,108 +88,67 @@ abstract contract ILRTAERC20 is ILRTA {
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataID(bytes calldata) external pure returns (bytes32) {
-        return bytes32(0);
+    function dataOf(address owner, bytes32) external view override returns (bytes memory) {
+        return abi.encode(_dataOf[owner]);
     }
 
-    /// @dev because this standard is completely fungible, there is no need for an id
-    function dataOf(address owner, bytes32) external view returns (ILRTAData memory) {
-        return _dataOf[owner];
+    function allowanceOf(address owner, address spender, bytes32) external view override returns (bytes memory) {
+        return abi.encode(_allowanceOf[owner][spender]);
     }
 
-    function transfer(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
-        return _transfer(msg.sender, to, transferDetails);
-    }
-
-    function transferBySignature(
-        address from,
-        SignatureTransfer calldata signatureTransfer,
-        RequestedTransfer calldata requestedTransfer,
-        bytes calldata signature
+    function validateRequest(
+        bytes memory signedTransferDetailsBytes,
+        bytes memory requestedTransferDetailsBytes
     )
         external
-        returns (bool)
+        pure
+        override
     {
-        if (requestedTransfer.transferDetails.amount > signatureTransfer.transferDetails.amount) {
-            revert InvalidRequest(abi.encode(signatureTransfer.transferDetails));
+        ILRTATransferDetails memory signedTransferDetails =
+            abi.decode(signedTransferDetailsBytes, (ILRTATransferDetails));
+
+        ILRTATransferDetails memory requestedTransferDetails =
+            abi.decode(requestedTransferDetailsBytes, (ILRTATransferDetails));
+
+        if (requestedTransferDetails.amount > signedTransferDetails.amount) {
+            revert InvalidRequest(requestedTransferDetailsBytes);
         }
-
-        _verifySignature(from, signatureTransfer, signature);
-
-        return
-        /* solhint-disable-next-line max-line-length */
-        _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
     }
 
-    function transferBySuperSignature(
+    function transfer(address to, bytes calldata transferDetailsBytes) external override returns (bool) {
+        return _transfer(msg.sender, to, abi.decode(transferDetailsBytes, (ILRTATransferDetails)));
+    }
+
+    function approve(address spender, bytes calldata transferDetailsBytes) external override returns (bool) {
+        _allowanceOf[msg.sender][spender] = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
+
+        emit Approval(msg.sender, spender, transferDetailsBytes);
+
+        return true;
+    }
+
+    function transferFrom(
         address from,
-        ILRTATransferDetails calldata transferDetails,
-        RequestedTransfer calldata requestedTransfer,
-        bytes32[] calldata dataHash
+        address to,
+        bytes calldata transferDetailsBytes
     )
         external
+        override
         returns (bool)
     {
-        if (requestedTransfer.transferDetails.amount > transferDetails.amount) {
-            revert InvalidRequest(abi.encode(transferDetails));
+        ILRTATransferDetails memory allowed = _allowanceOf[from][msg.sender];
+        ILRTATransferDetails memory transferDetails = abi.decode(transferDetailsBytes, (ILRTATransferDetails));
+
+        if (allowed.amount != type(uint256).max) {
+            _allowanceOf[from][msg.sender] = ILRTATransferDetails(allowed.amount - transferDetails.amount);
         }
 
-        _verifySuperSignature(from, transferDetails, dataHash);
-
-        return _transfer(from, requestedTransfer.to, requestedTransfer.transferDetails);
+        return _transfer(from, to, transferDetails);
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                              INTERNAL LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    function _verifySignature(
-        address from,
-        SignatureTransfer calldata signatureTransfer,
-        bytes calldata signature
-    )
-        private
-    {
-        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
-
-        useUnorderedNonce(from, signatureTransfer.nonce);
-
-        bytes32 signatureHash = hashTypedData(
-            keccak256(
-                abi.encode(
-                    TRANSFER_TYPEHASH,
-                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
-                    msg.sender,
-                    signatureTransfer.nonce,
-                    signatureTransfer.deadline
-                )
-            )
-        );
-
-        SignatureVerification.verify(signature, signatureHash, from);
-    }
-
-    function _verifySuperSignature(
-        address from,
-        ILRTATransferDetails calldata transferDetails,
-        bytes32[] calldata dataHash
-    )
-        private
-    {
-        bytes32 signatureHash = hashTypedData(
-            keccak256(
-                abi.encode(
-                    SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                    msg.sender
-                )
-            )
-        );
-
-        if (dataHash[0] != signatureHash) revert DataHashMismatch();
-
-        superSignature.verifyData(from, dataHash);
-    }
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         _dataOf[from].balance -= transferDetails.amount;
@@ -214,8 +158,8 @@ abstract contract ILRTAERC20 is ILRTA {
             _dataOf[to].balance += transferDetails.amount;
         }
 
+        emit Transfer(from, to, transferDetails.amount);
         emit Transfer(from, to, abi.encode(transferDetails));
-        emit Transfer(address(0), to, transferDetails.amount);
 
         return true;
     }

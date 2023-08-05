@@ -46,12 +46,7 @@ This protocol is adapted around two main ideas: token standards at their core ju
 
 ## Potential Improvements
 
-- Pass in the address of the super signature contract
-- Add `spender` field to a super signature for more safety of signature misuse
-- Explore being forwards compatible with transient storage, new signature methods
-- Make signatures show up in wallets
-- Redundant checks to make sure signatures aren't misused
-- Allow for multiple signers to use at once, changing SuperSignature root to a mapping
+- Implement decoding functions in assembly, allowing for a SuperTransfer instead of PermitILRTA
 
 ## Acknowledgements
 
