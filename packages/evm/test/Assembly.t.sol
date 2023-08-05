@@ -45,7 +45,7 @@ contract AssemblyTest is Test {
         // C(c).t1(C.S(to));
         address a = address(mockFT);
 
-        console2.log("%x", uint32(ILRTAFungibleToken.validateRequest.selector));
+        console2.log("%x", uint32(ILRTAFungibleToken.transferFrom.selector));
 
         // assembly {
         //     let freeMemoryPointer := mload(0x40)

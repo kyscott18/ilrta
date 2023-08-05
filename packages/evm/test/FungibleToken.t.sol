@@ -50,4 +50,11 @@ contract FungibleTokenTest is Test {
 
         ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
     }
+
+    function testFunctionSelectors() external {
+        assertTrue(ILRTAFungibleToken.transfer.selector == 0x8a4068dd);
+        assertTrue(ILRTAFungibleToken.approve.selector == 0x12424e3f);
+        assertTrue(ILRTAFungibleToken.transferFrom.selector == 0x811c34d3);
+        assertTrue(ILRTAFungibleToken.validateRequest.selector == 0x95a41eb5);
+    }
 }

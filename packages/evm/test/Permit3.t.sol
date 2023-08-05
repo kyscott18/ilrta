@@ -31,7 +31,7 @@ contract Permit3Test is Test {
         permit3 = new Permit3();
     }
 
-    function testTransferBySignature() external {
+    function testTransferBySignatureERC20() external {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
@@ -70,7 +70,7 @@ contract Permit3Test is Test {
         );
     }
 
-    function testILRTAValidate() external {
+    function testTransferBySignatureILRTA() external {
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
 
@@ -82,7 +82,7 @@ contract Permit3Test is Test {
             abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
             address(mockFT),
             Permit3.TokenType.ILRTA,
-            0x811c34d3
+            0x077adbce
         );
 
         bytes32 signatureHash = keccak256(
@@ -113,7 +113,7 @@ contract Permit3Test is Test {
         );
     }
 
-    function testGasTransferBySignature() external {
+    function testGasTransferBySignatureERC20() external {
         vm.pauseGasMetering();
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
@@ -151,6 +151,52 @@ contract Permit3Test is Test {
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
             Permit3.RequestedTransferDetails(abi.encode(1e18), address(this)),
+            signature
+        );
+    }
+
+    function testGasTransferBySignatureILRTA() external {
+        vm.pauseGasMetering();
+
+        uint256 privateKey = 0xC0FFEE;
+        address owner = vm.addr(privateKey);
+
+        mockFT.mint(owner, 1e18);
+        vm.prank(owner);
+        mockFT.approve(address(permit3), ILRTAFungibleToken.ILRTATransferDetails(type(uint256).max));
+
+        Permit3.TransferDetails memory transferDetails = Permit3.TransferDetails(
+            abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
+            address(mockFT),
+            Permit3.TokenType.ILRTA,
+            0x077adbce
+        );
+
+        bytes32 signatureHash = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                permit3.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        TRANSFER_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                        address(this),
+                        0,
+                        block.timestamp
+                    )
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, signatureHash);
+
+        bytes memory signature = abi.encodePacked(r, s, v);
+        vm.resumeGasMetering();
+
+        permit3.transferBySignature(
+            owner,
+            Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
+            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(0.5e18)), address(this)),
             signature
         );
     }

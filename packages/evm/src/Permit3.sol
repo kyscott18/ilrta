@@ -18,6 +18,8 @@ contract Permit3 is EIP712, UnorderedNonce {
 
     error InvalidRequest(bytes transferDetailsBytes);
 
+    error TransferFailed();
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
@@ -250,5 +252,51 @@ contract Permit3 is EIP712, UnorderedNonce {
         bytes memory requestedTransferDetails
     )
         private
-    {}
+    {
+        bytes4 functionSelector = signedTransferDetails.functionSelector;
+        bool success;
+        assembly {
+            let freeMemoryPointer := mload(0x40)
+
+            // Write the abi-encoded calldata into memory, beginning with the function selector.
+            mstore(freeMemoryPointer, functionSelector)
+
+            // Append and mask the "from" argument.
+            mstore(add(freeMemoryPointer, 4), and(from, 0xffffffffffffffffffffffffffffffffffffffff))
+
+            // Append and mask the "to" argument.
+            mstore(add(freeMemoryPointer, 36), and(to, 0xffffffffffffffffffffffffffffffffffffffff))
+
+            // Append the transfer details
+            // requestedTransferDetails represents the pointer to data in memory
+            // The first word is the length of the bytes array, the next words are the data
+            let transferDetailsLength := mload(requestedTransferDetails)
+            for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                mstore(add(freeMemoryPointer, add(68, i)), mload(add(add(requestedTransferDetails, 0x20), i)))
+            }
+
+            success :=
+                and(
+                    // Set success to whether the call reverted, if not we check it either
+                    // returned exactly 1 (can't just be non-zero data), or had no return data.
+                    or(and(eq(mload(0), 1), gt(returndatasize(), 31)), iszero(returndatasize())),
+                    // The token address is located in the next word after the location of the bytes array
+                    // The length of the data is 68 + length of transferDetails
+                    // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
+                    // Counterintuitively, this call must be positioned second to the or() call in the
+                    // surrounding and() call or else returndatasize() will be zero during the computation.
+                    call(
+                        gas(),
+                        mload(add(signedTransferDetails, 0x20)),
+                        0,
+                        freeMemoryPointer,
+                        add(68, transferDetailsLength),
+                        0,
+                        32
+                    )
+                )
+        }
+
+        if (!success) revert TransferFailed();
+    }
 }
