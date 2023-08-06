@@ -116,7 +116,6 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of tokens using a signed message
-    /// @custom:team make sure the signature and the request are the same length
     function transferBySignature(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
