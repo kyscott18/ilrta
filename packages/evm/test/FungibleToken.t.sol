@@ -4,30 +4,12 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {MockFungibleToken} from "./mocks/MockFungibleToken.sol";
 import {ILRTAFungibleToken} from "src/examples/FungibleToken.sol";
-import {Permit3} from "src/Permit3.sol";
-import {SuperSignature} from "src/SuperSignature.sol";
 
 contract FungibleTokenTest is Test {
     MockFungibleToken private ft;
-    SuperSignature private superSignature;
-
-    bytes32 private constant VERIFY_TYPEHASH = keccak256("Verify(bytes32[] dataHash,uint256 nonce,uint256 deadline)");
-
-    bytes32 private constant SUPER_SIGNATURE_TRANSFER_TYPEHASH =
-        keccak256(bytes("Transfer(TransferDetails transferDetails,address spender)TransferDetails(uint256 amount)"));
-
-    bytes32 private constant TRANSFER_TYPEHASH = keccak256(
-        bytes(
-            /* solhint-disable-next-line max-line-length */
-            "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(uint256 amount)"
-        )
-    );
-
-    bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256(bytes("TransferDetails(uint256 amount)"));
 
     function setUp() external {
-        superSignature = new Permit3();
-        ft = new MockFungibleToken(address(superSignature));
+        ft = new MockFungibleToken();
     }
 
     function testMetadata() external {
@@ -54,108 +36,11 @@ contract FungibleTokenTest is Test {
     function testTransfer() external {
         ft.mint(address(this), 1e18);
 
-        assertTrue(ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
+        assertTrue(ft.transfer_dMWqQA(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18})));
         assertEq(ft.totalSupply(), 1e18);
 
         assertEq(ft.balanceOf(address(this)), 0);
         assertEq(ft.balanceOf(address(0xC0FFEE)), 1e18);
-    }
-
-    function testTransferBySignature() external {
-        uint256 privateKey = 0xC0FFEE;
-        address owner = vm.addr(privateKey);
-
-        ft.mint(address(owner), 1e18);
-
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    ft.DOMAIN_SEPARATOR(),
-                    keccak256(
-                        abi.encode(
-                            TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                            address(this),
-                            0,
-                            block.timestamp
-                        )
-                    )
-                )
-            )
-        );
-
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        assertTrue(
-            ft.transferBySignature(
-                owner,
-                ILRTAFungibleToken.SignatureTransfer({
-                    nonce: 0,
-                    deadline: block.timestamp,
-                    transferDetails: transferDetails
-                }),
-                ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
-                signature
-            )
-        );
-        assertEq(ft.totalSupply(), 1e18);
-
-        assertEq(ft.balanceOf(address(this)), 1e18);
-        assertEq(ft.balanceOf(address(owner)), 0);
-    }
-
-    function testTransferBySuperSignature() external {
-        uint256 privateKey = 0xC0FFEE;
-        address owner = vm.addr(privateKey);
-
-        ft.mint(owner, 1e18);
-
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
-
-        bytes32[] memory dataHash = new bytes32[](1);
-        dataHash[0] = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                ft.DOMAIN_SEPARATOR(),
-                keccak256(
-                    abi.encode(
-                        SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                        address(this)
-                    )
-                )
-            )
-        );
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(VERIFY_TYPEHASH, keccak256(abi.encodePacked(dataHash)), 0, block.timestamp))
-                )
-            )
-        );
-
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
-
-        assertTrue(
-            ft.transferBySuperSignature(
-                owner,
-                transferDetails,
-                ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
-                dataHash
-            )
-        );
     }
 
     function testGasTransfer() external {
@@ -163,99 +48,13 @@ contract FungibleTokenTest is Test {
         ft.mint(address(this), 1e18);
         vm.resumeGasMetering();
 
-        ft.transfer(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
+        ft.transfer_dMWqQA(address(0xC0FFEE), ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18}));
     }
 
-    function testGasTransferBySignature() external {
-        vm.pauseGasMetering();
-        uint256 privateKey = 0xC0FFEE;
-        address owner = vm.addr(privateKey);
-
-        ft.mint(address(owner), 1e18);
-
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    ft.DOMAIN_SEPARATOR(),
-                    keccak256(
-                        abi.encode(
-                            TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                            address(this),
-                            0,
-                            block.timestamp
-                        )
-                    )
-                )
-            )
-        );
-
-        bytes memory signature = abi.encodePacked(r, s, v);
-        ILRTAFungibleToken.SignatureTransfer memory transfer = ILRTAFungibleToken.SignatureTransfer({
-            nonce: 0,
-            deadline: block.timestamp,
-            transferDetails: transferDetails
-        });
-        ILRTAFungibleToken.RequestedTransfer memory request =
-            ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails});
-
-        vm.resumeGasMetering();
-
-        ft.transferBySignature(owner, transfer, request, signature);
-    }
-
-    function testGasTransferBySuperSignature() external {
-        vm.pauseGasMetering();
-
-        uint256 privateKey = 0xC0FFEE;
-        address owner = vm.addr(privateKey);
-
-        ft.mint(owner, 1e18);
-
-        ILRTAFungibleToken.ILRTATransferDetails memory transferDetails =
-            ILRTAFungibleToken.ILRTATransferDetails({amount: 1e18});
-
-        bytes32[] memory dataHash = new bytes32[](1);
-        dataHash[0] = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                ft.DOMAIN_SEPARATOR(),
-                keccak256(
-                    abi.encode(
-                        SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                        address(this)
-                    )
-                )
-            )
-        );
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    superSignature.DOMAIN_SEPARATOR(),
-                    keccak256(abi.encode(VERIFY_TYPEHASH, keccak256(abi.encodePacked(dataHash)), 0, block.timestamp))
-                )
-            )
-        );
-
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        superSignature.verifyAndStoreRoot(owner, SuperSignature.Verify(dataHash, 0, block.timestamp), signature);
-
-        vm.resumeGasMetering();
-        ft.transferBySuperSignature(
-            owner,
-            transferDetails,
-            ILRTAFungibleToken.RequestedTransfer({to: address(this), transferDetails: transferDetails}),
-            dataHash
-        );
+    function testFunctionSelectors() external {
+        assertTrue(ILRTAFungibleToken.transfer_dMWqQA.selector == 0x8a4068dd);
+        assertTrue(ILRTAFungibleToken.approve_cMebqQ.selector == 0x12424e3f);
+        assertTrue(ILRTAFungibleToken.transferFrom_AVXnah.selector == 0x811c34d3);
+        assertTrue(ILRTAFungibleToken.validateRequest_sUsyFN.selector == 0x95a41eb5);
     }
 }

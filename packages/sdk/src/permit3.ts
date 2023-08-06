@@ -1,5 +1,6 @@
 import { Permit3Address } from "./constants.js";
 import { permit3ABI } from "./generated.js";
+import type { ILRTATransferDetails } from "./ilrta.js";
 import type { ERC20, ERC20Amount, ReverseMirageWrite } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import {
@@ -9,11 +10,15 @@ import {
   type PublicClient,
   type WalletClient,
   getAddress,
-  hashTypedData,
 } from "viem";
 
+export const TokenTypeEnum = {
+  ERC20: 0,
+  ILRTA: 1,
+} as const;
+
 export type SignatureTransfer = {
-  transferDetails: ERC20Amount<ERC20>;
+  transferDetails: ERC20Amount<ERC20> | ILRTATransferDetails;
   nonce: bigint;
   deadline: bigint;
 };
@@ -30,10 +35,12 @@ export type RequestedTransfer = {
 };
 
 export const TransferDetails = [
+  { name: "transferDetails", type: "bytes" },
   {
     name: "token",
     type: "address",
   },
+  { name: "tokenType", type: "uint8" },
   { name: "amount", type: "uint256" },
 ] as const;
 
@@ -57,75 +64,6 @@ export const TransferBatch = {
   TransferDetails,
 } as const;
 
-export const SuperSignatureTransfer = {
-  Transfer: [
-    { name: "transferDetails", type: "TransferDetails" },
-    { name: "spender", type: "address" },
-  ],
-  TransferDetails,
-} as const;
-
-export const SuperSignatureTransferBatch = {
-  Transfer: [
-    { name: "transferDetails", type: "TransferDetails[]" },
-    { name: "spender", type: "address" },
-  ],
-  TransferDetails,
-} as const;
-
-export const getTransferTypedDataHash = (
-  chainID: number,
-  transfer: { transferDetails: ERC20Amount<ERC20>; spender: Address },
-): Hex => {
-  const domain = {
-    name: "Permit3",
-    version: "1",
-    chainId: chainID,
-    verifyingContract: Permit3Address,
-  } as const;
-
-  return hashTypedData({
-    domain,
-    types: SuperSignatureTransfer,
-    primaryType: "Transfer",
-    message: {
-      transferDetails: {
-        token: transfer.transferDetails.token.address,
-        amount: transfer.transferDetails.amount,
-      },
-      spender: transfer.spender,
-    },
-  });
-};
-
-export const getTransferBatchTypedDataHash = (
-  chainID: number,
-  transfers: {
-    transferDetails: readonly ERC20Amount<ERC20>[];
-    spender: Address;
-  },
-) => {
-  const domain = {
-    name: "Permit3",
-    version: "1",
-    chainId: chainID,
-    verifyingContract: Permit3Address,
-  } as const;
-
-  return hashTypedData({
-    domain,
-    types: SuperSignatureTransferBatch,
-    primaryType: "Transfer",
-    message: {
-      transferDetails: transfers.transferDetails.map((c) => ({
-        token: c.token.address,
-        amount: c.amount,
-      })),
-      spender: transfers.spender,
-    },
-  });
-};
-
 export const permit3SignTransfer = (
   walletClient: WalletClient,
   account: Account | Address,
@@ -148,6 +86,8 @@ export const permit3SignTransfer = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
+        transferDetails: "0x",
+        tokenType: 9,
         token: getAddress(transfer.transferDetails.token.address),
         amount: transfer.transferDetails.amount,
       },

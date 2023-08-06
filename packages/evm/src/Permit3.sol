@@ -3,30 +3,39 @@ pragma solidity ^0.8.19;
 
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
-import {SuperSignature} from "./SuperSignature.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {UnorderedNonce} from "./UnorderedNonce.sol";
 
-contract Permit3 is SuperSignature {
-    using SafeTransferLib for ERC20;
-
+/// @title Next generation permit with support for signature transfer of multiple token types
+/// @author Kyle Scott
+contract Permit3 is EIP712, UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  ERRORS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    error InvalidAmount(uint256 maxAmount);
-
-    error DataHashMismatch();
+    error SignatureExpired(uint256 signatureDeadline);
 
     error LengthMismatch();
+
+    error InvalidRequest(bytes transferDetailsBytes);
+
+    error TransferFailed();
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    enum TokenType {
+        ERC20,
+        // ERC721,
+        // ERC1155,
+        ILRTA
+    }
+
     struct TransferDetails {
+        bytes transferDetails;
         address token;
-        uint256 amount;
+        TokenType tokenType;
+        bytes4 functionSelector;
     }
 
     struct SignatureTransfer {
@@ -42,32 +51,25 @@ contract Permit3 is SuperSignature {
     }
 
     struct RequestedTransferDetails {
+        bytes transferDetails;
         address to;
-        uint256 amount;
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                            SIGNATURE STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    bytes32 private constant TRANSFER_DETAILS_TYPEHASH = keccak256("TransferDetails(address token,uint256 amount)");
+    bytes32 private constant TRANSFER_DETAILS_TYPEHASH =
+        keccak256("TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
+        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
     );
 
     bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
-    );
-
-    bytes32 private constant SUPER_SIGNATURE_TRANSFER_TYPEHASH = keccak256(
-        "Transfer(TransferDetails transferDetails,address spender)TransferDetails(address token,uint256 amount)"
-    );
-
-    bytes32 private constant SUPER_SIGNATURE_TRANSFER_BATCH_TYPEHASH = keccak256(
-        "Transfer(TransferDetails[] transferDetails,address spender)TransferDetails(address token,uint256 amount)"
+        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
     );
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -90,9 +92,8 @@ contract Permit3 is SuperSignature {
         external
     {
         if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
-        if (requestedTransfer.amount > signatureTransfer.transferDetails.amount) {
-            revert InvalidAmount(signatureTransfer.transferDetails.amount);
-        }
+
+        _validateRequest(signatureTransfer.transferDetails, requestedTransfer.transferDetails);
 
         // compute data hash
         bytes32 signatureHash = hashTypedData(
@@ -111,12 +112,11 @@ contract Permit3 is SuperSignature {
         useUnorderedNonce(signer, signatureTransfer.nonce);
         SignatureVerification.verify(signature, signatureHash, signer);
 
-        ERC20(signatureTransfer.transferDetails.token).safeTransferFrom(
-            signer, requestedTransfer.to, requestedTransfer.amount
-        );
+        _transfer(signer, requestedTransfer.to, signatureTransfer.transferDetails, requestedTransfer.transferDetails);
     }
 
     /// @notice transfer a batch of tokens using a signed message
+    /// @custom:team make sure the signature and the request are the same length
     function transferBySignature(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
@@ -133,9 +133,9 @@ contract Permit3 is SuperSignature {
         }
 
         // compute data hash
-        bytes32[] memory transfeDetailsHashes = new bytes32[](length);
+        bytes32[] memory transferDetailsHashes = new bytes32[](length);
         for (uint256 i = 0; i < length;) {
-            transfeDetailsHashes[i] =
+            transferDetailsHashes[i] =
                 keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails[i]));
 
             unchecked {
@@ -146,7 +146,7 @@ contract Permit3 is SuperSignature {
             keccak256(
                 abi.encode(
                     TRANSFER_BATCH_TYPEHASH,
-                    keccak256(abi.encodePacked(transfeDetailsHashes)),
+                    keccak256(abi.encodePacked(transferDetailsHashes)),
                     msg.sender,
                     signatureTransfer.nonce,
                     signatureTransfer.deadline
@@ -158,19 +158,12 @@ contract Permit3 is SuperSignature {
         useUnorderedNonce(signer, signatureTransfer.nonce);
         SignatureVerification.verify(signature, signatureHash, signer);
 
-        // check requests and transfer out tokens
         for (uint256 i = 0; i < length;) {
             TransferDetails memory transferDetails = signatureTransfer.transferDetails[i];
 
-            if (requestedTransfer[i].amount > transferDetails.amount) {
-                revert InvalidAmount(transferDetails.amount);
-            }
+            _validateRequest(transferDetails, requestedTransfer[i].transferDetails);
 
-            if (requestedTransfer[i].amount > 0) {
-                ERC20(transferDetails.token).safeTransferFrom(
-                    signer, requestedTransfer[i].to, requestedTransfer[i].amount
-                );
-            }
+            _transfer(signer, requestedTransfer[i].to, transferDetails, requestedTransfer[i].transferDetails);
 
             unchecked {
                 i++;
@@ -178,94 +171,129 @@ contract Permit3 is SuperSignature {
         }
     }
 
-    /// @notice transfer a token using a signed message, relying on the super signature contract to validate the data
-    /// @dev assumes that the data has already been verified in the super signature contract
-    function transferBySuperSignature(
-        address signer,
-        TransferDetails calldata transferDetails,
-        RequestedTransferDetails calldata requestedTransfer,
-        bytes32[] calldata dataHash
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                             INTERNAL LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    function _validateRequest(
+        TransferDetails memory signedTransferDetails,
+        bytes memory requestedTransferDetails
     )
-        external
+        private
+        view
     {
-        if (requestedTransfer.amount > transferDetails.amount) {
-            revert InvalidAmount(transferDetails.amount);
+        if (signedTransferDetails.tokenType == TokenType.ERC20) {
+            uint256 signedAmount = abi.decode(signedTransferDetails.transferDetails, (uint256));
+            uint256 requestedAmount = abi.decode(requestedTransferDetails, (uint256));
+            if (requestedAmount > signedAmount) revert InvalidRequest(requestedTransferDetails);
+        } else {
+            bool success;
+            assembly {
+                // Determine the length of the transfer details
+                let transferDetailsLength := mload(requestedTransferDetails)
+
+                success := eq(mload(add(signedTransferDetails, 0x80)), transferDetailsLength)
+
+                if success {
+                    let freeMemoryPointer := mload(0x40)
+                    // Write the abi-encoded calldata into memory, beginning with the function selector.
+                    mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
+
+                    // Append the signature transfer details
+                    // signedTransferDetails represents the pointer to data in memory
+                    // The start of the transferDetails bytes array data is signedTransferDetails + 0x100
+                    for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                        mstore(add(freeMemoryPointer, add(4, i)), mload(add(add(signedTransferDetails, 0x100), i)))
+                    }
+
+                    // Append the requested transfer details
+                    // requestedTransferDetials represents the pointer to data in memory
+                    // The first word is the length of the bytes array, the next words are the data
+                    for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                        mstore(
+                            add(freeMemoryPointer, add(add(4, transferDetailsLength), i)),
+                            mload(add(add(requestedTransferDetails, 0x20), i))
+                        )
+                    }
+
+                    success :=
+                        and(
+                            // Set success to whether the call reverted, if not we check it
+                            // returned exactly 1
+                            eq(mload(0), 1),
+                            // The token address is located in the next word after the location of the bytes array
+                            // The length of the data is 4 + 2 * length of transferDetails
+                            // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
+                            // Counterintuitively, this call must be positioned second to the or() call in the
+                            // surrounding and() call or else returndatasize() will be zero during the computation.
+                            staticcall(
+                                gas(),
+                                mload(add(signedTransferDetails, 0x20)),
+                                freeMemoryPointer,
+                                add(4, mul(2, transferDetailsLength)),
+                                0,
+                                32
+                            )
+                        )
+                }
+            }
+
+            if (!success) revert InvalidRequest(requestedTransferDetails);
         }
-
-        // compute data hash
-        bytes32 signatureHash = hashTypedData(
-            keccak256(
-                abi.encode(
-                    SUPER_SIGNATURE_TRANSFER_TYPEHASH,
-                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                    msg.sender
-                )
-            )
-        );
-
-        // validate that this data was signed using super signature
-        if (dataHash[0] != signatureHash) revert DataHashMismatch();
-        verifyData(signer, dataHash);
-
-        // transfer out tokens
-        ERC20(transferDetails.token).safeTransferFrom(signer, requestedTransfer.to, requestedTransfer.amount);
     }
 
-    /// @notice transfer a batch of tokens using a signed message, relying on the super signature contract to validate
-    /// the data
-    /// @dev assumes that the data has already been verified in the super signature contract
-    function transferBySuperSignature(
-        address signer,
-        TransferDetails[] calldata transferDetails,
-        RequestedTransferDetails[] calldata requestedTransfer,
-        bytes32[] calldata dataHash
+    function _transfer(
+        address from,
+        address to,
+        TransferDetails memory signedTransferDetails,
+        bytes memory requestedTransferDetails
     )
-        external
+        private
     {
-        uint256 length = requestedTransfer.length;
+        bytes4 functionSelector = signedTransferDetails.functionSelector;
+        bool success;
+        assembly {
+            let freeMemoryPointer := mload(0x40)
 
-        if (length != transferDetails.length) {
-            revert LengthMismatch();
-        }
+            // Write the abi-encoded calldata into memory, beginning with the function selector.
+            mstore(freeMemoryPointer, functionSelector)
 
-        // compute data hash
-        bytes32[] memory transfeDetailsHashes = new bytes32[](length);
-        for (uint256 i = 0; i < length;) {
-            transfeDetailsHashes[i] = keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i]));
+            // Append and mask the "from" argument.
+            mstore(add(freeMemoryPointer, 4), and(from, 0xffffffffffffffffffffffffffffffffffffffff))
 
-            unchecked {
-                i++;
+            // Append and mask the "to" argument.
+            mstore(add(freeMemoryPointer, 36), and(to, 0xffffffffffffffffffffffffffffffffffffffff))
+
+            // Append the transfer details
+            // requestedTransferDetails represents the pointer to data in memory
+            // The first word is the length of the bytes array, the next words are the data
+            let transferDetailsLength := mload(requestedTransferDetails)
+            for { let i := 0 } lt(i, transferDetailsLength) { i := add(i, 0x20) } {
+                mstore(add(freeMemoryPointer, add(68, i)), mload(add(add(requestedTransferDetails, 0x20), i)))
             }
-        }
-        bytes32 signatureHash = hashTypedData(
-            keccak256(
-                abi.encode(
-                    SUPER_SIGNATURE_TRANSFER_BATCH_TYPEHASH,
-                    keccak256(abi.encodePacked(transfeDetailsHashes)),
-                    msg.sender
+
+            success :=
+                and(
+                    // Set success to whether the call reverted, if not we check it either
+                    // returned exactly 1 (can't just be non-zero data), or had no return data.
+                    or(and(eq(mload(0), 1), gt(returndatasize(), 31)), iszero(returndatasize())),
+                    // The token address is located in the next word after the location of the bytes array
+                    // The length of the data is 68 + length of transferDetails
+                    // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
+                    // Counterintuitively, this call must be positioned second to the or() call in the
+                    // surrounding and() call or else returndatasize() will be zero during the computation.
+                    call(
+                        gas(),
+                        mload(add(signedTransferDetails, 0x20)),
+                        0,
+                        freeMemoryPointer,
+                        add(68, transferDetailsLength),
+                        0,
+                        32
+                    )
                 )
-            )
-        );
-
-        // validate that this data was signed using super signature
-        if (dataHash[0] != signatureHash) revert DataHashMismatch();
-        verifyData(signer, dataHash);
-
-        // check requests and transfer out tokens
-        for (uint256 i = 0; i < length;) {
-            if (requestedTransfer[i].amount > transferDetails[i].amount) {
-                revert InvalidAmount(transferDetails[i].amount);
-            }
-
-            if (requestedTransfer[i].amount > 0) {
-                ERC20(transferDetails[i].token).safeTransferFrom(
-                    signer, requestedTransfer[i].to, requestedTransfer[i].amount
-                );
-            }
-
-            unchecked {
-                i++;
-            }
         }
+
+        if (!success) revert TransferFailed();
     }
 }

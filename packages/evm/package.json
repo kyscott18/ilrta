@@ -2,7 +2,10 @@
   "name": "ilrta",
   "version": "0.0.1",
   "description": "",
-  "files": ["src/**/*.sol", "out/"],
+  "files": [
+    "src/**/*.sol",
+    "out/"
+  ],
   "scripts": {
     "build": "forge build",
     "test": "forge test",
@@ -15,6 +18,6 @@
   "license": "MIT",
   "devDependencies": {
     "rome": "^12.1.3",
-    "solhint": "^3.4.1"
+    "solhint": "^3.5.1"
   }
 }
