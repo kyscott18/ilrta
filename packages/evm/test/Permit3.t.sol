@@ -15,14 +15,17 @@ contract Permit3Test is Test {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH =
         keccak256("TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)");
 
+    bytes32 private constant TRANSFER_DETAILS_ERC20_TYPEHASH =
+        keccak256("TransferDetails(address token,uint256 amount)");
+
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
     );
 
-    bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
+    bytes32 private constant TRANSFER_ERC20_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
+        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
     );
 
     function setUp() external {
@@ -39,8 +42,7 @@ contract Permit3Test is Test {
         vm.prank(owner);
         mockERC20.approve(address(permit3), 1e18);
 
-        Permit3.TransferDetails memory transferDetails =
-            Permit3.TransferDetails(abi.encode(1e18), address(mockERC20), Permit3.TokenType.ERC20, 0x23b872dd);
+        Permit3.TransferDetailsERC20 memory transferDetails = Permit3.TransferDetailsERC20(address(mockERC20), 1e18);
 
         bytes32 signatureHash = keccak256(
             abi.encodePacked(
@@ -48,8 +50,8 @@ contract Permit3Test is Test {
                 permit3.DOMAIN_SEPARATOR(),
                 keccak256(
                     abi.encode(
-                        TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                        TRANSFER_ERC20_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_ERC20_TYPEHASH, transferDetails)),
                         address(this),
                         0,
                         block.timestamp
@@ -64,8 +66,8 @@ contract Permit3Test is Test {
 
         permit3.transferBySignature(
             owner,
-            Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(1e18), address(this)),
+            Permit3.SignatureTransferERC20(transferDetails, 0, block.timestamp),
+            Permit3.RequestedTransferDetailsERC20(address(this), 1e18),
             signature
         );
 
@@ -124,37 +126,35 @@ contract Permit3Test is Test {
 
         mockERC20.mint(owner, 1e18);
         vm.prank(owner);
-        mockERC20.approve(address(permit3), type(uint256).max);
+        mockERC20.approve(address(permit3), 1e18);
 
-        Permit3.TransferDetails memory transferDetails =
-            Permit3.TransferDetails(abi.encode(1e18), address(mockERC20), Permit3.TokenType.ERC20, 0x23b872dd);
+        Permit3.TransferDetailsERC20 memory transferDetails = Permit3.TransferDetailsERC20(address(mockERC20), 1e18);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            privateKey,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    permit3.DOMAIN_SEPARATOR(),
-                    keccak256(
-                        abi.encode(
-                            TRANSFER_TYPEHASH,
-                            keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
-                            address(this),
-                            0,
-                            block.timestamp
-                        )
+        bytes32 signatureHash = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                permit3.DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        TRANSFER_ERC20_TYPEHASH,
+                        keccak256(abi.encode(TRANSFER_DETAILS_ERC20_TYPEHASH, transferDetails)),
+                        address(this),
+                        0,
+                        block.timestamp
                     )
                 )
             )
         );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, signatureHash);
 
         bytes memory signature = abi.encodePacked(r, s, v);
         vm.resumeGasMetering();
 
         permit3.transferBySignature(
             owner,
-            Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(1e18), address(this)),
+            Permit3.SignatureTransferERC20(transferDetails, 0, block.timestamp),
+            Permit3.RequestedTransferDetailsERC20(address(this), 1e18),
             signature
         );
     }

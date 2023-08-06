@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 import {EIP712} from "./EIP712.sol";
 import {SignatureVerification} from "./SignatureVerification.sol";
 import {UnorderedNonce} from "./UnorderedNonce.sol";
+import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
+import {ERC20} from "solmate/src/tokens/ERC20.sol";
 
 /// @title Next generation permit with support for signature transfer of multiple token types
 /// @author Kyle Scott
@@ -17,6 +19,8 @@ contract Permit3 is EIP712, UnorderedNonce {
     error LengthMismatch();
 
     error InvalidRequest(bytes transferDetailsBytes);
+
+    error InvalidRequestERC20(uint256 amount);
 
     error TransferFailed();
 
@@ -38,8 +42,19 @@ contract Permit3 is EIP712, UnorderedNonce {
         bytes4 functionSelector;
     }
 
+    struct TransferDetailsERC20 {
+        address token;
+        uint256 amount;
+    }
+
     struct SignatureTransfer {
         TransferDetails transferDetails;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
+    struct SignatureTransferERC20 {
+        TransferDetailsERC20 transferDetails;
         uint256 nonce;
         uint256 deadline;
     }
@@ -50,9 +65,20 @@ contract Permit3 is EIP712, UnorderedNonce {
         uint256 deadline;
     }
 
+    struct SignatureTransferBatchERC20 {
+        TransferDetailsERC20[] transferDetails;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
     struct RequestedTransferDetails {
         bytes transferDetails;
         address to;
+    }
+
+    struct RequestedTransferDetailsERC20 {
+        address to;
+        uint256 amount;
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -62,14 +88,27 @@ contract Permit3 is EIP712, UnorderedNonce {
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH =
         keccak256("TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)");
 
+    bytes32 private constant TRANSFER_DETAILS_ERC20_TYPEHASH =
+        keccak256("TransferDetails(address token,uint256 amount)");
+
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
     );
 
+    bytes32 private constant TRANSFER_ERC20_TYPEHASH = keccak256(
+        // solhint-disable-next-line max-line-length
+        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
+    );
+
     bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
+    );
+
+    bytes32 private constant TRANSFER_BATCH_ERC20_TYPEHASH = keccak256(
+        // solhint-disable-next-line max-line-length
+        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
     );
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -113,6 +152,43 @@ contract Permit3 is EIP712, UnorderedNonce {
         SignatureVerification.verify(signature, signatureHash, signer);
 
         _transfer(signer, requestedTransfer.to, signatureTransfer.transferDetails, requestedTransfer.transferDetails);
+    }
+
+    /// @notice transfer an erc20 token using a signed message
+    function transferBySignature(
+        address signer,
+        SignatureTransferERC20 calldata signatureTransfer,
+        RequestedTransferDetailsERC20 calldata requestedTransfer,
+        bytes calldata signature
+    )
+        external
+    {
+        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
+
+        if (requestedTransfer.amount > signatureTransfer.transferDetails.amount) {
+            revert InvalidRequestERC20(requestedTransfer.amount);
+        }
+
+        // compute data hash
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    TRANSFER_ERC20_TYPEHASH,
+                    keccak256(abi.encode(TRANSFER_DETAILS_ERC20_TYPEHASH, signatureTransfer.transferDetails)),
+                    msg.sender,
+                    signatureTransfer.nonce,
+                    signatureTransfer.deadline
+                )
+            )
+        );
+
+        // validate signature
+        useUnorderedNonce(signer, signatureTransfer.nonce);
+        SignatureVerification.verify(signature, signatureHash, signer);
+
+        SafeTransferLib.safeTransferFrom(
+            ERC20(signatureTransfer.transferDetails.token), signer, requestedTransfer.to, requestedTransfer.amount
+        );
     }
 
     /// @notice transfer a batch of tokens using a signed message
@@ -163,6 +239,65 @@ contract Permit3 is EIP712, UnorderedNonce {
             _validateRequest(transferDetails, requestedTransfer[i].transferDetails);
 
             _transfer(signer, requestedTransfer[i].to, transferDetails, requestedTransfer[i].transferDetails);
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    /// @notice transfer a batch of erc20 tokens using a signed message
+    function transferBySignature(
+        address signer,
+        SignatureTransferBatchERC20 calldata signatureTransfer,
+        RequestedTransferDetailsERC20[] calldata requestedTransfer,
+        bytes calldata signature
+    )
+        external
+    {
+        uint256 length = requestedTransfer.length;
+
+        if (block.timestamp > signatureTransfer.deadline) revert SignatureExpired(signatureTransfer.deadline);
+        if (length != signatureTransfer.transferDetails.length) {
+            revert LengthMismatch();
+        }
+
+        // compute data hash
+        bytes32[] memory transferDetailsHashes = new bytes32[](length);
+        for (uint256 i = 0; i < length;) {
+            transferDetailsHashes[i] =
+                keccak256(abi.encode(TRANSFER_DETAILS_ERC20_TYPEHASH, signatureTransfer.transferDetails[i]));
+
+            unchecked {
+                i++;
+            }
+        }
+        bytes32 signatureHash = hashTypedData(
+            keccak256(
+                abi.encode(
+                    TRANSFER_BATCH_ERC20_TYPEHASH,
+                    keccak256(abi.encodePacked(transferDetailsHashes)),
+                    msg.sender,
+                    signatureTransfer.nonce,
+                    signatureTransfer.deadline
+                )
+            )
+        );
+
+        // validate signature
+        useUnorderedNonce(signer, signatureTransfer.nonce);
+        SignatureVerification.verify(signature, signatureHash, signer);
+
+        for (uint256 i = 0; i < length;) {
+            TransferDetailsERC20 memory transferDetails = signatureTransfer.transferDetails[i];
+
+            if (requestedTransfer[i].amount > transferDetails.amount) {
+                revert InvalidRequestERC20(requestedTransfer[i].amount);
+            }
+
+            SafeTransferLib.safeTransferFrom(
+                ERC20(transferDetails.token), signer, requestedTransfer[i].to, requestedTransfer[i].amount
+            );
 
             unchecked {
                 i++;

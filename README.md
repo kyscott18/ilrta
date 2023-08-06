@@ -37,7 +37,6 @@ Because of the lack of support for type generics in Solidity, the implementation
 - Don't allow for function selector to be passed in because it may be dangerous.
 - Function to validate signature without passing in any transfer data.
 - Write a script that generates an ilrta implementation contract, complete with function selector mining
-- Gas benchmarking vs permit2
 - Use fallback instead of mining function selectors
 
 ## Acknowledgements
