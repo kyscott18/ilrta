@@ -1,18 +1,13 @@
 import { ilrtaFungibleTokenABI } from "../generated.js";
 import {
   type ILRTA,
+  type ILRTAApprovalDetails,
   type ILRTAData,
-  type ILRTARequestedTransfer,
-  type ILRTASignatureTransfer,
-  ILRTASuperSignatureTransfer,
-  ILRTATransfer,
   type ILRTATransferDetails,
 } from "../ilrta.js";
 import type { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
-import invariant from "tiny-invariant";
-import type { Account, Hex, PublicClient, WalletClient } from "viem";
+import type { Account, PublicClient, WalletClient } from "viem";
 import type { Address } from "viem/accounts";
-import { getAddress, hashTypedData } from "viem/utils";
 
 export type FungibleToken = ILRTA<"fungibleToken"> & {
   decimals: number;
@@ -26,85 +21,29 @@ export type TransferDetailsType = ILRTATransferDetails<
   { amount: bigint }
 >;
 
-export type SignatureTransfer = ILRTASignatureTransfer<TransferDetailsType>;
-
-export type RequestedTransfer = ILRTARequestedTransfer<TransferDetailsType>;
+export type ApprovalDetailsType = ILRTAApprovalDetails<
+  FungibleToken,
+  { amount: bigint }
+>;
 
 export const Data = [{ name: "balance", type: "uint256" }] as const;
 
 export const TransferDetails = [{ name: "amount", type: "uint256" }] as const;
 
-export const Transfer = ILRTATransfer(TransferDetails);
-
-export const SuperSignatureTransfer =
-  ILRTASuperSignatureTransfer(TransferDetails);
-
-export const getTransferTypedDataHash = (
-  chainID: number,
-  transfer: {
-    transferDetails: TransferDetailsType;
-    spender: Address;
-  },
-) => {
-  const domain = {
-    name: transfer.transferDetails.ilrta.name,
-    version: "1",
-    chainId: chainID,
-    verifyingContract: getAddress(transfer.transferDetails.ilrta.address),
-  } as const;
-
-  return hashTypedData({
-    domain,
-    types: SuperSignatureTransfer,
-    primaryType: "Transfer",
-    message: {
-      transferDetails: { amount: transfer.transferDetails.amount },
-      spender: getAddress(transfer.spender),
-    },
-  });
-};
-
-export const signTransfer = (
-  walletClient: WalletClient,
-  account: Account | Address,
-  transfer: SignatureTransfer & { spender: Address },
-): Promise<Hex> => {
-  const chainID = walletClient.chain?.id;
-  invariant(chainID);
-
-  const domain = {
-    name: transfer.transferDetails.ilrta.name,
-    version: "1",
-    chainId: chainID,
-    verifyingContract: transfer.transferDetails.ilrta.address,
-  } as const;
-
-  return walletClient.signTypedData({
-    domain,
-    account,
-    types: Transfer,
-    primaryType: "Transfer",
-    message: {
-      transferDetails: {
-        amount: transfer.transferDetails.amount,
-      },
-      spender: transfer.spender,
-      nonce: transfer.nonce,
-      deadline: transfer.deadline,
-    },
-  });
-};
+export const ApprovalDetails = [{ name: "amount", type: "uint256" }] as const;
 
 export const transfer = async (
   publicClient: PublicClient,
   walletClient: WalletClient,
   account: Account | Address,
   args: { to: Address; transferDetails: TransferDetailsType },
-): Promise<ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transfer">> => {
+): Promise<
+  ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transfer_dMWqQA">
+> => {
   const { request, result } = await publicClient.simulateContract({
     account,
     abi: ilrtaFungibleTokenABI,
-    functionName: "transfer",
+    functionName: "transfer_dMWqQA",
     args: [args.to, args.transferDetails],
     address: args.transferDetails.ilrta.address,
   });
@@ -112,45 +51,9 @@ export const transfer = async (
   return { hash, result, request };
 };
 
-export const transferBySignature = async (
-  publicClient: PublicClient,
-  walletClient: WalletClient,
-  account: Account | Address,
-  args: {
-    signer: Address;
-    signatureTransfer: SignatureTransfer;
-    requestedTransfer: RequestedTransfer;
-    signature: Hex;
-  },
-): Promise<
-  ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transferBySignature">
-> => {
-  const { request, result } = await publicClient.simulateContract({
-    account,
-    abi: ilrtaFungibleTokenABI,
-    functionName: "transferBySignature",
-    args: [
-      args.signer,
-      {
-        transferDetails: {
-          amount: args.signatureTransfer.transferDetails.amount,
-        },
-        nonce: args.signatureTransfer.nonce,
-        deadline: args.signatureTransfer.deadline,
-      },
-      {
-        to: args.requestedTransfer.to,
-        transferDetails: {
-          amount: args.requestedTransfer.transferDetails.amount,
-        },
-      },
-      args.signature,
-    ],
-    address: args.signatureTransfer.transferDetails.ilrta.address,
-  });
-  const hash = await walletClient.writeContract(request);
-  return { hash, result, request };
-};
+// TODO: transferFrom
+
+// TODO: approve
 
 export const dataOf = (
   publicClient: PublicClient,
@@ -170,3 +73,22 @@ export const dataOf = (
       balance: data.balance,
     }),
   }) satisfies ReverseMirageRead<{ balance: bigint }>;
+
+export const allowanceOf = (
+  publicClient: PublicClient,
+  args: { ilrta: FungibleToken; owner: Address; spender: Address },
+) =>
+  ({
+    read: () =>
+      publicClient.readContract({
+        abi: ilrtaFungibleTokenABI,
+        address: args.ilrta.address,
+        functionName: "allowanceOf",
+        args: [args.owner, args.spender, args.ilrta.id],
+      }),
+    parse: (data): ApprovalDetailsType => ({
+      type: "fungibleTokenApproval",
+      ilrta: args.ilrta,
+      amount: data.amount,
+    }),
+  }) satisfies ReverseMirageRead<{ amount: bigint }>;

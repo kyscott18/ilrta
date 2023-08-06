@@ -76,7 +76,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                               CONSTRUCTOR
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    constructor() EIP712("PermitILRTA") {}
+    constructor() EIP712("Permit3") {}
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  LOGIC
