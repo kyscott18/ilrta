@@ -5,7 +5,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-**ilrta** is a protocol focused on creating token standards for exotic use cases. The goal is to allow for custom standards to be created yet still retain composability. This currently consists of:
+**ilrta** is a framework for creating tokens for exotic use cases. The goal is to allow for custom standards to be created yet still retain composability. This currently consists of:
 
 - `ILRTA`: Token standard for token standards. Easily tokenize any data but share common infrastructure and maintain composability.
 - `Permit3`: Next version of permit2 with multiple token support.
