@@ -29,7 +29,7 @@ contract Permit2BenchmarkTest is Test {
         permit2 = IPermit2(PERMIT2_ADDRESS);
     }
 
-    function testGasTransferBySignature() external {
+    function test_TransferBySignature() external {
         vm.pauseGasMetering();
         uint256 privateKey = 0xC0FFEE;
         address owner = vm.addr(privateKey);
