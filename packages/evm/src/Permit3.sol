@@ -36,10 +36,10 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     struct TransferDetails {
-        bytes transferDetails;
         address token;
         TokenType tokenType;
         bytes4 functionSelector;
+        bytes transferDetails;
     }
 
     struct TransferDetailsERC20 {
@@ -72,8 +72,8 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     struct RequestedTransferDetails {
-        bytes transferDetails;
         address to;
+        bytes transferDetails;
     }
 
     struct RequestedTransferDetailsERC20 {
@@ -326,6 +326,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                 // Determine the length of the transfer details
                 let transferDetailsLength := mload(requestedTransferDetails)
 
+                // Check that the signed transferDetails and requested transfer details are the same length
                 success := eq(mload(add(signedTransferDetails, 0x80)), transferDetailsLength)
 
                 if success {
@@ -362,7 +363,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                             // surrounding and() call or else returndatasize() will be zero during the computation.
                             staticcall(
                                 gas(),
-                                mload(add(signedTransferDetails, 0x20)),
+                                mload(signedTransferDetails),
                                 freeMemoryPointer,
                                 add(4, mul(2, transferDetailsLength)),
                                 0,
@@ -384,12 +385,12 @@ contract Permit3 is EIP712, UnorderedNonce {
     )
         private
     {
-        bytes4 functionSelector = signedTransferDetails.functionSelector;
         bool success;
         assembly {
             let freeMemoryPointer := mload(0x40)
 
             // Write the abi-encoded calldata into memory, beginning with the function selector.
+            let functionSelector := mload(add(signedTransferDetails, 0x40))
             mstore(freeMemoryPointer, functionSelector)
 
             // Append and mask the "from" argument.
@@ -416,15 +417,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                     // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
                     // Counterintuitively, this call must be positioned second to the or() call in the
                     // surrounding and() call or else returndatasize() will be zero during the computation.
-                    call(
-                        gas(),
-                        mload(add(signedTransferDetails, 0x20)),
-                        0,
-                        freeMemoryPointer,
-                        add(68, transferDetailsLength),
-                        0,
-                        32
-                    )
+                    call(gas(), mload(signedTransferDetails), 0, freeMemoryPointer, add(68, transferDetailsLength), 0, 32)
                 )
         }
 

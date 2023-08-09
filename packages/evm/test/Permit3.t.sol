@@ -83,10 +83,10 @@ contract Permit3Test is Test {
         mockFT.approve_cMebqQ(address(permit3), ILRTAFungibleToken.ILRTAApprovalDetails(1e18));
 
         Permit3.TransferDetails memory transferDetails = Permit3.TransferDetails(
-            abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
             address(mockFT),
             Permit3.TokenType.ILRTA,
-            0x811c34d3
+            0x811c34d3,
+            abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))
         );
 
         bytes32 signatureHash = keccak256(
@@ -112,7 +112,7 @@ contract Permit3Test is Test {
         permit3.transferBySignature(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)), address(this)),
+            Permit3.RequestedTransferDetails(address(this), abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))),
             signature
         );
 
@@ -170,10 +170,10 @@ contract Permit3Test is Test {
         mockFT.approve_cMebqQ(address(permit3), ILRTAFungibleToken.ILRTAApprovalDetails(type(uint256).max));
 
         Permit3.TransferDetails memory transferDetails = Permit3.TransferDetails(
-            abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)),
             address(mockFT),
             Permit3.TokenType.ILRTA,
-            0x811c34d3
+            0x811c34d3,
+            abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))
         );
 
         bytes32 signatureHash = keccak256(
@@ -200,7 +200,7 @@ contract Permit3Test is Test {
         permit3.transferBySignature(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
-            Permit3.RequestedTransferDetails(abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18)), address(this)),
+            Permit3.RequestedTransferDetails(address(this), abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))),
             signature
         );
     }
