@@ -53,7 +53,7 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataOf(address owner, bytes32 id) external view returns (ILRTAData memory) {
+    function dataOf_XXXXXX(address owner, bytes32 id) external view returns (ILRTAData memory) {
         return _dataOf[owner][id];
     }
 
