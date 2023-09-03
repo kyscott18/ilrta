@@ -19,5 +19,8 @@
   "devDependencies": {
     "rome": "^12.1.3",
     "solhint": "^3.5.1"
+  },
+  "dependencies": {
+    "solmate": "^6"
   }
 }
