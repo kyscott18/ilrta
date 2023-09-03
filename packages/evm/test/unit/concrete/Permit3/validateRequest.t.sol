@@ -36,9 +36,9 @@ contract ValidateRequestTest is Test {
     }
 
     function test_ValidateRequest_ValidRequestERC20() external {
-        vm.expectRevert(SignatureVerification.InvalidSignatureLength.selector);
+        vm.expectRevert(SignatureVerification.InvalidContractSignature.selector);
         permit3.transferBySignature(
-            address(0),
+            address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, bytes4(0), abi.encode(uint256(1))),
                 0,
@@ -82,7 +82,7 @@ contract ValidateRequestTest is Test {
 
         vm.expectRevert(abi.encodeWithSelector(Permit3.InvalidRequest.selector, bytes("")));
         permit3.transferBySignature(
-            address(0),
+            address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),
                 0,
@@ -96,9 +96,9 @@ contract ValidateRequestTest is Test {
     function test_ValidateRequest_ReturnTrue() external {
         ret = Ret.True;
 
-        vm.expectRevert(SignatureVerification.InvalidSignatureLength.selector);
+        vm.expectRevert(SignatureVerification.InvalidContractSignature.selector);
         permit3.transferBySignature(
-            address(0),
+            address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),
                 0,
@@ -107,6 +107,10 @@ contract ValidateRequestTest is Test {
             Permit3.RequestedTransferDetails(address(0), bytes("")),
             bytes("")
         );
+    }
+
+    function isValidSignature(bytes32, bytes memory) external pure returns (bytes4) {
+        return bytes4(0);
     }
 
     function validateRequest() external view returns (bool) {
