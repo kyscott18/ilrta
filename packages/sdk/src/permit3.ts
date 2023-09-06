@@ -292,11 +292,11 @@ export const permit3TransferBySignature = async <
     requestedTransfer: RequestedTransfer<TSignatureTransfer["transferDetails"]>;
     signature: Hex;
   },
-): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature1">> => {
+): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
     address: Permit3Address,
     abi: permit3ABI,
-    functionName: "transferBySignature1",
+    functionName: "transferBySignature",
     args: [
       args.signer,
       {
@@ -356,11 +356,11 @@ export const permit3TransferBatchBySignature = async <
     >[];
     signature: Hex;
   },
-): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature3">> => {
+): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
     address: Permit3Address,
     abi: permit3ABI,
-    functionName: "transferBySignature3",
+    functionName: "transferBySignature",
     args: [
       args.signer,
       {
@@ -413,11 +413,11 @@ export const permit3TransferERC20BySignature = async (
     requestedTransfer: RequestedTransferERC20;
     signature: Hex;
   },
-): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature2">> => {
+): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
     address: Permit3Address,
     abi: permit3ABI,
-    functionName: "transferBySignature2",
+    functionName: "transferBySignature",
     args: [
       args.signer,
       {
@@ -452,11 +452,11 @@ export const permit3TransferBatchERC20BySignature = async (
     requestedTransfer: readonly RequestedTransferERC20[];
     signature: Hex;
   },
-): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature4">> => {
+): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
     address: Permit3Address,
     abi: permit3ABI,
-    functionName: "transferBySignature4",
+    functionName: "transferBySignature",
     args: [
       args.signer,
       {

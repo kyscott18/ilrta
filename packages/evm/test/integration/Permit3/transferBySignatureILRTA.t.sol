@@ -69,7 +69,7 @@ contract TransferBySignatureILRTATest is Test {
 
         vm.resumeGasMetering();
 
-        permit3.transferBySignature1(
+        permit3.transferBySignature(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
             Permit3.RequestedTransferDetails(address(this), abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))),

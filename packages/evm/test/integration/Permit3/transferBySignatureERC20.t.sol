@@ -55,7 +55,7 @@ contract TransferBySignatureERC20Test is Test {
 
         vm.resumeGasMetering();
 
-        permit3.transferBySignature2(
+        permit3.transferBySignature(
             owner,
             Permit3.SignatureTransferERC20(transferDetails, 0, block.timestamp),
             Permit3.RequestedTransferDetailsERC20(address(this), 1e18),

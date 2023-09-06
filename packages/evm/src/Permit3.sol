@@ -120,7 +120,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @notice transfer a token using a signed message
-    function transferBySignature1(
+    function transferBySignature(
         address signer,
         SignatureTransfer calldata signatureTransfer,
         RequestedTransferDetails calldata requestedTransfer,
@@ -161,7 +161,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer an erc20 token using a signed message
-    function transferBySignature2(
+    function transferBySignature(
         address signer,
         SignatureTransferERC20 calldata signatureTransfer,
         RequestedTransferDetailsERC20 calldata requestedTransfer,
@@ -198,7 +198,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of tokens using a signed message
-    function transferBySignature3(
+    function transferBySignature(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
         RequestedTransferDetails[] calldata requestedTransfer,
@@ -260,7 +260,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of erc20 tokens using a signed message
-    function transferBySignature4(
+    function transferBySignature(
         address signer,
         SignatureTransferBatchERC20 calldata signatureTransfer,
         RequestedTransferDetailsERC20[] calldata requestedTransfer,

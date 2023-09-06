@@ -25,7 +25,7 @@ contract TransferTest is Test, IERC1271 {
         ret = Ret.Fail;
 
         vm.expectRevert(Permit3.TransferFailed.selector);
-        permit3.transferBySignature1(
+        permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, 0x811c34d3, bytes("")),
@@ -40,7 +40,7 @@ contract TransferTest is Test, IERC1271 {
     function test_Transfer_ReturnTrue() external {
         ret = Ret.True;
 
-        permit3.transferBySignature1(
+        permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, 0x811c34d3, bytes("")),
@@ -56,7 +56,7 @@ contract TransferTest is Test, IERC1271 {
         ret = Ret.False;
 
         vm.expectRevert(Permit3.TransferFailed.selector);
-        permit3.transferBySignature1(
+        permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, 0x811c34d3, bytes("")),

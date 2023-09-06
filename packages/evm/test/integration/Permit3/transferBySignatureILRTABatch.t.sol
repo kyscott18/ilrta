@@ -87,7 +87,7 @@ contract TransferBySignatureILRTABatchTest is Test {
 
         vm.resumeGasMetering();
 
-        permit3.transferBySignature3(
+        permit3.transferBySignature(
             owner, Permit3.SignatureTransferBatch(transferDetails, 0, block.timestamp), requestedTransfers, signature
         );
         vm.pauseGasMetering();
