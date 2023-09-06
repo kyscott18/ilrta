@@ -1,3 +1,6 @@
+import type { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
+import type { Account, PublicClient, WalletClient } from "viem";
+import type { Address } from "viem/accounts";
 import { ilrtaFungibleTokenABI } from "../generated.js";
 import {
   type ILRTA,
@@ -5,13 +8,9 @@ import {
   type ILRTAData,
   type ILRTATransferDetails,
 } from "../ilrta.js";
-import type { ReverseMirageRead, ReverseMirageWrite } from "reverse-mirage";
-import type { Account, PublicClient, WalletClient } from "viem";
-import type { Address } from "viem/accounts";
 
 export type FungibleToken = ILRTA<"fungibleToken"> & {
   decimals: number;
-  id: "0x0000000000000000000000000000000000000000000000000000000000000000";
 };
 
 export type DataType = ILRTAData<FungibleToken, { balance: bigint }>;
@@ -64,8 +63,11 @@ export const dataOf = (
       publicClient.readContract({
         abi: ilrtaFungibleTokenABI,
         address: args.ilrta.address,
-        functionName: "dataOf",
-        args: [args.owner, args.ilrta.id],
+        functionName: "dataOf_cGJnTo",
+        args: [
+          args.owner,
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
       }),
     parse: (data): DataType => ({
       type: "fungibleTokenData",
@@ -83,8 +85,12 @@ export const allowanceOf = (
       publicClient.readContract({
         abi: ilrtaFungibleTokenABI,
         address: args.ilrta.address,
-        functionName: "allowanceOf",
-        args: [args.owner, args.spender, args.ilrta.id],
+        functionName: "allowanceOf_QDmnOj",
+        args: [
+          args.owner,
+          args.spender,
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
       }),
     parse: (data): ApprovalDetailsType => ({
       type: "fungibleTokenApproval",

@@ -46,7 +46,15 @@ contract TransferBySignatureILRTATest is Test {
                 keccak256(
                     abi.encode(
                         TRANSFER_TYPEHASH,
-                        keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails)),
+                        keccak256(
+                            abi.encode(
+                                TRANSFER_DETAILS_TYPEHASH,
+                                transferDetails.token,
+                                transferDetails.tokenType,
+                                transferDetails.functionSelector,
+                                keccak256(transferDetails.transferDetails)
+                            )
+                        ),
                         address(this),
                         0,
                         block.timestamp
@@ -61,7 +69,7 @@ contract TransferBySignatureILRTATest is Test {
 
         vm.resumeGasMetering();
 
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             owner,
             Permit3.SignatureTransfer(transferDetails, 0, block.timestamp),
             Permit3.RequestedTransferDetails(address(this), abi.encode(ILRTAFungibleToken.ILRTATransferDetails(1e18))),

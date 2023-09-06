@@ -23,7 +23,7 @@ contract ValidateRequestTest is Test {
 
     function test_ValidateRequest_InvalidRequestERC20() external {
         vm.expectRevert(abi.encodeWithSelector(Permit3.InvalidRequest.selector, abi.encode(uint256(1))));
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(0),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, bytes4(0), abi.encode(uint256(0))),
@@ -37,7 +37,7 @@ contract ValidateRequestTest is Test {
 
     function test_ValidateRequest_ValidRequestERC20() external {
         vm.expectRevert(SignatureVerification.InvalidContractSignature.selector);
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, bytes4(0), abi.encode(uint256(1))),
@@ -51,7 +51,7 @@ contract ValidateRequestTest is Test {
 
     function test_ValidateRequest_DifferentTransferDetailsLength() external {
         vm.expectRevert(abi.encodeWithSelector(Permit3.InvalidRequest.selector, bytes("")));
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(0),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, bytes4(0), abi.encode(uint256(0))),
@@ -67,7 +67,7 @@ contract ValidateRequestTest is Test {
         ret = Ret.False;
 
         vm.expectRevert(abi.encodeWithSelector(Permit3.InvalidRequest.selector, bytes("")));
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, bytes4(0), bytes("")), 0, block.timestamp
@@ -81,7 +81,7 @@ contract ValidateRequestTest is Test {
         ret = Ret.Fail;
 
         vm.expectRevert(abi.encodeWithSelector(Permit3.InvalidRequest.selector, bytes("")));
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),
@@ -97,7 +97,7 @@ contract ValidateRequestTest is Test {
         ret = Ret.True;
 
         vm.expectRevert(SignatureVerification.InvalidContractSignature.selector);
-        permit3.transferBySignature(
+        permit3.transferBySignature1(
             address(this),
             Permit3.SignatureTransfer(
                 Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),

@@ -17,7 +17,7 @@ export default defineConfig({
       ],
     }),
     foundry({
-      project: "node_modules/ilrta/lib/solmate/",
+      project: "../../lib/solmate/",
       include: ["MockERC20.sol/**"],
       namePrefix: "solmate",
     }),
