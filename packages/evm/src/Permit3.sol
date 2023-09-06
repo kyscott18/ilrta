@@ -30,8 +30,6 @@ contract Permit3 is EIP712, UnorderedNonce {
 
     enum TokenType {
         ERC20,
-        // ERC721,
-        // ERC1155,
         ILRTA
     }
 
@@ -122,7 +120,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @notice transfer a token using a signed message
-    function transferBySignature(
+    function transferBySignature1(
         address signer,
         SignatureTransfer calldata signatureTransfer,
         RequestedTransferDetails calldata requestedTransfer,
@@ -139,7 +137,15 @@ contract Permit3 is EIP712, UnorderedNonce {
             keccak256(
                 abi.encode(
                     TRANSFER_TYPEHASH,
-                    keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails)),
+                    keccak256(
+                        abi.encode(
+                            TRANSFER_DETAILS_TYPEHASH,
+                            signatureTransfer.transferDetails.token,
+                            signatureTransfer.transferDetails.tokenType,
+                            signatureTransfer.transferDetails.functionSelector,
+                            keccak256(signatureTransfer.transferDetails.transferDetails)
+                        )
+                    ),
                     msg.sender,
                     signatureTransfer.nonce,
                     signatureTransfer.deadline
@@ -155,7 +161,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer an erc20 token using a signed message
-    function transferBySignature(
+    function transferBySignature2(
         address signer,
         SignatureTransferERC20 calldata signatureTransfer,
         RequestedTransferDetailsERC20 calldata requestedTransfer,
@@ -192,7 +198,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of tokens using a signed message
-    function transferBySignature(
+    function transferBySignature3(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
         RequestedTransferDetails[] calldata requestedTransfer,
@@ -210,8 +216,15 @@ contract Permit3 is EIP712, UnorderedNonce {
         // compute data hash
         bytes32[] memory transferDetailsHashes = new bytes32[](length);
         for (uint256 i = 0; i < length;) {
-            transferDetailsHashes[i] =
-                keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, signatureTransfer.transferDetails[i]));
+            transferDetailsHashes[i] = keccak256(
+                abi.encode(
+                    TRANSFER_DETAILS_TYPEHASH,
+                    signatureTransfer.transferDetails[i].token,
+                    signatureTransfer.transferDetails[i].tokenType,
+                    signatureTransfer.transferDetails[i].functionSelector,
+                    keccak256(signatureTransfer.transferDetails[i].transferDetails)
+                )
+            );
 
             unchecked {
                 i++;
@@ -247,7 +260,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     }
 
     /// @notice transfer a batch of erc20 tokens using a signed message
-    function transferBySignature(
+    function transferBySignature4(
         address signer,
         SignatureTransferBatchERC20 calldata signatureTransfer,
         RequestedTransferDetailsERC20[] calldata requestedTransfer,

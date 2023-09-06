@@ -1,6 +1,6 @@
 {
 	"recommendations": [
-		"rome.rome",
+		"boimejs.biome",
 		"NomicFoundation.hardhat-solidity",
 		"tamasfe.even-better-toml"
 	]

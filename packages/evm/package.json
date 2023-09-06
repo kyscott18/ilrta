@@ -9,18 +9,18 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test",
-    "format": "rome format . --write && forge fmt",
+    "format": "biome format . --write && forge fmt",
     "clean": "rm -rf cache out",
-    "lint": "rome check ."
+    "lint": "biome check ."
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "rome": "^12.1.3",
-    "solhint": "^3.5.1"
+    "@biomejs/biome": "^1.0.0",
+    "solhint": "^3.6.2"
   },
   "dependencies": {
-    "solmate": "^6"
+    "solmate": "^6.2.0"
   }
 }

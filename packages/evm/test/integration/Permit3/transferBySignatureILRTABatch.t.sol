@@ -54,7 +54,15 @@ contract TransferBySignatureILRTABatchTest is Test {
 
         bytes32[] memory transferDetailsHashes = new bytes32[](transferDetails.length);
         for (uint256 i = 0; i < transferDetailsHashes.length; i++) {
-            transferDetailsHashes[i] = keccak256(abi.encode(TRANSFER_DETAILS_TYPEHASH, transferDetails[i]));
+            transferDetailsHashes[i] = keccak256(
+                abi.encode(
+                    TRANSFER_DETAILS_TYPEHASH,
+                    transferDetails[i].token,
+                    transferDetails[i].tokenType,
+                    transferDetails[i].functionSelector,
+                    keccak256(transferDetails[i].transferDetails)
+                )
+            );
         }
 
         bytes32 signatureHash = keccak256(
@@ -79,7 +87,7 @@ contract TransferBySignatureILRTABatchTest is Test {
 
         vm.resumeGasMetering();
 
-        permit3.transferBySignature(
+        permit3.transferBySignature3(
             owner, Permit3.SignatureTransferBatch(transferDetails, 0, block.timestamp), requestedTransfers, signature
         );
         vm.pauseGasMetering();

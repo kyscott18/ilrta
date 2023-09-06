@@ -2,5 +2,5 @@ import { getAddress } from "viem/utils";
 
 // TODO: make this based on chain
 export const Permit3Address = getAddress(
-  "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+  "0x5FbDB2315678afecb367f032d93F642f64180aa3",
 );

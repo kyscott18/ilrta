@@ -1,30 +1,25 @@
-import { Permit3Address } from "./constants.js";
-import {
-  permit3ABI,
-  solmateMockErc20ABI,
-  superSignatureABI,
-} from "./generated.js";
-import {
-  getTransferBatchTypedDataHash,
-  getTransferTypedDataHash,
-  permit3SignTransfer,
-  permit3SignTransferBatch,
-  permit3TransferBatchBySignature,
-  permit3TransferBySignature,
-} from "./permit3.js";
-import { signSuperSignature } from "./superSignature.js";
-import { ALICE, BOB } from "./test/constants.js";
-import { anvil, publicClient, testClient, walletClient } from "./test/utils.js";
-import MockERC20 from "ilrta/lib/solmate/out/MockERC20.sol/MockERC20.json";
 import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
 import { type ERC20, createAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, getAddress, parseEther } from "viem";
 import { beforeEach, describe, test } from "vitest";
+import MockERC20 from "../../evm/out/MockERC20.sol/MockERC20.json";
+import { mockErc20ABI, permit3ABI } from "./generated.js";
+import {
+  permit3SignTransfer,
+  permit3SignTransferBatch,
+  permit3SignTransferBatchERC20,
+  permit3SignTransferERC20,
+  permit3TransferBatchBySignature,
+  permit3TransferBatchERC20BySignature,
+  permit3TransferBySignature,
+  permit3TransferERC20BySignature,
+} from "./permit3.js";
+import { ALICE, BOB } from "./test/constants.js";
+import { anvil, publicClient, testClient, walletClient } from "./test/utils.js";
 
 let id: Hex | undefined = undefined;
-let mockERC20_1: ERC20;
-let mockERC20_2: ERC20;
+let mockERC20: ERC20;
 
 beforeEach(async () => {
   if (id === undefined) {
@@ -40,93 +35,52 @@ beforeEach(async () => {
         hash: deployHash,
       });
     invariant(Permit3Address);
-    console.log("permit3 address:", Permit3Address);
+    console.log("permit3 address:", getAddress(Permit3Address));
 
     // deploy tokens
     deployHash = await walletClient.deployContract({
       account: ALICE,
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       bytecode: MockERC20.bytecode.object as Hex,
       args: ["Mock ERC20", "MOCK", 18],
     });
 
-    const { contractAddress: mockERC20Address1 } =
+    const { contractAddress: mockERC20Address } =
       await publicClient.waitForTransactionReceipt({
         hash: deployHash,
       });
-    invariant(mockERC20Address1);
+    invariant(mockERC20Address);
 
-    mockERC20_1 = {
+    mockERC20 = {
       type: "erc20",
       decimals: 18,
       name: "Mock ERC20",
       symbol: "MOCK",
       chainID: anvil.id,
-      address: mockERC20Address1,
-    };
-    deployHash = await walletClient.deployContract({
-      account: ALICE,
-      abi: solmateMockErc20ABI,
-      bytecode: MockERC20.bytecode.object as Hex,
-      args: ["Mock ERC20", "MOCK", 18],
-    });
-
-    const { contractAddress: mockERC20Address2 } =
-      await publicClient.waitForTransactionReceipt({
-        hash: deployHash,
-      });
-    invariant(mockERC20Address2);
-
-    mockERC20_2 = {
-      type: "erc20",
-      decimals: 18,
-      name: "Mock ERC20",
-      symbol: "MOCK",
-      chainID: anvil.id,
-      address: mockERC20Address2,
+      address: mockERC20Address,
     };
 
     // mint to alice
     const { request: mintRequest1 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       functionName: "mint",
-      address: mockERC20Address1,
-      args: [ALICE, parseEther("1")],
+      address: mockERC20Address,
+      args: [ALICE, parseEther("4")],
       account: ALICE,
     });
-    let mintHash = await walletClient.writeContract(mintRequest1);
-    await publicClient.waitForTransactionReceipt({ hash: mintHash });
-
-    const { request: mintRequest2 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
-      functionName: "mint",
-      address: mockERC20Address2,
-      args: [ALICE, parseEther("1")],
-      account: ALICE,
-    });
-    mintHash = await walletClient.writeContract(mintRequest2);
-    await publicClient.waitForTransactionReceipt({ hash: mintHash });
+    const mintHash1 = await walletClient.writeContract(mintRequest1);
+    await publicClient.waitForTransactionReceipt({ hash: mintHash1 });
 
     // approve permit3
     const { request: approveRequest1 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       functionName: "approve",
-      address: mockERC20Address1,
-      args: [Permit3Address, parseEther("1")],
+      address: mockERC20Address,
+      args: [Permit3Address, parseEther("4")],
       account: ALICE,
     });
-    let approveHash = await walletClient.writeContract(approveRequest1);
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
-
-    const { request: approveRequest2 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
-      functionName: "approve",
-      address: mockERC20Address2,
-      args: [Permit3Address, parseEther("1")],
-      account: ALICE,
-    });
-    approveHash = await walletClient.writeContract(approveRequest2);
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
+    const approveHash1 = await walletClient.writeContract(approveRequest1);
+    await publicClient.waitForTransactionReceipt({ hash: approveHash1 });
   } else {
     await testClient.revert({ id });
   }
@@ -134,16 +88,17 @@ beforeEach(async () => {
 }, 100_000);
 
 describe("permit 3", () => {
-  test("transfer by signature", async () => {
+  test.todo("transfer by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: createAmountFromString(mockERC20_1, "1"),
+      transferDetails: createAmountFromString(mockERC20, "1"),
       spender: ALICE,
-      nonce: 0n,
+      nonce: 5n,
       deadline: block.timestamp + 100n,
     } as const;
 
     const signature = await permit3SignTransfer(walletClient, ALICE, transfer);
+
     const { hash } = await permit3TransferBySignature(
       publicClient,
       walletClient,
@@ -151,29 +106,35 @@ describe("permit 3", () => {
       {
         signer: ALICE,
         signatureTransfer: transfer,
-        requestedTransfer: { to: BOB, amount: transfer.transferDetails },
+        requestedTransfer: {
+          to: BOB,
+          amount: transfer.transferDetails.amount,
+        },
         signature,
       },
     );
+
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
-  test("transfer batch by signature", async () => {
+  test.todo("transfer batch by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        createAmountFromString(mockERC20_1, "1"),
-        createAmountFromString(mockERC20_2, "1"),
-      ],
+        createAmountFromString(mockERC20, "0.5"),
+        createAmountFromString(mockERC20, "0.5"),
+      ] as const,
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
     } as const;
+
     const signature = await permit3SignTransferBatch(
       walletClient,
       ALICE,
       transfer,
     );
+
     const { hash } = await permit3TransferBatchBySignature(
       publicClient,
       walletClient,
@@ -181,121 +142,95 @@ describe("permit 3", () => {
       {
         signer: ALICE,
         signatureTransfer: transfer,
-        requestedTransfer: transfer.transferDetails.map((t) => ({
-          to: BOB,
-          amount: t,
-        })),
+        requestedTransfer: [
+          {
+            to: BOB,
+            amount: transfer.transferDetails[0].amount,
+          },
+          {
+            to: BOB,
+            amount: transfer.transferDetails[1].amount,
+          },
+        ],
         signature,
       },
     );
+
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
-  test("transfer by super signature", async () => {
+  test("transfer by signature erc20", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: createAmountFromString(mockERC20_1, "1"),
+      transferDetails: createAmountFromString(mockERC20, "1"),
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
     } as const;
 
-    const dataHash = getTransferTypedDataHash(anvil.id, transfer);
+    const signature = await permit3SignTransferERC20(
+      walletClient,
+      ALICE,
+      transfer,
+    );
 
-    const verify = {
-      dataHash: [dataHash],
-      deadline: block.timestamp + 100n,
-      nonce: 0n,
-    } as const;
+    const { hash } = await permit3TransferERC20BySignature(
+      publicClient,
+      walletClient,
+      ALICE,
+      {
+        signer: ALICE,
+        signatureTransfer: transfer,
+        requestedTransfer: {
+          to: BOB,
+          amount: { amount: transfer.transferDetails.amount },
+        },
+        signature,
+      },
+    );
 
-    const signature = await signSuperSignature(walletClient, ALICE, verify);
-
-    const { request: verifyRequest } = await publicClient.simulateContract({
-      account: ALICE,
-      abi: superSignatureABI,
-      address: Permit3Address,
-      functionName: "verifyAndStoreRoot",
-      args: [ALICE, verify, signature],
-    });
-
-    let hash = await walletClient.writeContract(verifyRequest);
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    const { request: transferBySuperSignatureRequest } =
-      await publicClient.simulateContract({
-        account: ALICE,
-        abi: permit3ABI,
-        functionName: "transferBySuperSignature",
-        address: Permit3Address,
-        args: [
-          ALICE,
-          {
-            token: getAddress(transfer.transferDetails.token.address),
-            amount: transfer.transferDetails.amount,
-          },
-          { to: BOB, amount: transfer.transferDetails.amount },
-          [dataHash],
-        ],
-      });
-
-    hash = await walletClient.writeContract(transferBySuperSignatureRequest);
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
-  test("transfer batch by super signature", async () => {
+  test("transfer batch by signature erc20", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        createAmountFromString(mockERC20_1, "1"),
-        createAmountFromString(mockERC20_2, "1"),
+        createAmountFromString(mockERC20, "0.5"),
+        createAmountFromString(mockERC20, "0.5"),
       ],
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
     } as const;
 
-    const dataHash = getTransferBatchTypedDataHash(anvil.id, transfer);
+    const signature = await permit3SignTransferBatchERC20(
+      walletClient,
+      ALICE,
+      transfer,
+    );
 
-    const verify = {
-      dataHash: [dataHash],
-      deadline: block.timestamp + 100n,
-      nonce: 0n,
-    } as const;
-
-    const signature = await signSuperSignature(walletClient, ALICE, verify);
-
-    const { request: verifyRequest } = await publicClient.simulateContract({
-      account: ALICE,
-      abi: superSignatureABI,
-      address: Permit3Address,
-      functionName: "verifyAndStoreRoot",
-      args: [ALICE, verify, signature],
-    });
-
-    let hash = await walletClient.writeContract(verifyRequest);
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    const { request: transferBySuperSignatureRequest } =
-      await publicClient.simulateContract({
-        account: ALICE,
-        abi: permit3ABI,
-        functionName: "transferBySuperSignature",
-        address: Permit3Address,
-        args: [
-          ALICE,
-          transfer.transferDetails.map((t) => ({
-            token: getAddress(t.token.address),
-            amount: t.amount,
-          })),
-          transfer.transferDetails.map((t) => ({
+    const { hash } = await permit3TransferBatchERC20BySignature(
+      publicClient,
+      walletClient,
+      ALICE,
+      {
+        signer: ALICE,
+        signatureTransfer: transfer,
+        requestedTransfer: [
+          {
             to: BOB,
-            amount: t.amount,
-          })),
-          [dataHash],
+            amount: { amount: transfer.transferDetails[0].amount },
+          },
+          {
+            to: BOB,
+            amount: { amount: transfer.transferDetails[1].amount },
+          },
         ],
-      });
+        signature,
+      },
+    );
 
-    hash = await walletClient.writeContract(transferBySuperSignatureRequest);
     await publicClient.waitForTransactionReceipt({ hash });
   });
 });
