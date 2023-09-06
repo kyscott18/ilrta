@@ -14,12 +14,8 @@ export default defineConfig({
         "FungibleToken.sol/**",
         "MockFungibleToken.sol/**",
         "TransferBatch.sol/**",
+        "MockERC20.sol/**",
       ],
-    }),
-    foundry({
-      project: "../../lib/solmate/",
-      include: ["MockERC20.sol/**"],
-      namePrefix: "solmate",
     }),
   ],
 });

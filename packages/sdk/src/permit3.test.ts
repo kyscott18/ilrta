@@ -3,8 +3,8 @@ import { type ERC20, createAmountFromString } from "reverse-mirage";
 import invariant from "tiny-invariant";
 import { type Hex, getAddress, parseEther } from "viem";
 import { beforeEach, describe, test } from "vitest";
-import MockERC20 from "../../../lib/solmate/out/MockERC20.sol/MockERC20.json";
-import { permit3ABI, solmateMockErc20ABI } from "./generated.js";
+import MockERC20 from "../../evm/out/MockERC20.sol/MockERC20.json";
+import { mockErc20ABI, permit3ABI } from "./generated.js";
 import {
   permit3SignTransfer,
   permit3SignTransferBatch,
@@ -40,7 +40,7 @@ beforeEach(async () => {
     // deploy tokens
     deployHash = await walletClient.deployContract({
       account: ALICE,
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       bytecode: MockERC20.bytecode.object as Hex,
       args: ["Mock ERC20", "MOCK", 18],
     });
@@ -62,7 +62,7 @@ beforeEach(async () => {
 
     // mint to alice
     const { request: mintRequest1 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       functionName: "mint",
       address: mockERC20Address,
       args: [ALICE, parseEther("4")],
@@ -73,7 +73,7 @@ beforeEach(async () => {
 
     // approve permit3
     const { request: approveRequest1 } = await publicClient.simulateContract({
-      abi: solmateMockErc20ABI,
+      abi: mockErc20ABI,
       functionName: "approve",
       address: mockERC20Address,
       args: [Permit3Address, parseEther("4")],
