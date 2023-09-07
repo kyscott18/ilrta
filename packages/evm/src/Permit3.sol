@@ -36,7 +36,7 @@ contract Permit3 is EIP712, UnorderedNonce {
     struct TransferDetails {
         address token;
         TokenType tokenType;
-        bytes4 functionSelector;
+        uint32 functionSelector;
         bytes transferDetails;
     }
 
@@ -84,14 +84,14 @@ contract Permit3 is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH =
-        keccak256("TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)");
+        keccak256("TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)");
 
     bytes32 private constant TRANSFER_DETAILS_ERC20_TYPEHASH =
         keccak256("TransferDetails(address token,uint256 amount)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
+        "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 
     bytes32 private constant TRANSFER_ERC20_TYPEHASH = keccak256(
@@ -101,7 +101,7 @@ contract Permit3 is EIP712, UnorderedNonce {
 
     bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
+        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 
     bytes32 private constant TRANSFER_BATCH_ERC20_TYPEHASH = keccak256(
@@ -398,7 +398,7 @@ contract Permit3 is EIP712, UnorderedNonce {
             let freeMemoryPointer := mload(0x40)
 
             // Write the abi-encoded calldata into memory, beginning with the function selector.
-            let functionSelector := mload(add(signedTransferDetails, 0x40))
+            let functionSelector := shl(224, mload(add(signedTransferDetails, 0x40)))
             mstore(freeMemoryPointer, functionSelector)
 
             // Append and mask the "from" argument.

@@ -71,7 +71,7 @@ export type RequestedTransferERC20 = {
 export const TransferDetailsType = [
   { name: "token", type: "address" },
   { name: "tokenType", type: "uint8" },
-  { name: "functionSelector", type: "bytes4" },
+  { name: "functionSelector", type: "uint32" },
   { name: "transferDetails", type: "bytes" },
 ] as const;
 
@@ -193,13 +193,13 @@ export const permit3SignTransferBatch = (
           ? ({
               token: getAddress(t.ilrta.address),
               tokenType: TokenTypeEnum.ILRTA,
-              functionSelector: "0x811c34d3",
+              functionSelector: 0x811c34d3,
               transferDetails: t.transferDetails,
             } as const)
           : ({
               token: getAddress(t.token.address),
               tokenType: TokenTypeEnum.ERC20,
-              functionSelector: "0x23b872dd",
+              functionSelector: 0x23b872dd,
               transferDetails: encodeAbiParameters(
                 [{ name: "amount", type: "uint256" }],
                 [t.amount],
@@ -306,7 +306,7 @@ export const permit3TransferBySignature = async <
                 args.signatureTransfer.transferDetails.ilrta.address,
               ),
               tokenType: TokenTypeEnum.ILRTA,
-              functionSelector: "0x811c34d3",
+              functionSelector: 0x811c34d3,
               transferDetails:
                 args.signatureTransfer.transferDetails.transferDetails,
             } as const)
@@ -315,7 +315,7 @@ export const permit3TransferBySignature = async <
                 args.signatureTransfer.transferDetails.token.address,
               ),
               tokenType: TokenTypeEnum.ERC20,
-              functionSelector: "0x23b872dd",
+              functionSelector: 0x23b872dd,
               transferDetails: encodeAbiParameters(
                 [{ name: "amount", type: "uint256" }],
                 [args.signatureTransfer.transferDetails.amount],
@@ -369,13 +369,13 @@ export const permit3TransferBatchBySignature = async <
             ? ({
                 token: getAddress(t.ilrta.address),
                 tokenType: TokenTypeEnum.ILRTA,
-                functionSelector: "0x811c34d3",
+                functionSelector: 0x811c34d3,
                 transferDetails: t.transferDetails,
               } as const)
             : ({
                 token: getAddress(t.token.address),
                 tokenType: TokenTypeEnum.ERC20,
-                functionSelector: "0x23b872dd",
+                functionSelector: 0x23b872dd,
                 transferDetails: encodeAbiParameters(
                   [{ name: "amount", type: "uint256" }],
                   [t.amount],

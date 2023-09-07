@@ -26,7 +26,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(0),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, bytes4(0), abi.encode(uint256(0))),
+                Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, uint32(0), abi.encode(uint256(0))),
                 0,
                 block.timestamp
             ),
@@ -40,7 +40,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, bytes4(0), abi.encode(uint256(1))),
+                Permit3.TransferDetails(address(0), Permit3.TokenType.ERC20, uint32(0), abi.encode(uint256(1))),
                 0,
                 block.timestamp
             ),
@@ -54,7 +54,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(0),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, bytes4(0), abi.encode(uint256(0))),
+                Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, uint32(0), abi.encode(uint256(0))),
                 0,
                 block.timestamp
             ),
@@ -70,7 +70,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, bytes4(0), bytes("")), 0, block.timestamp
+                Permit3.TransferDetails(address(0), Permit3.TokenType.ILRTA, uint32(0), bytes("")), 0, block.timestamp
             ),
             Permit3.RequestedTransferDetails(address(0), bytes("")),
             bytes("")
@@ -84,7 +84,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),
+                Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, uint32(0), bytes("")),
                 0,
                 block.timestamp
             ),
@@ -100,7 +100,7 @@ contract ValidateRequestTest is Test {
         permit3.transferBySignature(
             address(this),
             Permit3.SignatureTransfer(
-                Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, bytes4(0), bytes("")),
+                Permit3.TransferDetails(address(this), Permit3.TokenType.ILRTA, uint32(0), bytes("")),
                 0,
                 block.timestamp
             ),
