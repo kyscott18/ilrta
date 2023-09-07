@@ -11,11 +11,11 @@ contract TransferBySignatureILRTABatchTest is Test {
     Permit3 private permit3;
 
     bytes32 private constant TRANSFER_DETAILS_TYPEHASH =
-        keccak256("TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)");
+        keccak256("TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)");
 
     bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
         // solhint-disable-next-line max-line-length
-        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,bytes4 functionSelector,bytes transferDetails)"
+        "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 
     function setUp() external {

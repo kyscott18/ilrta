@@ -88,7 +88,7 @@ beforeEach(async () => {
 }, 100_000);
 
 describe("permit 3", () => {
-  test.todo("transfer by signature", async () => {
+  test("transfer by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: createAmountFromString(mockERC20, "1"),
@@ -117,7 +117,7 @@ describe("permit 3", () => {
     await publicClient.waitForTransactionReceipt({ hash });
   });
 
-  test.todo("transfer batch by signature", async () => {
+  test("transfer batch by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
