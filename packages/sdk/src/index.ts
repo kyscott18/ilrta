@@ -22,6 +22,7 @@ export {
   TransferBatch,
   TransferERC20,
   TransferBatchERC20,
+  encodeTransferDetails,
   permit3SignTransfer,
   permit3SignTransferBatch,
   permit3SignTransferERC20,

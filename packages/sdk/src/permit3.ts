@@ -123,6 +123,24 @@ export const TransferBatchERC20 = {
   TransferDetails: TransferDetailsERC20,
 } as const;
 
+export const encodeTransferDetails = (transferDetails: TransferDetails) =>
+  isILRTA(transferDetails)
+    ? ({
+        token: getAddress(transferDetails.ilrta.address),
+        tokenType: TokenTypeEnum.ILRTA,
+        functionSelector: 0x811c34d3,
+        transferDetails: transferDetails.transferDetails,
+      } as const)
+    : ({
+        token: getAddress(transferDetails.token.address),
+        tokenType: TokenTypeEnum.ERC20,
+        functionSelector: 0x23b872dd,
+        transferDetails: encodeAbiParameters(
+          [{ name: "amount", type: "uint256" }],
+          [transferDetails.amount],
+        ),
+      } as const);
+
 export const permit3SignTransfer = (
   walletClient: WalletClient,
   account: Account | Address,
@@ -144,22 +162,7 @@ export const permit3SignTransfer = (
     types: Transfer,
     primaryType: "Transfer",
     message: {
-      transferDetails: isILRTA(transfer.transferDetails)
-        ? ({
-            token: getAddress(transfer.transferDetails.ilrta.address),
-            tokenType: TokenTypeEnum.ILRTA,
-            functionSelector: "0x811c34d3",
-            transferDetails: transfer.transferDetails.transferDetails,
-          } as const)
-        : ({
-            token: getAddress(transfer.transferDetails.token.address),
-            tokenType: TokenTypeEnum.ERC20,
-            functionSelector: "0x23b872dd",
-            transferDetails: encodeAbiParameters(
-              [{ name: "amount", type: "uint256" }],
-              [transfer.transferDetails.amount],
-            ),
-          } as const),
+      transferDetails: encodeTransferDetails(transfer.transferDetails),
       spender: getAddress(transfer.spender),
       nonce: transfer.nonce,
       deadline: transfer.deadline,
@@ -189,22 +192,7 @@ export const permit3SignTransferBatch = (
     primaryType: "Transfer",
     message: {
       transferDetails: transfers.transferDetails.map((t) =>
-        isILRTA(t)
-          ? ({
-              token: getAddress(t.ilrta.address),
-              tokenType: TokenTypeEnum.ILRTA,
-              functionSelector: 0x811c34d3,
-              transferDetails: t.transferDetails,
-            } as const)
-          : ({
-              token: getAddress(t.token.address),
-              tokenType: TokenTypeEnum.ERC20,
-              functionSelector: 0x23b872dd,
-              transferDetails: encodeAbiParameters(
-                [{ name: "amount", type: "uint256" }],
-                [t.amount],
-              ),
-            } as const),
+        encodeTransferDetails(t),
       ),
       spender: getAddress(transfers.spender),
       nonce: transfers.nonce,
