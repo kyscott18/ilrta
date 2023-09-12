@@ -2,10 +2,7 @@
   "name": "ilrta",
   "version": "0.0.1",
   "description": "",
-  "files": [
-    "src/**/*.sol",
-    "out/"
-  ],
+  "files": ["src/**/*.sol", "out/"],
   "scripts": {
     "build": "forge build",
     "test": "forge test",
