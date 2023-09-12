@@ -1,10 +1,8 @@
-export { Permit3Address } from "./constants.js";
-
 export {
   type ILRTA,
   type ILRTAData,
-  type ILRTATransferDetails,
-  type ILRTAApprovalDetails,
+  type ILRTATransfer,
+  type ILRTAApproval,
 } from "./ilrta.js";
 
 export {

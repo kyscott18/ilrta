@@ -1,5 +1,5 @@
 import type {
-  ERC20,
+  BaseERC20,
   ERC20Amount,
   ReverseMirageRead,
   ReverseMirageWrite,
@@ -14,9 +14,8 @@ import {
   encodeAbiParameters,
   getAddress,
 } from "viem";
-import { Permit3Address } from "./constants.js";
 import { permit3ABI } from "./generated.js";
-import type { ILRTATransferDetails } from "./ilrta.js";
+import type { ILRTATransfer } from "./ilrta.js";
 
 export const TokenTypeEnum = {
   ERC20: 0,
@@ -24,14 +23,14 @@ export const TokenTypeEnum = {
 } as const;
 
 export type TransferDetails =
-  | (Pick<ILRTATransferDetails, "type" | "ilrta"> & { transferDetails: Hex })
-  | ERC20Amount<ERC20>;
+  | (Pick<ILRTATransfer, "type" | "token"> & { transferDetails: Hex })
+  | ERC20Amount<BaseERC20>;
 
 const isILRTA = (
   transferDetails: TransferDetails,
-): transferDetails is Pick<ILRTATransferDetails, "type" | "ilrta"> & {
+): transferDetails is Pick<ILRTATransfer, "type" | "token"> & {
   transferDetails: Hex;
-} => !("token" in transferDetails);
+} => "transferDetails" in transferDetails;
 
 export type SignatureTransfer = {
   transferDetails: TransferDetails;
@@ -46,27 +45,23 @@ export type SignatureTransferBatch = {
 };
 
 export type SignatureTransferERC20 = {
-  transferDetails: ERC20Amount<ERC20>;
+  transferDetails: ERC20Amount<BaseERC20>;
   nonce: bigint;
   deadline: bigint;
 };
 
 export type SignatureTransferBatchERC20 = {
-  transferDetails: readonly ERC20Amount<ERC20>[];
+  transferDetails: readonly ERC20Amount<BaseERC20>[];
   nonce: bigint;
   deadline: bigint;
 };
 
-export type RequestedTransfer<TTransferDetails extends TransferDetails> = {
-  to: Address;
-} & (TTransferDetails["type"] extends `erc20${string}`
-  ? { amount: bigint }
-  : { transferDetails: Hex });
+export type RequestedTransfer<TTransferDetails extends TransferDetails> =
+  TTransferDetails extends { transferDetails: Hex }
+    ? { transferDetails: Hex }
+    : Omit<ERC20Amount<BaseERC20>, "type" | "token">;
 
-export type RequestedTransferERC20 = {
-  to: Address;
-  amount: Pick<ERC20Amount<ERC20>, "amount">;
-};
+export type RequestedTransferERC20 = Pick<ERC20Amount<BaseERC20>, "amount">;
 
 export const TransferDetailsType = [
   { name: "token", type: "address" },
@@ -126,7 +121,7 @@ export const TransferBatchERC20 = {
 export const encodeTransferDetails = (transferDetails: TransferDetails) =>
   isILRTA(transferDetails)
     ? ({
-        token: getAddress(transferDetails.ilrta.address),
+        token: getAddress(transferDetails.token.address),
         tokenType: TokenTypeEnum.ILRTA,
         functionSelector: 0x811c34d3,
         transferDetails: transferDetails.transferDetails,
@@ -144,7 +139,7 @@ export const encodeTransferDetails = (transferDetails: TransferDetails) =>
 export const permit3SignTransfer = (
   walletClient: WalletClient,
   account: Account | Address,
-  transfer: SignatureTransfer & { spender: Address },
+  args: SignatureTransfer & { spender: Address; permit3: Address },
 ): Promise<Hex> => {
   const chainID = walletClient.chain?.id;
   invariant(chainID);
@@ -153,7 +148,7 @@ export const permit3SignTransfer = (
     name: "Permit3",
     version: "1",
     chainId: chainID,
-    verifyingContract: Permit3Address,
+    verifyingContract: args.permit3,
   } as const;
 
   return walletClient.signTypedData({
@@ -162,10 +157,10 @@ export const permit3SignTransfer = (
     types: Transfer,
     primaryType: "Transfer",
     message: {
-      transferDetails: encodeTransferDetails(transfer.transferDetails),
-      spender: getAddress(transfer.spender),
-      nonce: transfer.nonce,
-      deadline: transfer.deadline,
+      transferDetails: encodeTransferDetails(args.transferDetails),
+      spender: getAddress(args.spender),
+      nonce: args.nonce,
+      deadline: args.deadline,
     },
   });
 };
@@ -173,7 +168,7 @@ export const permit3SignTransfer = (
 export const permit3SignTransferBatch = (
   walletClient: WalletClient,
   account: Account | Address,
-  transfers: SignatureTransferBatch & { spender: Address },
+  args: SignatureTransferBatch & { spender: Address; permit3: Address },
 ) => {
   const chainID = walletClient.chain?.id;
   invariant(chainID);
@@ -182,7 +177,7 @@ export const permit3SignTransferBatch = (
     name: "Permit3",
     version: "1",
     chainId: chainID,
-    verifyingContract: Permit3Address,
+    verifyingContract: args.permit3,
   } as const;
 
   return walletClient.signTypedData({
@@ -191,12 +186,12 @@ export const permit3SignTransferBatch = (
     types: TransferBatch,
     primaryType: "Transfer",
     message: {
-      transferDetails: transfers.transferDetails.map((t) =>
+      transferDetails: args.transferDetails.map((t) =>
         encodeTransferDetails(t),
       ),
-      spender: getAddress(transfers.spender),
-      nonce: transfers.nonce,
-      deadline: transfers.deadline,
+      spender: getAddress(args.spender),
+      nonce: args.nonce,
+      deadline: args.deadline,
     },
   });
 };
@@ -204,7 +199,7 @@ export const permit3SignTransferBatch = (
 export const permit3SignTransferERC20 = (
   walletClient: WalletClient,
   account: Account | Address,
-  transfer: SignatureTransferERC20 & { spender: Address },
+  args: SignatureTransferERC20 & { spender: Address; permit3: Address },
 ): Promise<Hex> => {
   const chainID = walletClient.chain?.id;
   invariant(chainID);
@@ -213,7 +208,7 @@ export const permit3SignTransferERC20 = (
     name: "Permit3",
     version: "1",
     chainId: chainID,
-    verifyingContract: Permit3Address,
+    verifyingContract: args.permit3,
   } as const;
 
   return walletClient.signTypedData({
@@ -223,12 +218,12 @@ export const permit3SignTransferERC20 = (
     primaryType: "Transfer",
     message: {
       transferDetails: {
-        token: getAddress(transfer.transferDetails.token.address),
-        amount: transfer.transferDetails.amount,
+        token: getAddress(args.transferDetails.token.address),
+        amount: args.transferDetails.amount,
       } as const,
-      spender: getAddress(transfer.spender),
-      nonce: transfer.nonce,
-      deadline: transfer.deadline,
+      spender: getAddress(args.spender),
+      nonce: args.nonce,
+      deadline: args.deadline,
     },
   });
 };
@@ -236,7 +231,7 @@ export const permit3SignTransferERC20 = (
 export const permit3SignTransferBatchERC20 = (
   walletClient: WalletClient,
   account: Account | Address,
-  transfers: SignatureTransferBatchERC20 & { spender: Address },
+  args: SignatureTransferBatchERC20 & { spender: Address; permit3: Address },
 ) => {
   const chainID = walletClient.chain?.id;
   invariant(chainID);
@@ -245,7 +240,7 @@ export const permit3SignTransferBatchERC20 = (
     name: "Permit3",
     version: "1",
     chainId: chainID,
-    verifyingContract: Permit3Address,
+    verifyingContract: args.permit3,
   } as const;
 
   return walletClient.signTypedData({
@@ -254,16 +249,16 @@ export const permit3SignTransferBatchERC20 = (
     types: TransferBatchERC20,
     primaryType: "Transfer",
     message: {
-      transferDetails: transfers.transferDetails.map(
+      transferDetails: args.transferDetails.map(
         (t) =>
           ({
             token: getAddress(t.token.address),
             amount: t.amount,
           }) as const,
       ),
-      spender: getAddress(transfers.spender),
-      nonce: transfers.nonce,
-      deadline: transfers.deadline,
+      spender: getAddress(args.spender),
+      nonce: args.nonce,
+      deadline: args.deadline,
     },
   });
 };
@@ -275,23 +270,25 @@ export const permit3TransferBySignature = async <
   walletClient: WalletClient,
   account: Account | Address,
   args: {
-    signer: Address;
+    from: Address;
+    to: Address;
     signatureTransfer: TSignatureTransfer;
     requestedTransfer: RequestedTransfer<TSignatureTransfer["transferDetails"]>;
     signature: Hex;
+    permit3: Address;
   },
 ): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
-    address: Permit3Address,
+    address: args.permit3,
     abi: permit3ABI,
     functionName: "transferBySignature",
     args: [
-      args.signer,
+      args.from,
       {
         transferDetails: isILRTA(args.signatureTransfer.transferDetails)
           ? ({
               token: getAddress(
-                args.signatureTransfer.transferDetails.ilrta.address,
+                args.signatureTransfer.transferDetails.token.address,
               ),
               tokenType: TokenTypeEnum.ILRTA,
               functionSelector: 0x811c34d3,
@@ -313,7 +310,7 @@ export const permit3TransferBySignature = async <
         deadline: args.signatureTransfer.deadline,
       },
       {
-        to: args.requestedTransfer.to,
+        to: args.to,
         transferDetails:
           "amount" in args.requestedTransfer
             ? encodeAbiParameters(
@@ -337,25 +334,33 @@ export const permit3TransferBatchBySignature = async <
   walletClient: WalletClient,
   account: Account | Address,
   args: {
-    signer: Address;
+    from: Address;
+    to: Address | Address[];
     signatureTransfer: TSignatureTransferBatch;
     requestedTransfer: readonly RequestedTransfer<
       TSignatureTransferBatch["transferDetails"][number]
     >[];
     signature: Hex;
+    permit3: Address;
   },
 ): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
+  if (
+    typeof args.to === "object" &&
+    args.to.length !== args.requestedTransfer.length
+  )
+    throw Error("Requested transfer length mismatch");
+
   const { request, result } = await publicClient.simulateContract({
-    address: Permit3Address,
+    address: args.permit3,
     abi: permit3ABI,
     functionName: "transferBySignature",
     args: [
-      args.signer,
+      args.from,
       {
         transferDetails: args.signatureTransfer.transferDetails.map((t) =>
           isILRTA(t)
             ? ({
-                token: getAddress(t.ilrta.address),
+                token: getAddress(t.token.address),
                 tokenType: TokenTypeEnum.ILRTA,
                 functionSelector: 0x811c34d3,
                 transferDetails: t.transferDetails,
@@ -373,8 +378,8 @@ export const permit3TransferBatchBySignature = async <
         nonce: args.signatureTransfer.nonce,
         deadline: args.signatureTransfer.deadline,
       },
-      args.requestedTransfer.map((r) => ({
-        to: r.to,
+      args.requestedTransfer.map((r, i) => ({
+        to: typeof args.to === "object" ? args.to[i]! : args.to,
         transferDetails:
           "amount" in r
             ? encodeAbiParameters(
@@ -396,18 +401,20 @@ export const permit3TransferERC20BySignature = async (
   walletClient: WalletClient,
   account: Account | Address,
   args: {
-    signer: Address;
+    from: Address;
+    to: Address;
     signatureTransfer: SignatureTransferERC20;
     requestedTransfer: RequestedTransferERC20;
     signature: Hex;
+    permit3: Address;
   },
 ): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
   const { request, result } = await publicClient.simulateContract({
-    address: Permit3Address,
+    address: args.permit3,
     abi: permit3ABI,
     functionName: "transferBySignature",
     args: [
-      args.signer,
+      args.from,
       {
         transferDetails: {
           token: getAddress(
@@ -419,8 +426,8 @@ export const permit3TransferERC20BySignature = async (
         deadline: args.signatureTransfer.deadline,
       },
       {
-        to: args.requestedTransfer.to,
-        amount: args.requestedTransfer.amount.amount,
+        to: args.to,
+        amount: args.requestedTransfer.amount,
       },
       args.signature,
     ],
@@ -435,18 +442,26 @@ export const permit3TransferBatchERC20BySignature = async (
   walletClient: WalletClient,
   account: Account | Address,
   args: {
-    signer: Address;
+    from: Address;
+    to: Address | Address[];
     signatureTransfer: SignatureTransferBatchERC20;
     requestedTransfer: readonly RequestedTransferERC20[];
     signature: Hex;
+    permit3: Address;
   },
 ): Promise<ReverseMirageWrite<typeof permit3ABI, "transferBySignature">> => {
+  if (
+    typeof args.to === "object" &&
+    args.to.length !== args.requestedTransfer.length
+  )
+    throw Error("Requested transfer length mismatch");
+
   const { request, result } = await publicClient.simulateContract({
-    address: Permit3Address,
+    address: args.permit3,
     abi: permit3ABI,
     functionName: "transferBySignature",
     args: [
-      args.signer,
+      args.from,
       {
         transferDetails: args.signatureTransfer.transferDetails.map(
           (t) =>
@@ -458,9 +473,9 @@ export const permit3TransferBatchERC20BySignature = async (
         nonce: args.signatureTransfer.nonce,
         deadline: args.signatureTransfer.deadline,
       },
-      args.requestedTransfer.map((r) => ({
-        to: r.to,
-        amount: r.amount.amount,
+      args.requestedTransfer.map((r, i) => ({
+        to: typeof args.to === "object" ? args.to[i]! : args.to,
+        amount: r.amount,
       })),
       args.signature,
     ],
@@ -470,15 +485,15 @@ export const permit3TransferBatchERC20BySignature = async (
   return { hash, result, request };
 };
 
-export const isNonceUsed = (
+export const permit3IsNonceUsed = (
   publicClient: PublicClient,
-  args: { address: Address; nonce: bigint },
+  args: { address: Address; nonce: bigint; permit3: Address },
 ) => {
   return {
     read: () =>
       publicClient.readContract({
         abi: permit3ABI,
-        address: Permit3Address,
+        address: args.permit3,
         functionName: "nonceBitmap",
         args: [args.address, args.nonce >> 8n],
       }),

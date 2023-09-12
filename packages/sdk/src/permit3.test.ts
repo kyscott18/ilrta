@@ -1,9 +1,20 @@
 import Permit3 from "ilrta/out/Permit3.sol/Permit3.json";
-import { type ERC20, createAmountFromString } from "reverse-mirage";
+import {
+  type ERC20,
+  createAmountFromString,
+  createERC20,
+} from "reverse-mirage";
 import invariant from "tiny-invariant";
-import { type Hex, getAddress, parseEther } from "viem";
+import { type Address, type Hex, getAddress, parseEther } from "viem";
 import { beforeEach, describe, test } from "vitest";
 import MockERC20 from "../../evm/out/MockERC20.sol/MockERC20.json";
+import { ALICE, BOB } from "./_test/constants.js";
+import {
+  anvil,
+  publicClient,
+  testClient,
+  walletClient,
+} from "./_test/utils.js";
 import { mockErc20ABI, permit3ABI } from "./generated.js";
 import {
   permit3SignTransfer,
@@ -15,11 +26,10 @@ import {
   permit3TransferBySignature,
   permit3TransferERC20BySignature,
 } from "./permit3.js";
-import { ALICE, BOB } from "./test/constants.js";
-import { anvil, publicClient, testClient, walletClient } from "./test/utils.js";
 
 let id: Hex | undefined = undefined;
-let mockERC20: ERC20;
+let erc20: ERC20;
+let permit3: Address;
 
 beforeEach(async () => {
   if (id === undefined) {
@@ -35,7 +45,7 @@ beforeEach(async () => {
         hash: deployHash,
       });
     invariant(Permit3Address);
-    console.log("permit3 address:", getAddress(Permit3Address));
+    permit3 = getAddress(Permit3Address);
 
     // deploy tokens
     deployHash = await walletClient.deployContract({
@@ -51,14 +61,7 @@ beforeEach(async () => {
       });
     invariant(mockERC20Address);
 
-    mockERC20 = {
-      type: "erc20",
-      decimals: 18,
-      name: "Mock ERC20",
-      symbol: "MOCK",
-      chainID: anvil.id,
-      address: mockERC20Address,
-    };
+    erc20 = createERC20(mockERC20Address, "name", "symbol", 18, anvil.id);
 
     // mint to alice
     const { request: mintRequest1 } = await publicClient.simulateContract({
@@ -91,10 +94,11 @@ describe("permit 3", () => {
   test("transfer by signature", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: createAmountFromString(mockERC20, "1"),
+      transferDetails: createAmountFromString(erc20, "1"),
       spender: ALICE,
       nonce: 5n,
       deadline: block.timestamp + 100n,
+      permit3,
     } as const;
 
     const signature = await permit3SignTransfer(walletClient, ALICE, transfer);
@@ -104,13 +108,14 @@ describe("permit 3", () => {
       walletClient,
       ALICE,
       {
-        signer: ALICE,
+        from: ALICE,
+        to: BOB,
         signatureTransfer: transfer,
         requestedTransfer: {
-          to: BOB,
           amount: transfer.transferDetails.amount,
         },
         signature,
+        permit3,
       },
     );
 
@@ -121,12 +126,13 @@ describe("permit 3", () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        createAmountFromString(mockERC20, "0.5"),
-        createAmountFromString(mockERC20, "0.5"),
+        createAmountFromString(erc20, "0.5"),
+        createAmountFromString(erc20, "0.5"),
       ] as const,
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
+      permit3,
     } as const;
 
     const signature = await permit3SignTransferBatch(
@@ -140,19 +146,19 @@ describe("permit 3", () => {
       walletClient,
       ALICE,
       {
-        signer: ALICE,
+        from: ALICE,
+        to: BOB,
         signatureTransfer: transfer,
         requestedTransfer: [
           {
-            to: BOB,
             amount: transfer.transferDetails[0].amount,
           },
           {
-            to: BOB,
             amount: transfer.transferDetails[1].amount,
           },
         ],
         signature,
+        permit3,
       },
     );
 
@@ -162,10 +168,11 @@ describe("permit 3", () => {
   test("transfer by signature erc20", async () => {
     const block = await publicClient.getBlock();
     const transfer = {
-      transferDetails: createAmountFromString(mockERC20, "1"),
+      transferDetails: createAmountFromString(erc20, "1"),
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
+      permit3,
     } as const;
 
     const signature = await permit3SignTransferERC20(
@@ -179,13 +186,12 @@ describe("permit 3", () => {
       walletClient,
       ALICE,
       {
-        signer: ALICE,
+        from: ALICE,
+        to: BOB,
         signatureTransfer: transfer,
-        requestedTransfer: {
-          to: BOB,
-          amount: { amount: transfer.transferDetails.amount },
-        },
+        requestedTransfer: { amount: transfer.transferDetails.amount },
         signature,
+        permit3,
       },
     );
 
@@ -196,12 +202,13 @@ describe("permit 3", () => {
     const block = await publicClient.getBlock();
     const transfer = {
       transferDetails: [
-        createAmountFromString(mockERC20, "0.5"),
-        createAmountFromString(mockERC20, "0.5"),
+        createAmountFromString(erc20, "0.5"),
+        createAmountFromString(erc20, "0.5"),
       ],
       spender: ALICE,
       nonce: 0n,
       deadline: block.timestamp + 100n,
+      permit3,
     } as const;
 
     const signature = await permit3SignTransferBatchERC20(
@@ -215,19 +222,15 @@ describe("permit 3", () => {
       walletClient,
       ALICE,
       {
-        signer: ALICE,
+        from: ALICE,
+        to: BOB,
         signatureTransfer: transfer,
         requestedTransfer: [
-          {
-            to: BOB,
-            amount: { amount: transfer.transferDetails[0].amount },
-          },
-          {
-            to: BOB,
-            amount: { amount: transfer.transferDetails[1].amount },
-          },
+          transfer.transferDetails[0],
+          transfer.transferDetails[1],
         ],
         signature,
+        permit3,
       },
     );
 
