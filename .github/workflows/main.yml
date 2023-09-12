@@ -62,4 +62,4 @@ jobs:
       - name: Codegen
         run: pnpm codegen
       - name: Run tests
-        run: pnpm test:cov
+        run: pnpm test
