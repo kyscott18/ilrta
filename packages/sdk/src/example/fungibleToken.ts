@@ -4,26 +4,28 @@ import type { Address } from "viem/accounts";
 import { ilrtaFungibleTokenABI } from "../generated.js";
 import {
   type ILRTA,
-  type ILRTAApprovalDetails,
+  type ILRTAApproval,
   type ILRTAData,
-  type ILRTATransferDetails,
+  type ILRTATransfer,
 } from "../ilrta.js";
 
 export type FungibleToken = ILRTA<"fungibleToken"> & {
   decimals: number;
 };
 
-export type DataType = ILRTAData<FungibleToken, { balance: bigint }>;
+export type FungibleTokenData = ILRTAData<FungibleToken, { amount: bigint }>;
 
-export type TransferDetailsType = ILRTATransferDetails<
+export type FungibleTokenTransfer = ILRTATransfer<
   FungibleToken,
   { amount: bigint }
 >;
 
-export type ApprovalDetailsType = ILRTAApprovalDetails<
+export type FungibleTokenApproval = ILRTAApproval<
   FungibleToken,
   { amount: bigint }
 >;
+
+// TODO: Do we need these
 
 export const Data = [{ name: "balance", type: "uint256" }] as const;
 
@@ -31,11 +33,11 @@ export const TransferDetails = [{ name: "amount", type: "uint256" }] as const;
 
 export const ApprovalDetails = [{ name: "amount", type: "uint256" }] as const;
 
-export const transfer = async (
+export const fungibleTokenTransfer = async (
   publicClient: PublicClient,
   walletClient: WalletClient,
   account: Account | Address,
-  args: { to: Address; transferDetails: TransferDetailsType },
+  args: { to: Address; transferDetails: FungibleTokenTransfer },
 ): Promise<
   ReverseMirageWrite<typeof ilrtaFungibleTokenABI, "transfer_dMWqQA">
 > => {
@@ -44,7 +46,7 @@ export const transfer = async (
     abi: ilrtaFungibleTokenABI,
     functionName: "transfer_dMWqQA",
     args: [args.to, args.transferDetails],
-    address: args.transferDetails.ilrta.address,
+    address: args.transferDetails.token.address,
   });
   const hash = await walletClient.writeContract(request);
   return { hash, result, request };
@@ -54,37 +56,37 @@ export const transfer = async (
 
 // TODO: approve
 
-export const dataOf = (
+export const fungibleTokenDataOf = (
   publicClient: PublicClient,
-  args: { ilrta: FungibleToken; owner: Address },
+  args: { token: FungibleToken; owner: Address },
 ) =>
   ({
     read: () =>
       publicClient.readContract({
         abi: ilrtaFungibleTokenABI,
-        address: args.ilrta.address,
+        address: args.token.address,
         functionName: "dataOf_cGJnTo",
         args: [
           args.owner,
           "0x0000000000000000000000000000000000000000000000000000000000000000",
         ],
       }),
-    parse: (data): DataType => ({
+    parse: (data): FungibleTokenData => ({
       type: "fungibleTokenData",
-      token: args.ilrta,
-      balance: data.balance,
+      token: args.token,
+      amount: data.balance,
     }),
   }) satisfies ReverseMirageRead<{ balance: bigint }>;
 
-export const allowanceOf = (
+export const fungibleTokenAllowanceOf = (
   publicClient: PublicClient,
-  args: { ilrta: FungibleToken; owner: Address; spender: Address },
+  args: { token: FungibleToken; owner: Address; spender: Address },
 ) =>
   ({
     read: () =>
       publicClient.readContract({
         abi: ilrtaFungibleTokenABI,
-        address: args.ilrta.address,
+        address: args.token.address,
         functionName: "allowanceOf_QDmnOj",
         args: [
           args.owner,
@@ -92,9 +94,9 @@ export const allowanceOf = (
           "0x0000000000000000000000000000000000000000000000000000000000000000",
         ],
       }),
-    parse: (data): ApprovalDetailsType => ({
+    parse: (data): FungibleTokenApproval => ({
       type: "fungibleTokenApproval",
-      ilrta: args.ilrta,
+      token: args.token,
       amount: data.amount,
     }),
   }) satisfies ReverseMirageRead<{ amount: bigint }>;
