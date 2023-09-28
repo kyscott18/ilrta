@@ -36,8 +36,8 @@ abstract contract UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function bitmapPositions(uint256 nonce) internal pure returns (uint256 wordPos, uint256 bitPos) {
-        wordPos = uint248(nonce >> 8);
-        bitPos = uint8(nonce);
+        wordPos = nonce >> 8;
+        bitPos = nonce & 0xff;
     }
 
     function useUnorderedNonce(address from, uint256 nonce) internal {
