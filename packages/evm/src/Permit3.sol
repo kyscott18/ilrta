@@ -323,38 +323,38 @@ contract Permit3 is EIP712, UnorderedNonce {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _validateRequest(
-        TransferDetails memory signedTransferDetails,
+        TransferDetails memory signatureTransfer,
         bytes memory requestedTransferDetails
     )
         private
         view
     {
-        if (signedTransferDetails.tokenType == TokenType.ERC20) {
-            uint256 signedAmount = abi.decode(signedTransferDetails.transferDetails, (uint256));
+        if (signatureTransfer.tokenType == TokenType.ERC20) {
+            uint256 signedAmount = abi.decode(signatureTransfer.transferDetails, (uint256));
             uint256 requestedAmount = abi.decode(requestedTransferDetails, (uint256));
             if (requestedAmount > signedAmount) revert InvalidRequest(requestedTransferDetails);
         } else {
-            bool success;
+            bytes memory signedTransferDetails = signatureTransfer.transferDetails;
 
-            if (signedTransferDetails.transferDetails.length != requestedTransferDetails.length) {
+            uint256 signedTransferLength = signedTransferDetails.length;
+            uint256 requestedTransferLength = requestedTransferDetails.length;
+
+            if (signedTransferLength != requestedTransferLength) {
                 revert InvalidRequest(requestedTransferDetails);
             }
 
-            bytes memory signedTransferBytes = signedTransferDetails.transferDetails;
-
-            uint256 length = signedTransferBytes.length;
-
+            bool success;
             assembly {
                 let freeMemoryPointer := mload(0x40)
                 // Write the abi-encoded calldata into memory, beginning with the function selector.
                 mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
 
                 // Append the signature transfer details
-                // signedTransferDetails represents the pointer to data in memory
+                // signatureTransfer represents the pointer to data in memory
                 // The first word is the length of the bytes array, the next words are the data
-                let signedTransferLocation := add(signedTransferBytes, 0x20)
                 let offset := add(freeMemoryPointer, 4)
-                for { let i := 0 } lt(i, length) { i := add(i, 0x20) } {
+                let signedTransferLocation := add(signedTransferDetails, 0x20)
+                for { let i := 0 } lt(i, signedTransferLength) { i := add(i, 0x20) } {
                     mstore(add(offset, i), mload(add(signedTransferLocation, i)))
                 }
 
@@ -362,8 +362,8 @@ contract Permit3 is EIP712, UnorderedNonce {
                 // requestedTransferDetials represents the pointer to data in memory
                 // The first word is the length of the bytes array, the next words are the data
                 let requestedTransferLocation := add(requestedTransferDetails, 0x20)
-                offset := add(freeMemoryPointer, add(4, length))
-                for { let i := 0 } lt(i, length) { i := add(i, 0x20) } {
+                offset := add(offset, signedTransferLength)
+                for { let i := 0 } lt(i, signedTransferLength) { i := add(i, 0x20) } {
                     mstore(add(offset, i), mload(add(requestedTransferLocation, i)))
                 }
 
@@ -372,12 +372,14 @@ contract Permit3 is EIP712, UnorderedNonce {
                         // Set success to whether the call reverted, if not we check it
                         // returned exactly 1
                         eq(mload(0), 1),
-                        // The token address is located in the next word after the location of the bytes array
+                        // The token address is located in first word
                         // The length of the data is 4 + 2 * length of transferDetails
                         // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
                         // Counterintuitively, this call must be positioned second to the or() call in the
                         // surrounding and() call or else returndatasize() will be zero during the computation.
-                        staticcall(gas(), mload(signedTransferDetails), freeMemoryPointer, add(4, mul(2, length)), 0, 32)
+                        staticcall(
+                            gas(), mload(signatureTransfer), freeMemoryPointer, add(4, mul(2, signedTransferLength)), 0, 32
+                        )
                     )
             }
 
