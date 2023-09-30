@@ -5,18 +5,15 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-**ilrta** is a framework for creating tokens for exotic use cases. The goal is to allow for custom standards to be created yet still retain composability. This currently consists of:
-
-- `ILRTA`: Token standard for token standards. Easily tokenize any data but share common infrastructure and maintain composability.
-- `Permit3`: Next version of permit2 with multiple token support.
+**ilrta** makes all new and existing popular token standards composable. Any standard that uses this framework has consistent event logs and function selectors, and are transferable in a trust minimized way using `Permit3`.
 
 ## `ILRTA`
 
 ### Abstract
 
-This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal. Instead, a higher level manager such as permit3 should be used because of its extensive features while still being permissionlessly upgradeable.
+This protocol is adapted around two main ideas: token standards at their core just represent ownership over arbitrary data, and the approve flow used by almost all token standards is suboptimal. Instead, a higher level manager such as `Permit3` should be used because of its extensive features while still being permissionlessly upgradeable.
 
-Because of the lack of support for type generics in Solidity, the implementation is lacking. `ILRTATemplate.sol` contains a more complete picture of what is needed to implement ilrta.
+Because of the lack of support for type generics in Solidity, the implementation is lacking. `ILRTATemplate.sol` contains a more complete picture of what needs to be implemented.
 
 ### Features
 
