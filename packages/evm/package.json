@@ -1,8 +1,11 @@
 {
   "name": "ilrta",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "",
-  "files": ["src/**/*.sol", "out/"],
+  "files": [
+    "src/**/*.sol",
+    "out/"
+  ],
   "scripts": {
     "build": "forge build",
     "test": "forge test",
@@ -14,8 +17,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^1.1.2",
-    "solhint": "^3.6.2"
+    "@biomejs/biome": "^1.4.1",
+    "solhint": "^4.0.0"
   },
   "dependencies": {
     "solmate": "^6.2.0"
