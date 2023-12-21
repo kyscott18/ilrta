@@ -2,22 +2,17 @@
   "name": "ilrta",
   "version": "0.0.0",
   "description": "",
-  "files": [
-    "src/**/*.sol",
-    "out/"
-  ],
+  "files": ["src/**/*.sol", "out/"],
   "scripts": {
     "build": "forge build",
     "test": "forge test",
-    "format": "biome format . --write && forge fmt",
-    "clean": "rm -rf cache out",
-    "lint": "biome check ."
+    "format": "forge fmt",
+    "clean": "rm -rf cache out"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^1.4.1",
     "solhint": "^4.0.0"
   },
   "dependencies": {

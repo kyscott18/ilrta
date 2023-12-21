@@ -10,8 +10,8 @@
     "build": "pnpm --filter 'ilrta' build && pnpm --filter './packages/*' --filter !'ilrta' build",
     "build:contracts": "pnpm --filter 'ilrta' build",
     "codegen": "pnpm --parallel codegen",
-    "lint": "pnpm --parallel lint",
-    "format": "pnpm --parallel format",
+    "lint": "biome check .",
+    "format": "biome format . && pnpm --parallel format",
     "typecheck": "pnpm --parallel typecheck",
     "test": "pnpm --parallel test"
   },
