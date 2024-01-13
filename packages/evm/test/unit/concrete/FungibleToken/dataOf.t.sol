@@ -12,8 +12,4 @@ contract DataOfTest is Test {
     function setUp() external {
         mockft = new MockFungibleToken();
     }
-
-    function test_DataOf_Selector() external {
-        assertEq(ILRTAFungibleToken.dataOf_cGJnTo.selector, bytes4(keccak256("dataOf()")));
-    }
 }

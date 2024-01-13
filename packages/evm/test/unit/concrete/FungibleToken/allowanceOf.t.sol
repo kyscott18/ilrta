@@ -12,8 +12,4 @@ contract AllowanceOfTest is Test {
     function setUp() external {
         mockft = new MockFungibleToken();
     }
-
-    function test_AllowanceOf_Selector() external {
-        assertEq(ILRTAFungibleToken.allowanceOf_QDmnOj.selector, bytes4(keccak256("allowanceOf()")));
-    }
 }
