@@ -22,7 +22,6 @@ You will need a copy of [Foundry](https://getfoundry.sh/) installed before proce
 ### Setup
 
 ```sh
-forge install
 pnpm install
 ```
 
@@ -30,12 +29,6 @@ pnpm install
 
 ```sh
 forge build
-```
-
-### Lint
-
-```sh
-pnpm lint
 ```
 
 ### Format
