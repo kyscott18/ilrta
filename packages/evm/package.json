@@ -16,6 +16,8 @@
     "solhint": "^4.0.0"
   },
   "dependencies": {
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std",
     "solmate": "^6.2.0"
   }
 }

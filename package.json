@@ -3,18 +3,6 @@
   "version": "0.0.0",
   "description": "",
   "private": "true",
-  "scripts": {
-    "install:packages": "pnpm --filter './packages/**' install",
-    "preinstall": "npx -y only-allow pnpm",
-    "postinstall": "husky install",
-    "build": "pnpm --filter 'ilrta' build && pnpm --filter './packages/*' --filter !'ilrta' build",
-    "build:contracts": "pnpm --filter 'ilrta' build",
-    "codegen": "pnpm --parallel codegen",
-    "lint": "biome check .",
-    "format": "biome format . && pnpm --parallel format",
-    "typecheck": "pnpm --parallel typecheck",
-    "test": "pnpm --parallel test"
-  },
   "keywords": [],
   "author": "",
   "license": "MIT",
@@ -23,8 +11,7 @@
     "pnpm": ">=8"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.4.1",
-    "husky": "^8.0.3",
+    "@biomejs/biome": "^1.5.1",
     "typescript": "^5.3.3"
   }
 }
