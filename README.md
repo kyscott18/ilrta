@@ -5,7 +5,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-**ilrta** makes all new and existing popular token standards composable. Any standard that uses this framework has consistent event logs and function selectors, and are transferable in a trust minimized way using `Permit3`.
+**ilrta** makes all new and existing popular token standards composable. Any standard that uses this framework has consistent event logs, function selectors, and are transferable in a trust minimized way using `Permit3`.
 
 ## `ILRTA`
 
