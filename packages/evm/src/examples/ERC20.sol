@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ILRTA} from "../ILRTA.sol";
+import {ILRTA} from "src/ILRTA.sol";
 
 /// @notice Implement both ERC20 and ILRTA
 /// @author Kyle Scott

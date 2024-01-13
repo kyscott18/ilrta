@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ILRTA} from "./ILRTA.sol";
+import {ILRTA} from "src/ILRTA.sol";
 
 /// @notice Template for what an instance of ILRTA should implement
 /// @author Kyle Scott

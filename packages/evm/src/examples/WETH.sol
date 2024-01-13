@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ILRTAERC20} from "./ERC20.sol";
+import {ILRTAERC20} from "src/examples/ERC20.sol";
 import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 
 /// @notice Wrapped Ether implementation with ilrta
