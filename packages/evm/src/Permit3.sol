@@ -90,22 +90,18 @@ contract Permit3 is EIP712, UnorderedNonce {
         keccak256("TransferDetails(address token,uint256 amount)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 
     bytes32 private constant TRANSFER_ERC20_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
     );
 
     bytes32 private constant TRANSFER_BATCH_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 
     bytes32 private constant TRANSFER_BATCH_ERC20_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails[] transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
     );
 

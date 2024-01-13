@@ -2,7 +2,10 @@
   "name": "ilrta",
   "version": "0.0.0",
   "description": "",
-  "files": ["src/**/*.sol", "out/"],
+  "files": [
+    "src/**/*.sol",
+    "out/"
+  ],
   "scripts": {
     "build": "forge build",
     "test": "forge test",
@@ -12,9 +15,6 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "solhint": "^4.0.0"
-  },
   "dependencies": {
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std",

@@ -15,7 +15,6 @@ contract Permit2BenchmarkTest is Test {
     bytes32 private constant TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
 
     bytes32 private constant PERMIT_TRANSFER_FROM_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "PermitTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline)TokenPermissions(address token,uint256 amount)"
     );
 

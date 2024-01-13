@@ -14,7 +14,6 @@ contract TransferBySignatureILRTATest is Test {
         keccak256("TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)");
 
     bytes32 private constant TRANSFER_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint8 tokenType,uint32 functionSelector,bytes transferDetails)"
     );
 

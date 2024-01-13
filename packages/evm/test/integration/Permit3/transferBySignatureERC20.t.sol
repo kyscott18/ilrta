@@ -13,7 +13,6 @@ contract TransferBySignatureERC20Test is Test {
         keccak256("TransferDetails(address token,uint256 amount)");
 
     bytes32 private constant TRANSFER_ERC20_TYPEHASH = keccak256(
-        // solhint-disable-next-line max-line-length
         "Transfer(TransferDetails transferDetails,address spender,uint256 nonce,uint256 deadline)TransferDetails(address token,uint256 amount)"
     );
 
