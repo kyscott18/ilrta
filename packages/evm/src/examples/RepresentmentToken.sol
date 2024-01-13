@@ -31,11 +31,17 @@ abstract contract ILRTARepresentmentToken is ILRTA {
         Data transferData;
     }
 
+    struct ILRTAApprovalDetails {
+        bool approved;
+    }
+
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     mapping(address owner => ILRTAData data) private _dataOf;
+
+    mapping(address owner => mapping(address spender => ILRTAApprovalDetails approvalDetails)) private _allowanceOf;
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               ILRTA LOGIC
@@ -45,11 +51,57 @@ abstract contract ILRTARepresentmentToken is ILRTA {
         return _dataOf[owner];
     }
 
+    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTAApprovalDetails memory) {
+        return _allowanceOf[owner][spender];
+    }
+
+    function validateRequest_XXXXXX(
+        ILRTATransferDetails calldata signedTransferDetails,
+        ILRTATransferDetails calldata requestedTransferDetails
+    )
+        external
+        pure
+        returns (bool)
+    {
+        return keccak256(abi.encode(signedTransferDetails)) == keccak256(abi.encode(requestedTransferDetails));
+    }
+
     function transfer_XXXXXX(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+        return _transfer(msg.sender, to, transferDetails);
+    }
+
+    function approve_XXXXXX(address spender, ILRTAApprovalDetails calldata approvalDetails) external returns (bool) {
+        _allowanceOf[msg.sender][spender] = approvalDetails;
+
+        emit Approval(msg.sender, spender, abi.encode(approvalDetails));
+
+        return true;
+    }
+
+    function transferFrom_XXXXXX(
+        address from,
+        address to,
+        ILRTATransferDetails calldata transferDetails
+    )
+        external
+        returns (bool)
+    {
+        ILRTAApprovalDetails memory allowed = _allowanceOf[from][msg.sender];
+
+        if (!allowed.approved) revert();
+
+        return _transfer(from, to, transferDetails);
+    }
+
+    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
+                             INTERNAL LOGIC
+    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
+
+    function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
         Data memory fromData = transferDetails.fromData;
         Data memory toData = transferDetails.toData;
 
-        if (_dataOf[msg.sender].hash != keccak256(abi.encode(fromData))) revert InvalidDataHash();
+        if (_dataOf[from].hash != keccak256(abi.encode(fromData))) revert InvalidDataHash();
         if (_dataOf[to].hash != keccak256(abi.encode(toData))) revert InvalidDataHash();
 
         for (uint256 i; i < 8; i++) {
@@ -59,10 +111,10 @@ abstract contract ILRTARepresentmentToken is ILRTA {
             }
         }
 
-        _dataOf[msg.sender].hash = keccak256(abi.encode(fromData));
+        _dataOf[from].hash = keccak256(abi.encode(fromData));
         _dataOf[to].hash = keccak256(abi.encode(toData));
 
-        emit Transfer(msg.sender, to, abi.encode(transferDetails));
+        emit Transfer(from, to, abi.encode(transferDetails));
 
         return true;
     }
