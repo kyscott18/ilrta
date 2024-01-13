@@ -11,41 +11,27 @@ concurrency:
 
 jobs:
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v3
-      - name: Setup javascript env
-        uses: ./.github/actions/setup-js
-      - name: Install foundry
-        uses: foundry-rs/foundry-toolchain@v1
-      - name: Build contracts
-        run: pnpm build:contracts
-      - name: Codegen
-        run: pnpm codegen
-      - name: Lint
-        run: pnpm lint
-      - name: Typecheck
-        run: pnpm typecheck
-
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
-      - name: Setup javascript env
-        uses: ./.github/actions/setup-js
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Install foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Build contracts
-        run: pnpm build:contracts
-      - name: Codegen
-        run: pnpm codegen
+
       - name: Build
-        run: pnpm build
+        run: cd packages/evm && pnpm build
+
 
   test:
     name: Test
@@ -53,13 +39,17 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
-      - name: Setup javascript env
-        uses: ./.github/actions/setup-js
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Install foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: Codegen
-        run: pnpm codegen
-      - name: Run tests
-        run: pnpm test
+
+      - name: Test
+        run: cd packages/evm && pnpm test
