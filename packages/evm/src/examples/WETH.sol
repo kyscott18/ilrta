@@ -4,8 +4,6 @@ pragma solidity ^0.8.19;
 import {ILRTAERC20} from "src/examples/ERC20.sol";
 import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 
-/// @notice Wrapped Ether implementation with ilrta
-/// @author Kyle Scott
 contract ILRTAWETH is ILRTAERC20 {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @notice underlying logic for contracts that allow for spending nonces regardless of order
 abstract contract UnorderedNonce {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS
@@ -40,7 +39,7 @@ abstract contract UnorderedNonce {
         bitPos = nonce & 0xff;
     }
 
-    /// @custom:team Should emit an event so that nonce can be indexed
+    /// @custom:team Used nonce event is required for complete indexing
     function useUnorderedNonce(address from, uint256 nonce) internal {
         (uint256 wordPos, uint256 bitPos) = bitmapPositions(nonce);
         uint256 bit = 1 << bitPos;

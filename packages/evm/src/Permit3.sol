@@ -115,7 +115,7 @@ contract Permit3 is EIP712, UnorderedNonce {
                                  LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    /// @notice transfer a token using a signed message
+    /// @notice Transfer a token using a signed message
     function transferBySignature(
         address signer,
         SignatureTransfer calldata signatureTransfer,
@@ -156,7 +156,7 @@ contract Permit3 is EIP712, UnorderedNonce {
         _transfer(signer, requestedTransfer.to, signatureTransfer.transferDetails, requestedTransfer.transferDetails);
     }
 
-    /// @notice transfer an erc20 token using a signed message
+    /// @notice Transfer an erc20 token using a signed message
     function transferBySignature(
         address signer,
         SignatureTransferERC20 calldata signatureTransfer,
@@ -193,7 +193,7 @@ contract Permit3 is EIP712, UnorderedNonce {
         );
     }
 
-    /// @notice transfer a batch of tokens using a signed message
+    /// @notice Transfer a batch of tokens using a signed message
     function transferBySignature(
         address signer,
         SignatureTransferBatch calldata signatureTransfer,
@@ -255,7 +255,7 @@ contract Permit3 is EIP712, UnorderedNonce {
         }
     }
 
-    /// @notice transfer a batch of erc20 tokens using a signed message
+    /// @notice Transfer a batch of erc20 tokens using a signed message
     function transferBySignature(
         address signer,
         SignatureTransferBatchERC20 calldata signatureTransfer,
@@ -346,8 +346,6 @@ contract Permit3 is EIP712, UnorderedNonce {
                 mstore(freeMemoryPointer, 0x95a41eb500000000000000000000000000000000000000000000000000000000)
 
                 // Append the signature transfer details
-                // signatureTransfer represents the pointer to data in memory
-                // The first word is the length of the bytes array, the next words are the data
                 let offset := add(freeMemoryPointer, 4)
                 let signedTransferLocation := add(signedTransferDetails, 0x20)
                 for { let i := 0 } lt(i, signedTransferLength) { i := add(i, 0x20) } {
@@ -355,8 +353,6 @@ contract Permit3 is EIP712, UnorderedNonce {
                 }
 
                 // Append the requested transfer details
-                // requestedTransferDetials represents the pointer to data in memory
-                // The first word is the length of the bytes array, the next words are the data
                 let requestedTransferLocation := add(requestedTransferDetails, 0x20)
                 offset := add(offset, signedTransferLength)
                 for { let i := 0 } lt(i, signedTransferLength) { i := add(i, 0x20) } {
@@ -366,11 +362,8 @@ contract Permit3 is EIP712, UnorderedNonce {
                 success :=
                     and(
                         // Set success to whether the call reverted, if not we check it
-                        // returned exactly 1
+                        // returned exactly 1.
                         eq(mload(0), 1),
-                        // The token address is located in first word
-                        // The length of the data is 4 + 2 * length of transferDetails
-                        // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
                         // Counterintuitively, this call must be positioned second to the or() call in the
                         // surrounding and() call or else returndatasize() will be zero during the computation.
                         staticcall(
@@ -406,8 +399,6 @@ contract Permit3 is EIP712, UnorderedNonce {
             mstore(add(freeMemoryPointer, 36), and(to, 0xffffffffffffffffffffffffffffffffffffffff))
 
             // Append the transfer details
-            // requestedTransferDetails represents the pointer to data in memory
-            // The first word is the length of the bytes array, the next words are the data
             let transferDetailsLength := mload(requestedTransferDetails)
             let offset := add(freeMemoryPointer, 68)
             let requestedTransferLocation := add(requestedTransferDetails, 0x20)
@@ -420,9 +411,6 @@ contract Permit3 is EIP712, UnorderedNonce {
                     // Set success to whether the call reverted, if not we check it either
                     // returned exactly 1 (can't just be non-zero data), or had no return data.
                     or(and(eq(mload(0), 1), gt(returndatasize(), 31)), iszero(returndatasize())),
-                    // The token address is located in the first word
-                    // The length of the data is 68 + length of transferDetails
-                    // We use 0 and 32 to copy up to 32 bytes of return data into the scratch space.
                     // Counterintuitively, this call must be positioned second to the or() call in the
                     // surrounding and() call or else returndatasize() will be zero during the computation.
                     call(gas(), mload(signedTransferDetails), 0, freeMemoryPointer, add(68, transferDetailsLength), 0, 32)

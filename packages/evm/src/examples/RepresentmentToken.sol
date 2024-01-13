@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {ILRTA} from "src/ILRTA.sol";
 
 /// @notice Token that stores only the hash of all data rather than the data itself
-/// @author Kyle Scott
 /// @dev See https://github.com/AstariaXYZ/starport-whitepaper
 abstract contract ILRTARepresentmentToken is ILRTA {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3

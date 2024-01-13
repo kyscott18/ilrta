@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "src/ILRTA.sol";
 
-/// @notice Implement both ERC20 and ILRTA
-/// @author Kyle Scott
 abstract contract ILRTAERC20 is ILRTA {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                  EVENTS

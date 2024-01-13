@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "src/ILRTA.sol";
 
-/// @notice Implement a semi-fungible token with ilrta
-/// @author Kyle Scott
 abstract contract ILRTASemiFungibleToken is ILRTA {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES

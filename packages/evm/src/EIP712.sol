@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @notice EIP712 Implementation
-/// @author Kyle Scott
 /// @dev Maintains cross-chain replay protection in the event of a fork
 abstract contract EIP712 {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3

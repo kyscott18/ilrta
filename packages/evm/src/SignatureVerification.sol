@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {IERC1271} from "src/IERC1271.sol";
 
-/// @custom:team implement eip 6492
+/// @custom:team eip 6492
 library SignatureVerification {
     /// @notice Thrown when the passed in signature is not a valid length
     error InvalidSignatureLength();
