@@ -17,7 +17,7 @@ abstract contract ILRTARepresentmentToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     struct Data {
-        uint24[8][8] rgb;
+        uint256[8][8][3] rgb;
     }
 
     struct ILRTAData {
@@ -103,10 +103,12 @@ abstract contract ILRTARepresentmentToken is ILRTA {
         if (_dataOf[from].hash != keccak256(abi.encode(fromData))) revert InvalidDataHash();
         if (_dataOf[to].hash != keccak256(abi.encode(toData))) revert InvalidDataHash();
 
-        for (uint256 i; i < 8; i++) {
-            for (uint256 j; j < 8; j++) {
-                fromData.rgb[i][j] -= transferDetails.transferData.rgb[i][j];
-                toData.rgb[i][j] += transferDetails.transferData.rgb[i][j];
+        for (uint256 i = 0; i < 8; i++) {
+            for (uint256 j = 0; j < 8; j++) {
+                for (uint256 l = 0; l < 3; l++) {
+                    fromData.rgb[i][j][l] -= transferDetails.transferData.rgb[i][j][l];
+                    toData.rgb[i][j][l] += transferDetails.transferData.rgb[i][j][l];
+                }
             }
         }
 
