@@ -1,23 +1,18 @@
 {
   "name": "ilrta",
-  "version": "0.0.1",
-  "description": "",
-  "files": ["src/**/*.sol", "out/"],
+  "version": "0.0.0",
   "scripts": {
     "build": "forge build",
     "test": "forge test",
-    "format": "biome format . --write && forge fmt",
-    "clean": "rm -rf cache out",
-    "lint": "biome check ."
+    "format": "forge fmt",
+    "clean": "rm -rf cache out"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "@biomejs/biome": "^1.1.2",
-    "solhint": "^3.6.2"
-  },
   "dependencies": {
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std",
     "solmate": "^6.2.0"
   }
 }

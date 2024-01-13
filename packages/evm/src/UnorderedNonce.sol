@@ -40,6 +40,7 @@ abstract contract UnorderedNonce {
         bitPos = nonce & 0xff;
     }
 
+    /// @custom:team Should emit an event so that nonce can be indexed
     function useUnorderedNonce(address from, uint256 nonce) internal {
         (uint256 wordPos, uint256 bitPos) = bitmapPositions(nonce);
         uint256 bit = 1 << bitPos;

@@ -3,29 +3,36 @@ pragma solidity ^0.8.19;
 
 import {ILRTA} from "src/ILRTA.sol";
 
-/// @notice Implement a fungible token with ilrta
+/// @notice Token that stores only the hash of all data rather than the data itself
 /// @author Kyle Scott
-abstract contract ILRTAFungibleToken is ILRTA {
+/// @dev See https://github.com/AstariaXYZ/starport-whitepaper
+abstract contract ILRTARepresentmentToken is ILRTA {
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                            METADATA STORAGE
+                                 ERRORS
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    uint8 public immutable decimals;
+    error InvalidDataHash();
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                                DATA TYPES
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
+    struct Data {
+        uint24[8][8] rgb;
+    }
+
     struct ILRTAData {
-        uint256 balance;
+        bytes32 hash;
     }
 
     struct ILRTATransferDetails {
-        uint256 amount;
+        Data fromData;
+        Data toData;
+        Data transferData;
     }
 
     struct ILRTAApprovalDetails {
-        uint256 amount;
+        bool approved;
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
@@ -35,24 +42,6 @@ abstract contract ILRTAFungibleToken is ILRTA {
     mapping(address owner => ILRTAData data) private _dataOf;
 
     mapping(address owner => mapping(address spender => ILRTAApprovalDetails approvalDetails)) private _allowanceOf;
-
-    uint256 public totalSupply;
-
-    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                              CONSTRUCTOR
-    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    constructor(string memory _name, string memory _symbol, uint8 _decimals) ILRTA(_name, _symbol) {
-        decimals = _decimals;
-    }
-
-    /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
-                                 LOGIC
-    <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
-
-    function balanceOf(address owner) external view returns (uint256 balance) {
-        return _dataOf[owner].balance;
-    }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               ILRTA LOGIC
@@ -66,7 +55,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
         return _allowanceOf[owner][spender];
     }
 
-    function validateRequest_sUsyFN(
+    function validateRequest_XXXXXX(
         ILRTATransferDetails calldata signedTransferDetails,
         ILRTATransferDetails calldata requestedTransferDetails
     )
@@ -74,14 +63,14 @@ abstract contract ILRTAFungibleToken is ILRTA {
         pure
         returns (bool)
     {
-        return requestedTransferDetails.amount > signedTransferDetails.amount ? false : true;
+        return keccak256(abi.encode(signedTransferDetails)) == keccak256(abi.encode(requestedTransferDetails));
     }
 
-    function transfer_dMWqQA(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
+    function transfer_XXXXXX(address to, ILRTATransferDetails calldata transferDetails) external returns (bool) {
         return _transfer(msg.sender, to, transferDetails);
     }
 
-    function approve_cMebqQ(address spender, ILRTAApprovalDetails calldata approvalDetails) external returns (bool) {
+    function approve_XXXXXX(address spender, ILRTAApprovalDetails calldata approvalDetails) external returns (bool) {
         _allowanceOf[msg.sender][spender] = approvalDetails;
 
         emit Approval(msg.sender, spender, abi.encode(approvalDetails));
@@ -89,7 +78,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
         return true;
     }
 
-    function transferFrom_AVXnah(
+    function transferFrom_XXXXXX(
         address from,
         address to,
         ILRTATransferDetails calldata transferDetails
@@ -99,9 +88,7 @@ abstract contract ILRTAFungibleToken is ILRTA {
     {
         ILRTAApprovalDetails memory allowed = _allowanceOf[from][msg.sender];
 
-        if (allowed.amount != type(uint256).max) {
-            _allowanceOf[from][msg.sender] = ILRTAApprovalDetails(allowed.amount - transferDetails.amount);
-        }
+        if (!allowed.approved) revert();
 
         return _transfer(from, to, transferDetails);
     }
@@ -111,37 +98,24 @@ abstract contract ILRTAFungibleToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
-        _dataOf[from].balance -= transferDetails.amount;
+        Data memory fromData = transferDetails.fromData;
+        Data memory toData = transferDetails.toData;
 
-        // Cannot overflow because the sum of all user balances can't exceed the max uint256 value.
-        unchecked {
-            _dataOf[to].balance += transferDetails.amount;
+        if (_dataOf[from].hash != keccak256(abi.encode(fromData))) revert InvalidDataHash();
+        if (_dataOf[to].hash != keccak256(abi.encode(toData))) revert InvalidDataHash();
+
+        for (uint256 i; i < 8; i++) {
+            for (uint256 j; j < 8; j++) {
+                fromData.rgb[i][j] -= transferDetails.transferData.rgb[i][j];
+                toData.rgb[i][j] += transferDetails.transferData.rgb[i][j];
+            }
         }
+
+        _dataOf[from].hash = keccak256(abi.encode(fromData));
+        _dataOf[to].hash = keccak256(abi.encode(toData));
 
         emit Transfer(from, to, abi.encode(transferDetails));
 
         return true;
-    }
-
-    function _mint(address to, uint256 amount) internal virtual {
-        totalSupply += amount;
-
-        // Cannot overflow because the sum of all user balances can't exceed the max uint256 value.
-        unchecked {
-            _dataOf[to].balance += amount;
-        }
-
-        emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({amount: amount})));
-    }
-
-    function _burn(address from, uint256 amount) internal virtual {
-        _dataOf[from].balance -= amount;
-
-        // Cannot underflow because a user's balance will never be larger than the total supply.
-        unchecked {
-            totalSupply -= amount;
-        }
-
-        emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({amount: amount})));
     }
 }

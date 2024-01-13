@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {IERC1271} from "./IERC1271.sol";
+import {IERC1271} from "src/IERC1271.sol";
 
 /// @custom:team implement eip 6492
 library SignatureVerification {

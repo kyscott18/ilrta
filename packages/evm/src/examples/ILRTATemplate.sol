@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ILRTA} from "./ILRTA.sol";
+import {ILRTA} from "src/ILRTA.sol";
 
 /// @notice Template for what an instance of ILRTA should implement
 /// @author Kyle Scott
@@ -42,12 +42,10 @@ abstract contract ILRTATemplate is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @notice return the data of the owner, with the specific id
-    /// @dev Replace XXXXXX such that the function selector is 0xc7f78af9
-    function dataOf_XXXXXX(address owner, bytes32 id) external view virtual returns (ILRTAData memory);
+    function dataOf(address owner, bytes32 id) external view virtual returns (ILRTAData memory);
 
     /// @notice return the spenders allowance of the data owned by owner, with the specific id
-    /// @dev Replace XXXXXX such that the function selector is 0xd3b864ec
-    function allowanceOf_XXXXXX(
+    function allowanceOf(
         address owner,
         address spender,
         bytes32 id
