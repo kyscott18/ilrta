@@ -17,7 +17,7 @@ abstract contract ILRTARepresentmentToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     struct Data {
-        uint256[8][8][3] rgb;
+        uint8[8][8][3] rgb;
     }
 
     struct ILRTAData {
