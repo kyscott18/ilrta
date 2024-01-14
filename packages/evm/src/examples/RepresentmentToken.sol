@@ -16,18 +16,14 @@ abstract contract ILRTARepresentmentToken is ILRTA {
                                DATA TYPES
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    struct Data {
-        uint8[8][8][3] rgb;
-    }
-
     struct ILRTAData {
         bytes32 hash;
     }
 
     struct ILRTATransferDetails {
-        Data fromData;
-        Data toData;
-        Data transferData;
+        uint8[8][8][3] fromRBG;
+        uint8[8][8][3] toRBG;
+        uint8[8][8][3] transferRBG;
     }
 
     struct ILRTAApprovalDetails {
@@ -97,23 +93,23 @@ abstract contract ILRTARepresentmentToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function _transfer(address from, address to, ILRTATransferDetails memory transferDetails) internal returns (bool) {
-        Data memory fromData = transferDetails.fromData;
-        Data memory toData = transferDetails.toData;
+        uint8[8][8][3] memory fromRBG = transferDetails.fromRBG;
+        uint8[8][8][3] memory toRBG = transferDetails.toRBG;
 
-        if (_dataOf[from].hash != keccak256(abi.encode(fromData))) revert InvalidDataHash();
-        if (_dataOf[to].hash != keccak256(abi.encode(toData))) revert InvalidDataHash();
+        if (_dataOf[from].hash != keccak256(abi.encode(fromRBG))) revert InvalidDataHash();
+        if (_dataOf[to].hash != keccak256(abi.encode(toRBG))) revert InvalidDataHash();
 
         for (uint256 i = 0; i < 8; i++) {
             for (uint256 j = 0; j < 8; j++) {
                 for (uint256 l = 0; l < 3; l++) {
-                    fromData.rgb[i][j][l] -= transferDetails.transferData.rgb[i][j][l];
-                    toData.rgb[i][j][l] += transferDetails.transferData.rgb[i][j][l];
+                    fromRBG[i][j][l] -= transferDetails.transferRBG[i][j][l];
+                    toRBG[i][j][l] += transferDetails.transferRBG[i][j][l];
                 }
             }
         }
 
-        _dataOf[from].hash = keccak256(abi.encode(fromData));
-        _dataOf[to].hash = keccak256(abi.encode(toData));
+        _dataOf[from].hash = keccak256(abi.encode(fromRBG));
+        _dataOf[to].hash = keccak256(abi.encode(toRBG));
 
         emit Transfer(from, to, abi.encode(transferDetails));
 
