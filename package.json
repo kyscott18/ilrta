@@ -1,14 +1,21 @@
 {
-  "name": "ilrta-monorepo",
+  "name": "ilrta",
   "version": "0.0.0",
   "description": "",
   "private": "true",
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=8"
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "format": "forge fmt",
+    "clean": "rm -rf cache out"
+  },
+  "dependencies": {
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std",
+    "solmate": "^6.2.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.5.1",
