@@ -5,7 +5,7 @@
 [license]: https://opensource.org/licenses/MIT
 [license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
-Composable token standards and transfer utilities. **ilrta** standardizes event logs, function selector, and transfer + approve flow. **Permit3** implements `transferBySignature` for all current and future token standards.
+Composable token standard and transfer utilities. **ilrta** standardizes event logs, function selector, and transfer + approve flow. **Permit3** implements `transferBySignature` for all current and future token standards.
 
 ## Potential Improvements
 
