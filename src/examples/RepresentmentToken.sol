@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {ILRTA} from "src/ILRTA.sol";
+import {ILRTA} from "../ILRTA.sol";
 
 /// @notice Token that stores only the hash of all data rather than the data itself
 /// @dev See https://github.com/AstariaXYZ/starport-whitepaper
