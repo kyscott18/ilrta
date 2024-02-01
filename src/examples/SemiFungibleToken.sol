@@ -17,7 +17,7 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
     }
 
     struct ILRTATransferDetails {
-        uint256 id;
+        bytes32 id;
         uint256 amount;
     }
 
@@ -29,7 +29,7 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
                                 STORAGE
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    mapping(address owner => mapping(uint256 id => ILRTAData data)) private _dataOf;
+    mapping(address owner => mapping(bytes32 id => ILRTAData data)) private _dataOf;
 
     mapping(address owner => mapping(address spender => ILRTAApprovalDetails approvalDetails)) private _allowanceOf;
 
@@ -44,15 +44,15 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     function balanceOf(address owner, uint256 id) external view returns (uint256 balance) {
-        return _dataOf[owner][id].balance;
+        return _dataOf[owner][bytes32(id)].balance;
     }
 
     /*<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataOf_XXXXXX(address owner, ILRTADataID memory id) external view returns (ILRTAData memory) {
-        return _dataOf[owner][id.id];
+    function dataOf_XXXXXX(address owner, bytes32 id) external view returns (ILRTAData memory) {
+        return _dataOf[owner][id];
     }
 
     function allowanceOf_XXXXXX(address owner, address spender) external view returns (ILRTAApprovalDetails memory) {
@@ -114,13 +114,13 @@ abstract contract ILRTASemiFungibleToken is ILRTA {
         return true;
     }
 
-    function _mint(address to, uint256 id, uint256 amount) internal virtual {
+    function _mint(address to, bytes32 id, uint256 amount) internal virtual {
         _dataOf[to][id].balance += amount;
 
         emit Transfer(address(0), to, abi.encode(ILRTATransferDetails({amount: amount, id: id})));
     }
 
-    function _burn(address from, uint256 id, uint256 amount) internal virtual {
+    function _burn(address from, bytes32 id, uint256 amount) internal virtual {
         _dataOf[from][id].balance -= amount;
 
         emit Transfer(from, address(0), abi.encode(ILRTATransferDetails({amount: amount, id: id})));
