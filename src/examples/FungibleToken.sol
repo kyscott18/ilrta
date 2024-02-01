@@ -56,11 +56,11 @@ abstract contract ILRTAFungibleToken is ILRTA {
                               ILRTA LOGIC
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
-    function dataOf(address owner, bytes32) external view returns (ILRTAData memory) {
+    function dataOf_XXXXXX(address owner) external view returns (ILRTAData memory) {
         return _dataOf[owner];
     }
 
-    function allowanceOf(address owner, address spender, bytes32) external view returns (ILRTAApprovalDetails memory) {
+    function allowanceOf_XXXXXX(address owner, address spender) external view returns (ILRTAApprovalDetails memory) {
         return _allowanceOf[owner][spender];
     }
 

@@ -41,13 +41,15 @@ abstract contract ILRTATemplate is ILRTA {
     <3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3<3*/
 
     /// @notice return the data of the owner, with the specific id
-    function dataOf(address owner, bytes32 id) external view virtual returns (ILRTAData memory);
+    /// @dev Replace XXXXXX such that the function selector is 0xc7f78af9
+    function dataOf_XXXXXX(address owner, ILRTADataID memory id) external view virtual returns (ILRTAData memory);
 
     /// @notice return the spenders allowance of the data owned by owner, with the specific id
-    function allowanceOf(
+    /// @dev Replace XXXXXX such that the function selector is 0xd3b864ec
+    function allowanceOf_XXXXXX(
         address owner,
         address spender,
-        bytes32 id
+        ILRTADataID memory id
     )
         external
         view
